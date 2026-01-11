@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=Read Selection
+Name[fr]=Lire la sélection
+Name[de]=Auswahl vorlesen
+Name[es]=Leer la selección
+Comment=Text-to-speech using PiperRead
+Comment[fr]=Lecture vocale avec PiperRead
+Comment[de]=Vorlesen mit PiperRead
+Comment[es]=Leer texto con PiperRead
+Exec=/bin/bash -c 'source $HOME/git/piper/PiperRead/piper-env/bin/activate && $HOME/git/piper/PiperRead/read.sh auto'
+Icon=audio-volume-high
+Terminal=false
+Categories=Utility;Accessibility;AudioVideo;
