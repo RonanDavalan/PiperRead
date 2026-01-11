@@ -1,0 +1,18 @@
+# Environnements virtuels Python
+piper-env/
+venv/
+env/
+__pycache__/
+*.py[cod]
+
+# Fichiers de modèles vocaux (trop lourds pour Git)
+voices/*.onnx
+voices/*.json
+
+# Fichiers système et IDE
+.DS_Store
+.vscode/
+.idea/
+
+# Fichiers temporaires ou logs
+*.log
