@@ -1,7 +1,7 @@
-# PiperRead 0.1-Alpha
+# PiperRead
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-v0.1--Alpha-orange" alt="Version">
+  <img src="https://img.shields.io/badge/Version-v0.1.1--Alpha-orange" alt="Version">
   <img src="https://img.shields.io/badge/Licence-MIT-green" alt="Licence">
   <img src="https://img.shields.io/badge/Plateforme-Linux_(Wayland_|_X11)-black" alt="OS supporté">
   <img src="https://img.shields.io/badge/Moteur-Piper_Neural_TTS-blueviolet" alt="Moteur audio">
