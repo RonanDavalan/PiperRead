@@ -24,6 +24,9 @@ cleanup() {
 }
 trap cleanup SIGINT SIGTERM EXIT
 
+# --- NETTOYAGE MARKDOWN ---
+source "$BASE_DIR/utils/cleaner.sh"
+
 # --- GESTION PRESSE-PAPIERS (Wayland & X11) ---
 get_clipboard() {
     local mode="$1"
@@ -61,7 +64,8 @@ get_clipboard() {
 
 # --- LECTURE AUDIO ---
 play_text() {
-    local text="$1"
+    local raw_text="$1"
+    local text=$(clean_markdown "$raw_text")
     
     # Coupe la parole si relancé
     pkill -f "aplay -r 22050" 2>/dev/null
