@@ -8,12 +8,16 @@
 #     ou le presse-papiers, sous Wayland comme sous X11.
 #
 # Usage :
-#     read.sh [auto|selection|clipboard|--stop|--pause|--resume]
+#     read.sh [auto|selection|clipboard] [--speed X] [--voice NOM] [--lang CODE]
+#     read.sh --stop | --pause | --resume
 #     auto (défaut) lit la sélection à la souris, à défaut le presse-papiers.
+#     --speed : multiplicateur de vitesse de 0,5 à 3,0 (1 = voix naturelle).
 #     --stop arrête la lecture en cours ; relancer read.sh coupe la précédente.
 #     --pause la suspend, --resume la reprend là où elle s'était arrêtée.
+#     Chaque réglage vient de l'option, sinon de PIPERREAD_SPEED, PIPERREAD_VOICE
+#     ou PIPERREAD_LANG, sinon de ~/.config/piperread/piperread.conf.
 #
-# Dépend de : utils/cleaner.sh, utils/flatfile.sh, lang/ (messages), piper-env/
+# Dépend de : utils/cleaner.sh, utils/flatfile.sh, utils/config.sh, lang/ (messages), piper-env/
 #     (moteur), voices/ (voix .onnx), wl-paste ou xsel, aplay, setsid, flock,
 #     notify-send.
 
@@ -29,13 +33,6 @@ DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/piperread"
 if [ -d "$BASE_DIR/voices" ]; then VOICES_DIR="$BASE_DIR/voices"; else VOICES_DIR="$DATA_DIR/voices"; fi
 if [ -d "$BASE_DIR/piper-env" ]; then VENV_PATH="$BASE_DIR/piper-env"; else VENV_PATH="/usr/lib/piperread/venv"; fi
 
-# Première voix par ordre alphabétique : celle que l'installation a téléchargée,
-# quelle que soit la langue.
-MODEL_PATH=""
-for voice in "$VOICES_DIR"/*.onnx; do
-    if [ -f "$voice" ]; then MODEL_PATH="$voice"; break; fi
-done
-
 # --- NETTOYAGE ---
 cleanup() {
     if [ -n "$VIRTUAL_ENV" ]; then deactivate; fi
@@ -47,20 +44,23 @@ source "$BASE_DIR/utils/cleaner.sh"
 
 # --- MESSAGES ---
 source "$BASE_DIR/utils/flatfile.sh"
+source "$BASE_DIR/utils/config.sh"
 declare -A MSG
 
 # L'anglais est chargé d'abord : il comble toute clé absente d'une autre langue.
 load_messages() {
-    local lang="${LANG%%_*}"
+    local lang="$1"
     read_flat_file "$BASE_DIR/lang/en.txt" MSG
-    if [[ "$lang" =~ ^[a-z]{2}$ && "$lang" != "en" ]]; then
+    if [ "$lang" != "en" ]; then
         read_flat_file "$BASE_DIR/lang/$lang.txt" MSG
     fi
 }
 
 msg() {
     local text="${MSG[$1]:-$1}"
-    echo "${text//\{1\}/"$2"}"
+    text="${text//\{1\}/"$2"}"
+    text="${text//\{2\}/"$3"}"
+    echo "${text//\{3\}/"$4"}"
 }
 
 alert() {
@@ -72,8 +72,6 @@ alert() {
         echo "$APP_NAME : $text" >&2
     fi
 }
-
-load_messages
 
 # --- GESTION PRESSE-PAPIERS (Wayland & X11) ---
 get_clipboard() {
@@ -220,8 +218,8 @@ play_text() {
     # Synthèse vocale dans son propre groupe : un signal au groupe n'atteint ni
     # le terminal lanceur ni un autre lecteur audio. Le verrou est fermé pour le
     # pipeline, sinon il le tiendrait jusqu'à la fin de la lecture.
-    setsid bash -c 'piper --model "$1" --length_scale 0.8 --output_raw | aplay -r "$2" -f S16_LE -t raw - 2>/dev/null' \
-        piperread-pipeline "$MODEL_PATH" "$rate" 9>&- <<< "$text" &
+    setsid bash -c 'piper --model "$1" --length-scale "$3" --output_raw | aplay -r "$2" -f S16_LE -t raw - 2>/dev/null' \
+        piperread-pipeline "$MODEL_PATH" "$rate" "$LENGTH_SCALE" 9>&- <<< "$text" &
     pid=$!
     echo "$pid" > "$RUN/group.$pid" && mv -f "$RUN/group.$pid" "$RUN/group"
     exec 9>&-
@@ -236,8 +234,86 @@ play_text() {
     exec 9>&-
 }
 
+# --- ARGUMENTS ---
+PARSE_ERROR=""
+parse_arguments() {
+    local name
+    MODE="auto"
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --stop|--pause|--resume|auto|selection|clipboard) MODE="$1" ;;
+            --speed|--voice|--lang)
+                if [ $# -lt 2 ]; then PARSE_ERROR="missing:$1"; return 1; fi
+                OPT_VALUES["${1#--}"]="$2"
+                shift
+                ;;
+            --speed=*|--voice=*|--lang=*)
+                name="${1%%=*}"
+                OPT_VALUES["${name#--}"]="${1#*=}"
+                ;;
+            *) PARSE_ERROR="$1"; return 1 ;;
+        esac
+        shift
+    done
+}
+
+# --- REGLAGES ---
+# Une option invalide refuse la lecture ; une valeur invalide de l'environnement
+# ou du fichier prévient et laisse le niveau suivant s'appliquer.
+refuse_option() {
+    local key="${RESOLVED_INVALID[0]}" value="${RESOLVED_INVALID[1]}" source="${RESOLVED_INVALID[2]}"
+    if [ "$key" == "voice" ] && valid_voice_name "$value" > /dev/null; then
+        alert voice_not_found "$value"
+    else
+        alert option_invalid "$source" "$value"
+    fi
+    exit 2
+}
+
+emit_setting_warnings() {
+    local i key value source
+    for ((i = 0; i < ${#SETTING_WARNINGS[@]}; i += 3)); do
+        key="${SETTING_WARNINGS[i]}"
+        value="${SETTING_WARNINGS[i+1]}"
+        source="${SETTING_WARNINGS[i+2]}"
+        if [ "$key" == "voice" ] && [ -n "$MODEL_PATH" ]; then
+            alert voice_fallback "$value" "$source" "$(basename "$MODEL_PATH" .onnx)"
+        else
+            alert setting_invalid "$key" "$value" "$source"
+        fi
+    done
+}
+
+parse_arguments "$@"
+load_config_file
+
+resolve_setting lang valid_lang
+LANG_STATUS=$?
+LANG_CODE="$RESOLVED_VALUE"
+if [ -z "$LANG_CODE" ]; then LANG_CODE=$(valid_lang "${LANG%%_*}") || LANG_CODE="en"; fi
+load_messages "$LANG_CODE"
+
+if [[ "$PARSE_ERROR" == missing:* ]]; then
+    alert option_invalid "${PARSE_ERROR#missing:}" ""
+    exit 2
+elif [ -n "$PARSE_ERROR" ]; then
+    alert unknown_option "$PARSE_ERROR"
+    exit 2
+fi
+if [ "$LANG_STATUS" -eq 2 ]; then refuse_option; fi
+
+resolve_setting speed normalize_speed || refuse_option
+LENGTH_SCALE=$(speed_to_length_scale "${RESOLVED_VALUE:-1}")
+
+resolve_setting voice validate_voice || refuse_option
+if [ -n "$RESOLVED_VALUE" ]; then
+    MODEL_PATH="$VOICES_DIR/$RESOLVED_VALUE.onnx"
+else
+    MODEL_PATH=$(default_voice) || MODEL_PATH=""
+fi
+emit_setting_warnings
+
 # --- LOGIQUE INTELLIGENTE ---
-MODE="${1:-auto}"
 TEXT=""
 
 case "$MODE" in
@@ -251,11 +327,6 @@ case "$MODE" in
             --resume) if resume_reading; then alert resumed; else alert nothing_to_stop; fi ;;
         esac
         exit 0
-        ;;
-    auto|selection|clipboard) ;;
-    *)
-        alert unknown_option "$MODE"
-        exit 2
         ;;
 esac
 

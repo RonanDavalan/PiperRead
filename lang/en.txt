@@ -9,3 +9,7 @@ rate_unreadable=Cannot read the sample rate of the voice; using 22050 Hz.
 runtime_dir_refused=The runtime directory {1} is not a private directory of yours; refusing to use it.
 paused=Reading paused.
 resumed=Reading resumed.
+option_invalid=Invalid value "{2}" for {1}.
+setting_invalid=Invalid {1} "{2}" in {3}; the next level applies.
+voice_not_found=Voice not found: {1}
+voice_fallback=Voice "{1}" from {2} is not available; using "{3}" instead.

@@ -9,3 +9,7 @@ rate_unreadable=Impossible de lire le taux d'échantillonnage de la voix ; 22050
 runtime_dir_refused=Le dossier d'exécution {1} n'est pas un dossier privé qui vous appartient ; il est refusé.
 paused=Lecture en pause.
 resumed=Lecture reprise.
+option_invalid=Valeur invalide « {2} » pour {1}.
+setting_invalid=Valeur invalide de {1} « {2} » dans {3} ; le niveau suivant s’applique.
+voice_not_found=Voix introuvable : {1}
+voice_fallback=La voix « {1} » demandée par {2} n’est pas disponible ; la voix « {3} » est utilisée à la place.

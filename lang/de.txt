@@ -9,3 +9,7 @@ rate_unreadable=Die Abtastrate der Stimme ist nicht lesbar; 22050 Hz werden verw
 runtime_dir_refused=Das Laufzeitverzeichnis {1} ist kein privates Verzeichnis von Ihnen; es wird abgelehnt.
 paused=Vorlesen pausiert.
 resumed=Vorlesen fortgesetzt.
+option_invalid=Ungültiger Wert „{2}“ für {1}.
+setting_invalid=Ungültiger Wert für {1} „{2}“ in {3}; die nächste Ebene gilt.
+voice_not_found=Stimme nicht gefunden: {1}
+voice_fallback=Die Stimme „{1}“ aus {2} ist nicht verfügbar; stattdessen wird „{3}“ verwendet.

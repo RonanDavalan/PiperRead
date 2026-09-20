@@ -9,3 +9,7 @@ rate_unreadable=No se puede leer la frecuencia de muestreo de la voz; se usan 22
 runtime_dir_refused=El directorio de ejecución {1} no es un directorio privado suyo; se rechaza.
 paused=Lectura en pausa.
 resumed=Lectura reanudada.
+option_invalid=Valor no válido «{2}» para {1}.
+setting_invalid=Valor no válido de {1} «{2}» en {3}; se aplica el nivel siguiente.
+voice_not_found=Voz no encontrada: {1}
+voice_fallback=La voz «{1}» de {2} no está disponible; se usa «{3}» en su lugar.
