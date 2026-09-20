@@ -66,7 +66,7 @@ cd PiperRead
 
 ### 2. Initialiser l'environnement (critique)
 
-Cette étape crée l'isolation Python et télécharge le modèle vocal neuronal (français - Siwis Medium).
+Cette étape crée l'isolation Python, installe le moteur, puis télécharge la voix que vous choisissez. `./read.sh --list-voices` liste les voix proposées avec leur licence, leur taille et des liens d'écoute ; la qualité d'une voix reste à l'appréciation de chacun.
 
 ```bash
 # Création de l'environnement virtuel
@@ -75,12 +75,8 @@ python3 -m venv piper-env
 # Installation du moteur Piper TTS
 ./piper-env/bin/pip install piper-tts
 
-# Téléchargement du modèle vocal
-mkdir -p voices
-cd voices
-wget https://huggingface.co/rhasspy/piper-voices/resolve/main/fr/fr_FR/siwis/medium/fr_FR-siwis-medium.onnx
-wget https://huggingface.co/rhasspy/piper-voices/resolve/main/fr/fr_FR/siwis/medium/fr_FR-siwis-medium.onnx.json
-cd ..
+# Téléchargement d'une voix (choix : ./read.sh --list-voices)
+./read.sh --download-voice fr_FR-siwis-medium
 ```
 
 ### 3. Configuration des permissions

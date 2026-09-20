@@ -66,7 +66,7 @@ cd PiperRead
 
 ### 2. Umgebung initialisieren (Kritisch)
 
-Dieser Schritt erstellt die Python-Isolation und lädt das neuronale Sprachmodell herunter (Französisch - Siwis Medium).
+Dieser Schritt erstellt die Python-Isolation, installiert die Engine und lädt dann die Stimme herunter, die Sie wählen. `./read.sh --list-voices` listet die angebotenen Stimmen mit Lizenz, Größe und Hörproben-Links auf; die Qualität einer Stimme bleibt Geschmackssache.
 
 ```bash
 # Erstellung der virtuellen Umgebung
@@ -75,12 +75,8 @@ python3 -m venv piper-env
 # Installation der Piper TTS Engine
 ./piper-env/bin/pip install piper-tts
 
-# Herunterladen des Sprachmodells
-mkdir -p voices
-cd voices
-wget https://huggingface.co/rhasspy/piper-voices/resolve/main/de/de_DE/thorsten/medium/de_DE-thorsten-medium.onnx
-wget https://huggingface.co/rhasspy/piper-voices/resolve/main/de/de_DE/thorsten/medium/de_DE-thorsten-medium.onnx.json
-cd ..
+# Eine Stimme herunterladen (Auswahl: ./read.sh --list-voices)
+./read.sh --download-voice de_DE-thorsten-medium
 ```
 
 ### 3. Berechtigungen konfigurieren

@@ -67,7 +67,7 @@ cd PiperRead
 
 ### 2. Initialize the environment (Critical)
 
-This step creates the Python isolation and downloads the neural voice model (French - Siwis Medium).
+This step creates the Python isolation, installs the engine, then downloads the voice you choose. `./read.sh --list-voices` lists the proposed voices with their licence, size and listening links; the voice quality is a matter of personal taste.
 
 ```bash
 # Create virtual environment
@@ -76,12 +76,8 @@ python3 -m venv piper-env
 # Install Piper TTS Engine
 ./piper-env/bin/pip install piper-tts
 
-# Download voice model
-mkdir -p voices
-cd voices
-wget https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx 
-wget https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx.json
-cd ..
+# Download a voice (see the choices with ./read.sh --list-voices)
+./read.sh --download-voice en_US-ljspeech-medium
 ```
 
 ### 3. Configure permissions
