@@ -11,16 +11,19 @@
 #     read.sh [auto|selection|clipboard] [--speed X] [--voice NOM] [--lang CODE]
 #     read.sh --stop | --pause | --resume
 #     read.sh --version | --diagnose
+#     read.sh --list-voices | --download-voice [NOM...]
 #     auto (défaut) lit la sélection à la souris, à défaut le presse-papiers.
 #     --speed : multiplicateur de vitesse de 0,5 à 3,0 (1 = voix naturelle).
 #     --stop arrête la lecture en cours ; relancer read.sh coupe la précédente.
 #     --pause la suspend, --resume la reprend là où elle s'était arrêtée.
 #     --diagnose contrôle l'installation (code 1 s'il y a un échec), sans rien lire ni jouer.
+#     --list-voices affiche les voix proposées, avec leur licence, sans réseau.
+#     --download-voice télécharge les voix nommées ; sans nom, propose celle de la langue.
 #     Chaque réglage vient de l'option, sinon de PIPERREAD_SPEED, PIPERREAD_VOICE
 #     ou PIPERREAD_LANG, sinon de ~/.config/piperread/piperread.conf.
 #
-# Dépend de : utils/cleaner.sh, utils/flatfile.sh, utils/config.sh, utils/diagnose.sh, lang/ (messages), piper-env/
-#     (moteur), voices/ (voix .onnx), wl-paste ou xsel, aplay, setsid, flock,
+# Dépend de : utils/cleaner.sh, utils/flatfile.sh, utils/config.sh, utils/diagnose.sh, utils/voices.sh,
+#     lang/ (messages), piper-env/ (moteur), voices/ (voix .onnx), wl-paste ou xsel, aplay, setsid, flock,
 #     notify-send.
 
 VERSION="0.1.2-alpha"
@@ -54,6 +57,7 @@ source "$BASE_DIR/utils/cleaner.sh"
 source "$BASE_DIR/utils/flatfile.sh"
 source "$BASE_DIR/utils/config.sh"
 source "$BASE_DIR/utils/diagnose.sh"
+source "$BASE_DIR/utils/voices.sh"
 declare -A MSG
 
 # L'anglais est chargé d'abord : il comble toute clé absente d'une autre langue.
@@ -255,7 +259,12 @@ parse_arguments() {
     MODE="auto"
     while [ $# -gt 0 ]; do
         case "$1" in
-            --stop|--pause|--resume|--diagnose|auto|selection|clipboard) MODE="$1" ;;
+            --stop|--pause|--resume|--diagnose|--list-voices|auto|selection|clipboard) MODE="$1" ;;
+            --download-voice)
+                MODE="$1"
+                while [ $# -gt 1 ] && [[ "$2" != -* ]]; do DOWNLOAD_NAMES+=("$2"); shift; done
+                ;;
+            --download-voice=*) MODE="--download-voice"; DOWNLOAD_NAMES+=("${1#*=}") ;;
             --speed|--voice|--lang)
                 if [ $# -lt 2 ]; then PARSE_ERROR="missing:$1"; return 1; fi
                 OPT_VALUES["${1#--}"]="$2"
@@ -325,7 +334,10 @@ if [ -n "$RESOLVED_VALUE" ]; then
 else
     MODEL_PATH=$(default_voice) || MODEL_PATH=""
 fi
-if [ "$MODE" != "--diagnose" ]; then emit_setting_warnings; fi
+case "$MODE" in
+    --diagnose|--list-voices|--download-voice) ;;
+    *) emit_setting_warnings ;;
+esac
 
 # --- LOGIQUE INTELLIGENTE ---
 TEXT=""
@@ -333,6 +345,14 @@ TEXT=""
 case "$MODE" in
     --diagnose)
         run_diagnose
+        exit $?
+        ;;
+    --list-voices)
+        list_voices
+        exit 0
+        ;;
+    --download-voice)
+        download_voices_command
         exit $?
         ;;
     --stop|--pause|--resume)
