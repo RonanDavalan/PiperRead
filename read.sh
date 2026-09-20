@@ -10,7 +10,7 @@
 # Usage :
 #     read.sh [auto|selection|clipboard|--stop]
 #     auto (défaut) lit la sélection à la souris, à défaut le presse-papiers.
-#     --stop arrête la lecture en cours ; relancer read.sh la remplace.
+#     --stop arrête la lecture en cours ; relancer read.sh coupe la précédente.
 #
 # Dépend de : utils/cleaner.sh, utils/flatfile.sh, lang/ (messages), piper-env/
 #     (moteur), voices/ (voix .onnx), wl-paste ou xsel, aplay, setsid, flock,
