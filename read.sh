@@ -8,9 +8,10 @@
 #     ou le presse-papiers, sous Wayland comme sous X11.
 #
 # Usage :
-#     read.sh [auto|selection|clipboard|--stop]
+#     read.sh [auto|selection|clipboard|--stop|--pause|--resume]
 #     auto (défaut) lit la sélection à la souris, à défaut le presse-papiers.
 #     --stop arrête la lecture en cours ; relancer read.sh coupe la précédente.
+#     --pause la suspend, --resume la reprend là où elle s'était arrêtée.
 #
 # Dépend de : utils/cleaner.sh, utils/flatfile.sh, lang/ (messages), piper-env/
 #     (moteur), voices/ (voix .onnx), wl-paste ou xsel, aplay, setsid, flock,
@@ -152,21 +153,42 @@ voice_rate() {
     fi
 }
 
-# --- ARRET ---
+# --- ARRET, PAUSE ET REPRISE ---
 # Le verrou fd 9 doit être tenu par l'appelant. L'identifiant n'est utilisé que si
 # le processus porte encore la marque du pipeline : un fichier périmé pourrait
 # désigner un processus étranger qui a repris le même numéro.
-stop_reading() {
+active_group() {
     local file="$RUN/group" group
     local -a args
     [ -f "$file" ] || return 1
     group=$(<"$file")
+    if [[ "$group" =~ ^[0-9]+$ ]] && [ "$group" -gt 1 ] && [ -r "/proc/$group/cmdline" ]; then
+        mapfile -d '' -t args < "/proc/$group/cmdline"
+        if [ "${args[3]}" == "piperread-pipeline" ]; then echo "$group"; return 0; fi
+    fi
     rm -f "$file"
-    [[ "$group" =~ ^[0-9]+$ ]] && [ "$group" -gt 1 ] || return 1
-    [ -r "/proc/$group/cmdline" ] || return 1
-    mapfile -d '' -t args < "/proc/$group/cmdline"
-    [ "${args[3]}" == "piperread-pipeline" ] || return 1
+    return 1
+}
+
+# SIGCONT après SIGTERM : un groupe en pause ne traite pas SIGTERM avant d'être repris.
+stop_reading() {
+    local group
+    group=$(active_group) || return 1
+    rm -f "$RUN/group"
     kill -TERM -- "-$group" 2>/dev/null
+    kill -CONT -- "-$group" 2>/dev/null
+}
+
+pause_reading() {
+    local group
+    group=$(active_group) || return 1
+    kill -STOP -- "-$group" 2>/dev/null
+}
+
+resume_reading() {
+    local group
+    group=$(active_group) || return 1
+    kill -CONT -- "-$group" 2>/dev/null
 }
 
 # --- LECTURE AUDIO ---
@@ -219,11 +241,15 @@ MODE="${1:-auto}"
 TEXT=""
 
 case "$MODE" in
-    --stop)
+    --stop|--pause|--resume)
         RUN=$(runtime_dir) || exit 1
         exec 9>"$RUN/lock"
         flock 9
-        if stop_reading; then alert stopped; else alert nothing_to_stop; fi
+        case "$MODE" in
+            --stop)   if stop_reading; then alert stopped; else alert nothing_to_stop; fi ;;
+            --pause)  if pause_reading; then alert paused; else alert nothing_to_stop; fi ;;
+            --resume) if resume_reading; then alert resumed; else alert nothing_to_stop; fi ;;
+        esac
         exit 0
         ;;
     auto|selection|clipboard) ;;
