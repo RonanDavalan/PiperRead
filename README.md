@@ -149,4 +149,6 @@ The **PiperRead** project is the result of a hybrid **Human-AI** collaboration:
 *   **Ronan Davalan**: Architect & Arbiter. Product vision, security requirements, project direction, validation and testing. All architectural decisions are validated by him.
 *   **Claude Code (Anthropic)**: Systems Engineer & Lead Developer. Implementation of the Bash scripts, the documentation and the website; technical choices within the validated architecture. Principal author of the source code.
 *   **Google Gemini**: Synthesizer & Strategic Advisor. Independent architectural analysis, logical conflict resolution, workflow optimisation, cross-validation of technical decisions.
+*   **Muse Spark**: Synthesizer & Strategic Advisor. Replaces Gemini in some sessions, with good results; some of its answers were passed on to Claude Code.
+*   **DeepSeek**: Cleanup of the project's working framework at the start of the project.
 *   **Core Engine**: [Piper TTS](https://github.com/OHF-voice/piper1-gpl), licensed GPL-3.0-or-later. It is installed on your machine by `pip` and called as an external program; PiperRead does not redistribute it.
