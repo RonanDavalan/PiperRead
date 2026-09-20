@@ -1,0 +1,9 @@
+venv_missing=Entorno virtual no encontrado: {1}
+no_text=Ningún texto seleccionado ni copiado.
+dependency_missing=Falta una dependencia: {1}
+voice_missing=No se encontró ninguna voz. Instale una como se indica en el README.
+unknown_option=Opción desconocida: {1}
+stopped=Lectura detenida.
+nothing_to_stop=No se está leyendo nada.
+rate_unreadable=No se puede leer la frecuencia de muestreo de la voz; se usan 22050 Hz.
+runtime_dir_refused=El directorio de ejecución {1} no le pertenece; se rechaza.

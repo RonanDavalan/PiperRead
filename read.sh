@@ -11,10 +11,11 @@
 #     read.sh [auto|selection|clipboard]
 #     auto (défaut) lit la sélection à la souris, à défaut le presse-papiers.
 #
-# Dépend de : utils/cleaner.sh, piper-env/ (moteur), voices/ (voix .onnx),
-#     wl-paste ou xsel, aplay, notify-send.
+# Dépend de : utils/cleaner.sh, utils/flatfile.sh, lang/ (messages), piper-env/
+#     (moteur), voices/ (voix .onnx), wl-paste ou xsel, aplay, notify-send.
 
 VERSION="0.1.2-alpha"
+APP_NAME="PiperRead"
 
 # --- CONFIGURATION DYNAMIQUE ---
 BASE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -35,6 +36,36 @@ trap cleanup SIGINT SIGTERM EXIT
 
 # --- NETTOYAGE MARKDOWN ---
 source "$BASE_DIR/utils/cleaner.sh"
+
+# --- MESSAGES ---
+source "$BASE_DIR/utils/flatfile.sh"
+declare -A MSG
+
+# L'anglais est chargé d'abord : il comble toute clé absente d'une autre langue.
+load_messages() {
+    local lang="${LANG%%_*}"
+    read_flat_file "$BASE_DIR/lang/en.txt" MSG
+    if [[ "$lang" =~ ^[a-z]{2}$ && "$lang" != "en" ]]; then
+        read_flat_file "$BASE_DIR/lang/$lang.txt" MSG
+    fi
+}
+
+msg() {
+    local text="${MSG[$1]:-$1}"
+    echo "${text//\{1\}/"$2"}"
+}
+
+alert() {
+    local text
+    text=$(msg "$@")
+    if command -v notify-send &> /dev/null; then
+        notify-send "$APP_NAME" "$text"
+    else
+        echo "$APP_NAME : $text" >&2
+    fi
+}
+
+load_messages
 
 # --- GESTION PRESSE-PAPIERS (Wayland & X11) ---
 get_clipboard() {
@@ -85,7 +116,7 @@ play_text() {
     if [ -f "$VENV_PATH/bin/activate" ]; then
         source "$VENV_PATH/bin/activate"
     else
-        notify-send "Erreur PiperRead" "Environnement virtuel introuvable : $VENV_PATH"
+        alert venv_missing "$VENV_PATH"
         exit 1
     fi
 

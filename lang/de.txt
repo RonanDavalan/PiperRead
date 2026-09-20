@@ -1,0 +1,9 @@
+venv_missing=Virtuelle Umgebung nicht gefunden: {1}
+no_text=Kein Text ausgewählt oder kopiert.
+dependency_missing=Fehlende Abhängigkeit: {1}
+voice_missing=Keine Stimme gefunden. Installieren Sie eine, wie in der README beschrieben.
+unknown_option=Unbekannte Option: {1}
+stopped=Wiedergabe gestoppt.
+nothing_to_stop=Es wird nichts vorgelesen.
+rate_unreadable=Die Abtastrate der Stimme ist nicht lesbar; 22050 Hz werden verwendet.
+runtime_dir_refused=Das Laufzeitverzeichnis {1} gehört Ihnen nicht; es wird abgelehnt.

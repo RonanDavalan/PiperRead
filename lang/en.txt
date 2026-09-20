@@ -1,0 +1,9 @@
+venv_missing=Virtual environment not found: {1}
+no_text=No text selected or copied.
+dependency_missing=Missing dependency: {1}
+voice_missing=No voice found. Install one as described in the README.
+unknown_option=Unknown option: {1}
+stopped=Reading stopped.
+nothing_to_stop=Nothing is being read.
+rate_unreadable=Cannot read the sample rate of the voice; using 22050 Hz.
+runtime_dir_refused=The runtime directory {1} does not belong to you; refusing to use it.
