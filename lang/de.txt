@@ -6,4 +6,4 @@ unknown_option=Unbekannte Option: {1}
 stopped=Wiedergabe gestoppt.
 nothing_to_stop=Es wird nichts vorgelesen.
 rate_unreadable=Die Abtastrate der Stimme ist nicht lesbar; 22050 Hz werden verwendet.
-runtime_dir_refused=Das Laufzeitverzeichnis {1} gehört Ihnen nicht; es wird abgelehnt.
+runtime_dir_refused=Das Laufzeitverzeichnis {1} ist kein privates Verzeichnis von Ihnen; es wird abgelehnt.

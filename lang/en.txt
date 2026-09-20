@@ -6,4 +6,4 @@ unknown_option=Unknown option: {1}
 stopped=Reading stopped.
 nothing_to_stop=Nothing is being read.
 rate_unreadable=Cannot read the sample rate of the voice; using 22050 Hz.
-runtime_dir_refused=The runtime directory {1} does not belong to you; refusing to use it.
+runtime_dir_refused=The runtime directory {1} is not a private directory of yours; refusing to use it.

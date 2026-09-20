@@ -6,4 +6,4 @@ unknown_option=Option inconnue : {1}
 stopped=Lecture arrêtée.
 nothing_to_stop=Aucune lecture en cours.
 rate_unreadable=Impossible de lire le taux d'échantillonnage de la voix ; 22050 Hz utilisé.
-runtime_dir_refused=Le dossier d'exécution {1} ne vous appartient pas ; il est refusé.
+runtime_dir_refused=Le dossier d'exécution {1} n'est pas un dossier privé qui vous appartient ; il est refusé.

@@ -8,11 +8,13 @@
 #     ou le presse-papiers, sous Wayland comme sous X11.
 #
 # Usage :
-#     read.sh [auto|selection|clipboard]
+#     read.sh [auto|selection|clipboard|--stop]
 #     auto (défaut) lit la sélection à la souris, à défaut le presse-papiers.
+#     --stop arrête la lecture en cours ; relancer read.sh la remplace.
 #
 # Dépend de : utils/cleaner.sh, utils/flatfile.sh, lang/ (messages), piper-env/
-#     (moteur), voices/ (voix .onnx), wl-paste ou xsel, aplay, notify-send.
+#     (moteur), voices/ (voix .onnx), wl-paste ou xsel, aplay, setsid, flock,
+#     notify-send.
 
 VERSION="0.1.2-alpha"
 APP_NAME="PiperRead"
@@ -102,15 +104,66 @@ get_clipboard() {
     return 1
 }
 
+# --- DOSSIER D'EXECUTION ---
+# Sous /tmp le chemin est prévisible : un dossier ou un lien posé à l'avance par
+# un autre utilisateur ferait écrire l'identifiant de groupe chez lui.
+runtime_dir() {
+    local dir
+    if [ -n "$XDG_RUNTIME_DIR" ]; then
+        dir="$XDG_RUNTIME_DIR/piperread"
+    else
+        dir="/tmp/piperread-$UID"
+    fi
+    if [ ! -e "$dir" ] && [ ! -L "$dir" ]; then mkdir -m 700 -- "$dir" 2>/dev/null; fi
+    if [ -L "$dir" ] || [ ! -d "$dir" ] || [ "$(stat -c '%u %a' -- "$dir")" != "$UID 700" ]; then
+        alert runtime_dir_refused "$dir"
+        return 1
+    fi
+    echo "$dir"
+}
+
+check_dependencies() {
+    local dep
+    for dep in aplay setsid flock; do
+        if ! command -v "$dep" &> /dev/null; then alert dependency_missing "$dep"; exit 1; fi
+    done
+    if ! command -v wl-paste &> /dev/null && ! command -v xsel &> /dev/null; then
+        alert dependency_missing "wl-paste / xsel"
+        exit 1
+    fi
+}
+
+# --- ARRET ---
+# Le verrou fd 9 doit être tenu par l'appelant. L'identifiant n'est utilisé que si
+# le processus porte encore la marque du pipeline : un fichier périmé pourrait
+# désigner un processus étranger qui a repris le même numéro.
+stop_reading() {
+    local file="$RUN/group" group
+    local -a args
+    [ -f "$file" ] || return 1
+    group=$(<"$file")
+    rm -f "$file"
+    [[ "$group" =~ ^[0-9]+$ ]] && [ "$group" -gt 1 ] || return 1
+    [ -r "/proc/$group/cmdline" ] || return 1
+    mapfile -d '' -t args < "/proc/$group/cmdline"
+    [ "${args[3]}" == "piperread-pipeline" ] || return 1
+    kill -TERM -- "-$group" 2>/dev/null
+}
+
 # --- LECTURE AUDIO ---
 play_text() {
     local raw_text="$1"
     local text=$(clean_markdown "$raw_text")
-    
+    local rate=22050 pid
+
+    RUN=$(runtime_dir) || exit 1
+    exec 9>"$RUN/lock"
+    flock 9
+
     # Coupe la parole si relancé
-    pkill -f "aplay -r 22050" 2>/dev/null
-    
-    if [ -z "$text" ]; then return 1; fi
+    stop_reading
+
+    if [ -z "$text" ]; then exec 9>&-; return 1; fi
 
     # Activation environnement virtuel
     if [ -f "$VENV_PATH/bin/activate" ]; then
@@ -120,13 +173,45 @@ play_text() {
         exit 1
     fi
 
-    # Synthèse vocale
-    echo "$text" | piper --model "$MODEL_PATH" --length_scale 0.8 --output_raw | aplay -r 22050 -f S16_LE -t raw - 2>/dev/null
+    # Synthèse vocale dans son propre groupe : un signal au groupe n'atteint ni
+    # le terminal lanceur ni un autre lecteur audio. Le verrou est fermé pour le
+    # pipeline, sinon il le tiendrait jusqu'à la fin de la lecture.
+    setsid bash -c 'piper --model "$1" --length_scale 0.8 --output_raw | aplay -r "$2" -f S16_LE -t raw - 2>/dev/null' \
+        piperread-pipeline "$MODEL_PATH" "$rate" 9>&- <<< "$text" &
+    pid=$!
+    echo "$pid" > "$RUN/group.$pid" && mv -f "$RUN/group.$pid" "$RUN/group"
+    exec 9>&-
+
+    wait "$pid"
+
+    # Ne retire le fichier que s'il porte encore cette lecture : une relance a pu
+    # le remplacer entre-temps.
+    exec 9>"$RUN/lock"
+    flock 9
+    if [ "$(cat "$RUN/group" 2>/dev/null)" == "$pid" ]; then rm -f "$RUN/group"; fi
+    exec 9>&-
 }
 
 # --- LOGIQUE INTELLIGENTE ---
 MODE="${1:-auto}"
 TEXT=""
+
+case "$MODE" in
+    --stop)
+        RUN=$(runtime_dir) || exit 1
+        exec 9>"$RUN/lock"
+        flock 9
+        if stop_reading; then alert stopped; else alert nothing_to_stop; fi
+        exit 0
+        ;;
+    auto|selection|clipboard) ;;
+    *)
+        alert unknown_option "$MODE"
+        exit 2
+        ;;
+esac
+
+check_dependencies
 
 if [ "$MODE" == "selection" ]; then
     TEXT=$(get_clipboard "primary")
@@ -142,4 +227,6 @@ fi
 
 if [ -n "$TEXT" ]; then
     play_text "$TEXT"
+else
+    alert no_text
 fi
