@@ -8,13 +8,13 @@
   <img src="https://img.shields.io/badge/Sprache-Python_|_Bash-blue" alt="Code">
 </p>
 
-[🇺🇸 English](../../README.md) | [🇫🇷 Français](../fr-FR/README.md) | **🇩🇪 Deutsch** | [🇪🇸 Español](../es-ES/README.md)
+[English](../../README.md) | [Français](../fr-FR/README.md) | **Deutsch** | [Español](../es-ES/README.md)
 
 ## Beschreibung
 
 **PiperRead** ist eine leichtgewichtige Automatisierungslösung, die entwickelt wurde, um hochwertige neuronale Sprachsynthese (TTS) auf Linux-Desktops zu bringen.
 
-🌐 **Offizielle Website**: [piperread.davalan.fr](https://piperread.davalan.fr)
+**Offizielle Website**: [piperread.davalan.fr](https://piperread.davalan.fr)
 
 Im Gegensatz zu Cloud-Lösungen arbeitet PiperRead dank der [Piper](https://github.com/OHF-voice/piper1-gpl)-Engine vollständig offline (lokal). Es fungiert als Brücke zwischen Ihrer Desktop-Umgebung (Zwischenablage/Maus) und der Synthese-Engine.
 
@@ -36,7 +36,7 @@ Es ermöglicht das Vorlesen jedes mit der Maus ausgewählten oder in die Zwische
 
 ---
 
-## 🛠️ Voraussetzungen
+## Voraussetzungen
 
 Stellen Sie vor der Installation sicher, dass Ihr System über die erforderlichen Audio- und Zwischenablage-Tools verfügt.
 
@@ -51,7 +51,7 @@ sudo apt install -y python3 python3-venv python3-pip alsa-utils wl-clipboard xse
 
 ---
 
-## 💾 Installation
+## Installation
 
 Da dieses Projekt auf großen Sprachmodellen und einer spezifischen virtuellen Umgebung basiert, müssen Sie das Projekt nach dem Klonen initialisieren.
 
@@ -106,7 +106,7 @@ update-desktop-database $HOME/.local/share/applications
 
 ---
 
-## 🚀 Verwendung
+## Verwendung
 
 ### Methode 1: Mausauswahl (Empfohlen)
 
@@ -125,7 +125,7 @@ update-desktop-database $HOME/.local/share/applications
 
 ---
 
-## 💎 Qualität
+## Qualität
 
 Dieses Projekt entstand aus einer Entdeckung: der beeindruckenden Qualität der **Piper**-Engine für eine vollständig freie und lokale Lösung.
 
@@ -135,13 +135,13 @@ Dieses Projekt entstand aus einer Entdeckung: der beeindruckenden Qualität der 
 
 ---
 
-## 💡 Projektursprung
+## Projektursprung
 
 Der Anstoß zu diesem Projekt kam von meinem Bruder, einem langjährigen Debian-Nutzer, der Piper als nützliche Lösung für lokales TTS identifizierte.
 
 ---
 
-## 🤖 Credits & "Vibe Coding"
+## Credits & "Vibe Coding"
 
 Das Projekt **PiperRead** ist das Ergebnis einer hybriden **Mensch-KI**-Zusammenarbeit:
 

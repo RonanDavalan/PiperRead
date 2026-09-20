@@ -9,13 +9,13 @@
   <img src="https://img.shields.io/badge/Language-Python_|_Bash-blue" alt="Code">
 </p>
 
-**🇺🇸 English** | [🇫🇷 Français](docs/fr-FR/README.md) | [🇩🇪 Deutsch](docs/de-DE/README.md) | [🇪🇸 Español](docs/es-ES/README.md)
+**English** | [Français](docs/fr-FR/README.md) | [Deutsch](docs/de-DE/README.md) | [Español](docs/es-ES/README.md)
 
 ## Description
 
 **PiperRead** is a lightweight automation solution designed to bring high-quality neural text-to-speech (TTS) to Linux desktops.
 
-🌐 **Official Website**: [piperread.davalan.fr](https://piperread.davalan.fr)
+**Official Website**: [piperread.davalan.fr](https://piperread.davalan.fr)
 
 Unlike cloud-based solutions, PiperRead operates entirely offline (locally) thanks to the [Piper](https://github.com/OHF-voice/piper1-gpl) engine. It acts as a bridge between your desktop environment (Clipboard/Mouse) and the synthesis engine.
 
@@ -37,7 +37,7 @@ It allows you to read aloud any text selected with the mouse or copied to the cl
 
 ---
 
-## 🛠️ Prerequisites
+## Prerequisites
 
 Before installing, ensure your system has the required audio and clipboard tools.
 
@@ -52,7 +52,7 @@ sudo apt install -y python3 python3-venv python3-pip alsa-utils wl-clipboard xse
 
 ---
 
-## 💾 Installation
+## Installation
 
 Since this project relies on large voice models and a specific virtual environment, you must initialize the project after cloning it.
 
@@ -107,7 +107,7 @@ update-desktop-database $HOME/.local/share/applications
 
 ---
 
-## 🚀 Usage
+## Usage
 
 ### Method 1: Mouse Selection (Recommended)
 
@@ -126,7 +126,7 @@ update-desktop-database $HOME/.local/share/applications
 
 ---
 
-## 💎 Quality
+## Quality
 
 This project was born from a discovery: the impressive quality of the **Piper** engine for a fully free and local solution.
 
@@ -136,13 +136,13 @@ This project was born from a discovery: the impressive quality of the **Piper** 
 
 ---
 
-## 💡 Project Origin
+## Project Origin
 
 The impetus for this project comes from my brother, a historic Debian user, who identified Piper as a useful solution for local TTS.
 
 ---
 
-## 🤖 Credits & "Vibe Coding"
+## Credits & "Vibe Coding"
 
 The **PiperRead** project is the result of a hybrid **Human-AI** collaboration:
 
