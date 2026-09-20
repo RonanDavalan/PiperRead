@@ -1,21 +1,30 @@
 #!/bin/bash
 
-# ==================================================================================
-# PROJET     : PiperRead
-# VERSION    : 0.1-Alpha
-# DESCRIPTION: Orchestrateur de synthèse vocale neuronale locale (Wayland & X11).
-#              Lit le texte sélectionné ou le presse-papiers via le moteur Piper.
+# read.sh — lit à voix haute le texte sélectionné ou copié, avec le moteur Piper.
 #
-# ARCHITECTE : Ronan Davalan
-# CO-PILOTES : Google Gemini, Claude (Anthropic), Perplexity
-# LICENCE    : MIT
-# DÉPÔT      : https://github.com/RonanDavalan/PiperRead
-# SITE WEB   : https://piperread.davalan.fr
-# ==================================================================================
+# Pourquoi ce fichier existe :
+#     Écouter un texte sans le confier à un service en ligne : la synthèse est
+#     neuronale et entièrement locale, et le texte est pris dans la sélection
+#     ou le presse-papiers, sous Wayland comme sous X11.
+#
+# Usage :
+#     read.sh [auto|selection|clipboard]
+#     auto (défaut) lit la sélection à la souris, à défaut le presse-papiers.
+#
+# Dépend de : utils/cleaner.sh, piper-env/ (moteur), voices/ (voix .onnx),
+#     wl-paste ou xsel, aplay, notify-send.
+
+VERSION="0.1.2-alpha"
 
 # --- CONFIGURATION DYNAMIQUE ---
 BASE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-MODEL_PATH="$BASE_DIR/voices/fr_FR-siwis-medium.onnx"
+# Première voix par ordre alphabétique : celle que l'installation a téléchargée,
+# quelle que soit la langue.
+MODEL_PATH=""
+for voice in "$BASE_DIR"/voices/*.onnx; do
+    if [ -f "$voice" ]; then MODEL_PATH="$voice"; break; fi
+done
+if [ -z "$MODEL_PATH" ]; then MODEL_PATH="$BASE_DIR/voices/fr_FR-siwis-medium.onnx"; fi
 VENV_PATH="$BASE_DIR/piper-env"
 
 # --- NETTOYAGE ---
