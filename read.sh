@@ -79,11 +79,8 @@ msg() {
 alert() {
     local text
     text=$(msg "$@")
-    if command -v notify-send &> /dev/null; then
-        notify-send "$APP_NAME" "$text"
-    else
-        echo "$APP_NAME : $text" >&2
-    fi
+    echo "$APP_NAME : $text" >&2
+    if command -v notify-send &> /dev/null; then notify-send "$APP_NAME" "$text"; fi
 }
 
 # --- GESTION PRESSE-PAPIERS (Wayland & X11) ---
