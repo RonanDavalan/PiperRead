@@ -2,7 +2,7 @@
 # PiperRead
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-v0.1.1--Alpha-orange" alt="Version">
+  <img src="https://img.shields.io/static/v1?label=Version&message=v0.1.2-alpha&color=orange" alt="Version">
   <img src="https://img.shields.io/badge/License-MIT-green" alt="License">
   <img src="https://img.shields.io/badge/Platform-Linux_(Wayland_|_X11)-black" alt="Supported OS">
   <img src="https://img.shields.io/badge/Engine-Piper_Neural_TTS-blueviolet" alt="Audio Engine">
@@ -17,7 +17,7 @@
 
 🌐 **Official Website**: [piperread.davalan.fr](https://piperread.davalan.fr)
 
-Unlike cloud-based solutions, PiperRead operates entirely offline (locally) thanks to the [Piper](https://github.com/rhasspy/piper) engine. It acts as a bridge between your desktop environment (Clipboard/Mouse) and the synthesis engine.
+Unlike cloud-based solutions, PiperRead operates entirely offline (locally) thanks to the [Piper](https://github.com/OHF-voice/piper1-gpl) engine. It acts as a bridge between your desktop environment (Clipboard/Mouse) and the synthesis engine.
 
 It allows you to read aloud any text selected with the mouse or copied to the clipboard, without requiring a complex screen reader.
 
@@ -47,7 +47,7 @@ sudo apt update
 
 # Install Python, Audio, and Clipboard tools
 # (Installs both wl-clipboard for Wayland and xsel for X11 to ensure compatibility)
-sudo apt install -y python3 python3-venv python3-pip alsa-utils wl-clipboard xsel
+sudo apt install -y python3 python3-venv python3-pip alsa-utils wl-clipboard xsel libnotify-bin
 ```
 
 ---
@@ -149,4 +149,4 @@ The **PiperRead** project is the result of a hybrid **Human-AI** collaboration:
 *   **Ronan Davalan**: Project Lead, Chief Architect, Quality Assurance (QA).
 *   **Google Gemini**: AI Architect, Planner, Technical Writer.
 *   **Claude (Anthropic)** & **Perplexity**: AI Technical Consultants (Code review and optimization).
-*   **Core Engine**: [Piper TTS](https://github.com/rhasspy/piper) by Rhasspy.
+*   **Core Engine**: [Piper TTS](https://github.com/OHF-voice/piper1-gpl), licensed GPL-3.0-or-later. It is installed on your machine by `pip` and called as an external program; PiperRead does not redistribute it.

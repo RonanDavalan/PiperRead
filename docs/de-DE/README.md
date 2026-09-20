@@ -1,7 +1,7 @@
 # PiperRead
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-v0.1.1--Alpha-orange" alt="Version">
+  <img src="https://img.shields.io/static/v1?label=Version&message=v0.1.2-alpha&color=orange" alt="Version">
   <img src="https://img.shields.io/badge/Lizenz-MIT-green" alt="Lizenz">
   <img src="https://img.shields.io/badge/Plattform-Linux_(Wayland_|_X11)-black" alt="Unterstütztes OS">
   <img src="https://img.shields.io/badge/Engine-Piper_Neural_TTS-blueviolet" alt="Audio-Engine">
@@ -16,7 +16,7 @@
 
 🌐 **Offizielle Website**: [piperread.davalan.fr](https://piperread.davalan.fr)
 
-Im Gegensatz zu Cloud-Lösungen arbeitet PiperRead dank der [Piper](https://github.com/rhasspy/piper)-Engine vollständig offline (lokal). Es fungiert als Brücke zwischen Ihrer Desktop-Umgebung (Zwischenablage/Maus) und der Synthese-Engine.
+Im Gegensatz zu Cloud-Lösungen arbeitet PiperRead dank der [Piper](https://github.com/OHF-voice/piper1-gpl)-Engine vollständig offline (lokal). Es fungiert als Brücke zwischen Ihrer Desktop-Umgebung (Zwischenablage/Maus) und der Synthese-Engine.
 
 Es ermöglicht das Vorlesen jedes mit der Maus ausgewählten oder in die Zwischenablage kopierten Textes, ohne dass ein komplexer Screenreader erforderlich ist.
 
@@ -46,7 +46,7 @@ sudo apt update
 
 # Installation von Python, Audio und Zwischenablage-Tools
 # (Installiert sowohl wl-clipboard für Wayland als auch xsel für X11, um Kompatibilität zu gewährleisten)
-sudo apt install -y python3 python3-venv python3-pip alsa-utils wl-clipboard xsel
+sudo apt install -y python3 python3-venv python3-pip alsa-utils wl-clipboard xsel libnotify-bin
 ```
 
 ---
@@ -148,4 +148,4 @@ Das Projekt **PiperRead** ist das Ergebnis einer hybriden **Mensch-KI**-Zusammen
 *   **Ronan Davalan**: Projektleiter, Chefarchitekt, Qualitätssicherung (QA).
 *   **Google Gemini**: KI-Architekt, Planer, Technischer Redakteur.
 *   **Claude (Anthropic)** & **Perplexity**: Technische KI-Berater (Code-Review und Optimierung).
-*   **Kern-Engine**: [Piper TTS](https://github.com/rhasspy/piper) von Rhasspy.
+*   **Kern-Engine**: [Piper TTS](https://github.com/OHF-voice/piper1-gpl), lizenziert unter GPL-3.0-or-later. Es wird per `pip` auf Ihrem Rechner installiert und als externes Programm aufgerufen; PiperRead verteilt es nicht weiter.

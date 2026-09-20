@@ -1,7 +1,7 @@
 # PiperRead
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-v0.1.1--Alpha-orange" alt="Version">
+  <img src="https://img.shields.io/static/v1?label=Version&message=v0.1.2-alpha&color=orange" alt="Version">
   <img src="https://img.shields.io/badge/Licence-MIT-green" alt="Licence">
   <img src="https://img.shields.io/badge/Plateforme-Linux_(Wayland_|_X11)-black" alt="OS supporté">
   <img src="https://img.shields.io/badge/Moteur-Piper_Neural_TTS-blueviolet" alt="Moteur audio">
@@ -16,7 +16,7 @@
 
 🌐 **Site officiel** : [piperread.davalan.fr](https://piperread.davalan.fr)
 
-Contrairement aux solutions cloud, PiperRead fonctionne entièrement hors-ligne (local) grâce au moteur [Piper](https://github.com/rhasspy/piper). Il fait le pont entre votre environnement de bureau (presse-papiers/souris) et le moteur de synthèse.
+Contrairement aux solutions cloud, PiperRead fonctionne entièrement hors-ligne (local) grâce au moteur [Piper](https://github.com/OHF-voice/piper1-gpl). Il fait le pont entre votre environnement de bureau (presse-papiers/souris) et le moteur de synthèse.
 
 Il permet de lire à haute voix n'importe quel texte sélectionné à la souris ou copié dans le presse-papiers, sans nécessiter de lecteur d'écran complexe.
 
@@ -46,7 +46,7 @@ sudo apt update
 
 # Installation de Python, audio et outils presse-papiers
 # (Installe à la fois wl-clipboard pour Wayland et xsel pour X11 pour garantir la compatibilité)
-sudo apt install -y python3 python3-venv python3-pip alsa-utils wl-clipboard xsel
+sudo apt install -y python3 python3-venv python3-pip alsa-utils wl-clipboard xsel libnotify-bin
 ```
 
 ---
@@ -148,4 +148,4 @@ Le projet **PiperRead** est le résultat d'une collaboration hybride **Humain-IA
 *   **Ronan Davalan** : chef de projet, architecte principal, assurance qualité (QA).
 *   **Google Gemini** : architecte IA, planificateur, rédacteur technique.
 *   **Claude (Anthropic)** & **Perplexity** : consultants techniques IA (revue de code et optimisation).
-*   **Moteur Core** : [Piper TTS](https://github.com/rhasspy/piper) par Rhasspy.
+*   **Moteur Core** : [Piper TTS](https://github.com/OHF-voice/piper1-gpl), sous licence GPL-3.0-or-later. Il est installé sur votre machine par `pip` et appelé comme programme externe ; PiperRead ne le redistribue pas.
