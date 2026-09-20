@@ -48,7 +48,21 @@ if [ -d "$BASE_DIR/piper-env" ]; then VENV_PATH="$BASE_DIR/piper-env"; else VENV
 cleanup() {
     if [ -n "$VIRTUAL_ENV" ]; then deactivate; fi
 }
-trap cleanup SIGINT SIGTERM EXIT
+trap cleanup EXIT
+
+# La lecture vit dans son propre groupe : sans ce piège, Ctrl-C ne l'atteindrait
+# pas et elle continuerait sans que le fichier de suivi la désigne.
+PIPELINE_PID=""
+interrupt() {
+    if [ -n "$PIPELINE_PID" ]; then
+        kill -TERM -- "-$PIPELINE_PID" 2>/dev/null || kill -TERM "$PIPELINE_PID" 2>/dev/null
+        kill -CONT -- "-$PIPELINE_PID" 2>/dev/null
+        if [ "$(cat "$RUN/group" 2>/dev/null)" == "$PIPELINE_PID" ]; then rm -f "$RUN/group"; fi
+    fi
+    exit "$1"
+}
+trap 'interrupt 130' SIGINT
+trap 'interrupt 143' SIGTERM
 
 # --- NETTOYAGE MARKDOWN ---
 source "$BASE_DIR/utils/cleaner.sh"
@@ -84,6 +98,7 @@ alert() {
 }
 
 # --- GESTION PRESSE-PAPIERS (Wayland & X11) ---
+# Un contenu fait d'espaces et de retours à la ligne est traité comme vide.
 get_clipboard() {
     local mode="$1"
     local content=""
@@ -95,7 +110,7 @@ get_clipboard() {
         else
             content=$(wl-paste --no-newline 2>/dev/null)
         fi
-        if [ -n "$content" ]; then
+        if [[ "$content" =~ [^[:space:]] ]]; then
             echo "$content"
             return 0
         fi
@@ -108,7 +123,7 @@ get_clipboard() {
         else
             content=$(xsel --clipboard --output 2>/dev/null)
         fi
-        if [ -n "$content" ]; then
+        if [[ "$content" =~ [^[:space:]] ]]; then
             echo "$content"
             return 0
         fi
@@ -236,10 +251,12 @@ play_text() {
     setsid bash -c 'piper --model "$1" --length-scale "$3" --output_raw | aplay -r "$2" -f S16_LE -t raw - 2>/dev/null' \
         piperread-pipeline "$MODEL_PATH" "$rate" "$LENGTH_SCALE" 9>&- <<< "$text" &
     pid=$!
+    PIPELINE_PID="$pid"
     echo "$pid" > "$RUN/group.$pid" && mv -f "$RUN/group.$pid" "$RUN/group"
     exec 9>&-
 
     wait "$pid"
+    PIPELINE_PID=""
 
     # Ne retire le fichier que s'il porte encore cette lecture : une relance a pu
     # le remplacer entre-temps.
