@@ -145,7 +145,7 @@ L'impulsion de ce projet vient de mon frère, utilisateur historique de Debian, 
 
 Le projet **PiperRead** est le résultat d'une collaboration hybride **Humain-IA** :
 
-*   **Ronan Davalan** : chef de projet, architecte principal, assurance qualité (QA).
-*   **Google Gemini** : architecte IA, planificateur, rédacteur technique.
-*   **Claude (Anthropic)** & **Perplexity** : consultants techniques IA (revue de code et optimisation).
+*   **Ronan Davalan** : architecte et arbitre. Vision produit, exigences de sécurité, direction du projet, validation et tests. Toutes les décisions d'architecture sont validées par lui.
+*   **Claude Code (Anthropic)** : ingénieur systèmes et développeur principal. Implémentation des scripts Bash, de la documentation et du site ; choix techniques dans l'architecture validée. Auteur principal du code source.
+*   **Google Gemini** : synthétiseur et conseiller stratégique. Analyse d'architecture indépendante, résolution de conflits logiques, optimisation du flux de travail, validation croisée des décisions techniques.
 *   **Moteur Core** : [Piper TTS](https://github.com/OHF-voice/piper1-gpl), sous licence GPL-3.0-or-later. Il est installé sur votre machine par `pip` et appelé comme programme externe ; PiperRead ne le redistribue pas.
