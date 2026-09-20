@@ -62,11 +62,16 @@ default_voice() {
     return 1
 }
 
+config_file_path() {
+    echo "${XDG_CONFIG_HOME:-$HOME/.config}/piperread/piperread.conf"
+}
+
 load_config_file() {
-    local file="${XDG_CONFIG_HOME:-$HOME/.config}/piperread/piperread.conf"
+    local file
     local -A raw=()
     local key value
 
+    file=$(config_file_path)
     CONFIG_FILE_VALUES=()
     CONFIG_UNKNOWN_KEYS=()
     read_flat_file "$file" raw || return 0

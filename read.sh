@@ -10,19 +10,27 @@
 # Usage :
 #     read.sh [auto|selection|clipboard] [--speed X] [--voice NOM] [--lang CODE]
 #     read.sh --stop | --pause | --resume
+#     read.sh --version | --diagnose
 #     auto (défaut) lit la sélection à la souris, à défaut le presse-papiers.
 #     --speed : multiplicateur de vitesse de 0,5 à 3,0 (1 = voix naturelle).
 #     --stop arrête la lecture en cours ; relancer read.sh coupe la précédente.
 #     --pause la suspend, --resume la reprend là où elle s'était arrêtée.
+#     --diagnose contrôle l'installation (code 1 s'il y a un échec), sans rien lire ni jouer.
 #     Chaque réglage vient de l'option, sinon de PIPERREAD_SPEED, PIPERREAD_VOICE
 #     ou PIPERREAD_LANG, sinon de ~/.config/piperread/piperread.conf.
 #
-# Dépend de : utils/cleaner.sh, utils/flatfile.sh, utils/config.sh, lang/ (messages), piper-env/
+# Dépend de : utils/cleaner.sh, utils/flatfile.sh, utils/config.sh, utils/diagnose.sh, lang/ (messages), piper-env/
 #     (moteur), voices/ (voix .onnx), wl-paste ou xsel, aplay, setsid, flock,
 #     notify-send.
 
 VERSION="0.1.2-alpha"
 APP_NAME="PiperRead"
+
+# Avant tout le reste : aucun message, aucune dépendance ni dossier touchés.
+for arg in "$@"; do
+    if [ "$arg" == "--version" ]; then echo "piperread $VERSION"; exit 0; fi
+done
+unset arg
 
 # --- CONFIGURATION DYNAMIQUE ---
 BASE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -45,6 +53,7 @@ source "$BASE_DIR/utils/cleaner.sh"
 # --- MESSAGES ---
 source "$BASE_DIR/utils/flatfile.sh"
 source "$BASE_DIR/utils/config.sh"
+source "$BASE_DIR/utils/diagnose.sh"
 declare -A MSG
 
 # L'anglais est chargé d'abord : il comble toute clé absente d'une autre langue.
@@ -140,15 +149,20 @@ check_dependencies() {
 # --- TAUX D'ECHANTILLONNAGE ---
 # Les voix de Piper vont de 16 000 à 44 100 Hz : jouées à un autre taux, elles
 # sortent trop rapides ou trop lentes.
-voice_rate() {
+read_voice_rate() {
     local rate
     rate=$(sed -n 's/.*"sample_rate": *\([0-9][0-9]*\).*/\1/p' "$1.json" 2>/dev/null | head -n 1)
     if [[ "$rate" =~ ^[0-9]+$ ]] && [ "$rate" -ge 8000 ] && [ "$rate" -le 48000 ]; then
         echo "$rate"
     else
-        alert rate_unreadable
-        echo 22050
+        return 1
     fi
+}
+
+voice_rate() {
+    read_voice_rate "$1" && return 0
+    alert rate_unreadable
+    echo 22050
 }
 
 # --- ARRET, PAUSE ET REPRISE ---
@@ -241,7 +255,7 @@ parse_arguments() {
     MODE="auto"
     while [ $# -gt 0 ]; do
         case "$1" in
-            --stop|--pause|--resume|auto|selection|clipboard) MODE="$1" ;;
+            --stop|--pause|--resume|--diagnose|auto|selection|clipboard) MODE="$1" ;;
             --speed|--voice|--lang)
                 if [ $# -lt 2 ]; then PARSE_ERROR="missing:$1"; return 1; fi
                 OPT_VALUES["${1#--}"]="$2"
@@ -311,12 +325,16 @@ if [ -n "$RESOLVED_VALUE" ]; then
 else
     MODEL_PATH=$(default_voice) || MODEL_PATH=""
 fi
-emit_setting_warnings
+if [ "$MODE" != "--diagnose" ]; then emit_setting_warnings; fi
 
 # --- LOGIQUE INTELLIGENTE ---
 TEXT=""
 
 case "$MODE" in
+    --diagnose)
+        run_diagnose
+        exit $?
+        ;;
     --stop|--pause|--resume)
         RUN=$(runtime_dir) || exit 1
         exec 9>"$RUN/lock"
