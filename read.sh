@@ -21,14 +21,19 @@ APP_NAME="PiperRead"
 
 # --- CONFIGURATION DYNAMIQUE ---
 BASE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/piperread"
+
+# Un clone fonctionne sans installation : ses dossiers, s'ils existent, passent
+# avant ceux d'un paquet, dont le moteur est système et les voix personnelles.
+if [ -d "$BASE_DIR/voices" ]; then VOICES_DIR="$BASE_DIR/voices"; else VOICES_DIR="$DATA_DIR/voices"; fi
+if [ -d "$BASE_DIR/piper-env" ]; then VENV_PATH="$BASE_DIR/piper-env"; else VENV_PATH="/usr/lib/piperread/venv"; fi
+
 # Première voix par ordre alphabétique : celle que l'installation a téléchargée,
 # quelle que soit la langue.
 MODEL_PATH=""
-for voice in "$BASE_DIR"/voices/*.onnx; do
+for voice in "$VOICES_DIR"/*.onnx; do
     if [ -f "$voice" ]; then MODEL_PATH="$voice"; break; fi
 done
-if [ -z "$MODEL_PATH" ]; then MODEL_PATH="$BASE_DIR/voices/fr_FR-siwis-medium.onnx"; fi
-VENV_PATH="$BASE_DIR/piper-env"
 
 # --- NETTOYAGE ---
 cleanup() {
@@ -133,6 +138,20 @@ check_dependencies() {
     fi
 }
 
+# --- TAUX D'ECHANTILLONNAGE ---
+# Les voix de Piper vont de 16 000 à 44 100 Hz : jouées à un autre taux, elles
+# sortent trop rapides ou trop lentes.
+voice_rate() {
+    local rate
+    rate=$(sed -n 's/.*"sample_rate": *\([0-9][0-9]*\).*/\1/p' "$1.json" 2>/dev/null | head -n 1)
+    if [[ "$rate" =~ ^[0-9]+$ ]] && [ "$rate" -ge 8000 ] && [ "$rate" -le 48000 ]; then
+        echo "$rate"
+    else
+        alert rate_unreadable
+        echo 22050
+    fi
+}
+
 # --- ARRET ---
 # Le verrou fd 9 doit être tenu par l'appelant. L'identifiant n'est utilisé que si
 # le processus porte encore la marque du pipeline : un fichier périmé pourrait
@@ -154,7 +173,7 @@ stop_reading() {
 play_text() {
     local raw_text="$1"
     local text=$(clean_markdown "$raw_text")
-    local rate=22050 pid
+    local rate pid
 
     RUN=$(runtime_dir) || exit 1
     exec 9>"$RUN/lock"
@@ -164,6 +183,9 @@ play_text() {
     stop_reading
 
     if [ -z "$text" ]; then exec 9>&-; return 1; fi
+
+    if [ -z "$MODEL_PATH" ]; then alert voice_missing; exit 1; fi
+    rate=$(voice_rate "$MODEL_PATH")
 
     # Activation environnement virtuel
     if [ -f "$VENV_PATH/bin/activate" ]; then
