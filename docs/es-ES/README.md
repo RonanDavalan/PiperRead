@@ -1,7 +1,7 @@
 # PiperRead
 
 <p align="center">
-  <img src="https://img.shields.io/static/v1?label=Version&message=v0.1.2-alpha&color=orange" alt="Version">
+  <img src="https://img.shields.io/static/v1?label=Version&message=v0.2.0-alpha&color=orange" alt="Version">
   <img src="https://img.shields.io/badge/Licencia-MIT-green" alt="Licencia">
   <img src="https://img.shields.io/badge/Plataforma-Linux_(Wayland_|_X11)-black" alt="OS soportado">
   <img src="https://img.shields.io/badge/Motor-Piper_Neural_TTS-blueviolet" alt="Motor de audio">
