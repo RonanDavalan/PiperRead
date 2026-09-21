@@ -55,7 +55,7 @@ una vez con **\--download-voice** y después funciona sin red.
     la voz.
 
 **\--voice** *NOMBRE*
-:   Voz que se usará, tal como la lista **\--list-voices**.
+:   Voz que se usará, tal como aparece en **\--list-voices**.
 
 **\--lang** *CÓDIGO*
 :   Idioma de los mensajes y de la voz por defecto (`en`, `fr`, `de` o `es`).
@@ -118,7 +118,7 @@ falla una comprobación del diagnóstico, `2` en caso de error de uso.
 
 # AUTOR
 
-Ronan Davalan. Código fuente y notificación de errores: <https://github.com/RonanDavalan/PiperRead>.
+Ronan Davalan. Código fuente e incidencias: <https://github.com/RonanDavalan/PiperRead>.
 
 # LICENCIA
 

@@ -119,7 +119,7 @@ oder eine Prüfung der Diagnose fehlschlägt, `2` bei einem Aufruffehler.
 
 # AUTOR
 
-Ronan Davalan. Quellcode und Fehlermeldungen: <https://github.com/RonanDavalan/PiperRead>.
+Ronan Davalan. Quellcode und Fehlerverfolgung: <https://github.com/RonanDavalan/PiperRead>.
 
 # LIZENZ
 
