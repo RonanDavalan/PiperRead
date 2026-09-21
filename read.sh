@@ -44,6 +44,9 @@ DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/piperread"
 if [ -d "$BASE_DIR/voices" ]; then VOICES_DIR="$BASE_DIR/voices"; else VOICES_DIR="$DATA_DIR/voices"; fi
 if [ -d "$BASE_DIR/piper-env" ]; then VENV_PATH="$BASE_DIR/piper-env"; else VENV_PATH="/usr/lib/piperread/venv"; fi
 
+# Les messages citent la commande que l'utilisateur tape : celle du paquet n'est pas read.sh.
+if [ "$BASE_DIR" == "/usr/lib/piperread" ]; then COMMAND_NAME="piperread"; else COMMAND_NAME="read.sh"; fi
+
 # --- NETTOYAGE ---
 cleanup() {
     if [ -n "$VIRTUAL_ENV" ]; then deactivate; fi
@@ -85,6 +88,7 @@ load_messages() {
 
 msg() {
     local text="${MSG[$1]:-$1}"
+    text="${text//\{cmd\}/"$COMMAND_NAME"}"
     text="${text//\{1\}/"$2"}"
     text="${text//\{2\}/"$3"}"
     echo "${text//\{3\}/"$4"}"
