@@ -12,7 +12,7 @@ piperread - read the selected or copied text aloud, offline, with the Piper engi
 
 **piperread** {**\--stop** | **\--pause** | **\--resume**}
 
-**piperread** {**\--version** | **\--diagnose**}
+**piperread** {**\--version** | **\--diagnose** | **\--help**}
 
 **piperread** **\--list-voices**
 
@@ -77,6 +77,10 @@ downloaded once with **\--download-voice**, then works without network.
 
 **\--version**
 :   Print the version and exit.
+
+**\--help**
+:   Print a summary of the options, in the language of the messages,
+    and exit.
 
 # CONFIGURATION
 

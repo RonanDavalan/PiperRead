@@ -12,7 +12,7 @@ piperread - markierten oder kopierten Text offline mit der Piper-Engine vorlesen
 
 **piperread** {**\--stop** | **\--pause** | **\--resume**}
 
-**piperread** {**\--version** | **\--diagnose**}
+**piperread** {**\--version** | **\--diagnose** | **\--help**}
 
 **piperread** **\--list-voices**
 
@@ -82,6 +82,10 @@ heruntergeladen und funktioniert danach ohne Netzwerk.
 
 **\--version**
 :   Die Version ausgeben und beenden.
+
+**\--help**
+:   Eine Übersicht der Optionen in der Sprache der Meldungen ausgeben und
+    beenden.
 
 # KONFIGURATION
 

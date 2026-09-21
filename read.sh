@@ -10,13 +10,14 @@
 # Usage :
 #     read.sh [auto|selection|clipboard] [--speed X] [--voice NOM] [--lang CODE]
 #     read.sh --stop | --pause | --resume
-#     read.sh --version | --diagnose
+#     read.sh --version | --diagnose | --help
 #     read.sh --list-voices | --download-voice [NOM...]
 #     auto (défaut) lit la sélection à la souris, à défaut le presse-papiers.
 #     --speed : multiplicateur de vitesse de 0,5 à 3,0 (1 = voix naturelle).
 #     --stop arrête la lecture en cours ; relancer read.sh coupe la précédente.
 #     --pause la suspend, --resume la reprend là où elle s'était arrêtée.
 #     --diagnose contrôle l'installation (code 1 s'il y a un échec), sans rien lire ni jouer.
+#     --help affiche l'aide dans la langue des messages, sur la sortie standard.
 #     --list-voices affiche les voix proposées, avec leur licence, sans réseau.
 #     --download-voice télécharge les voix nommées ; sans nom, propose celle de la langue.
 #     Chaque réglage vient de l'option, sinon de PIPERREAD_SPEED, PIPERREAD_VOICE
@@ -270,6 +271,36 @@ play_text() {
     exec 9>&-
 }
 
+# --- AIDE ---
+print_help() {
+    local name
+    echo "$APP_NAME $VERSION"
+    msg help_intro
+    echo
+    msg help_usage_title
+    echo "  $(msg help_usage_read)"
+    echo "  $COMMAND_NAME --stop | --pause | --resume"
+    echo "  $(msg help_usage_download)"
+    echo "  $COMMAND_NAME --list-voices | --diagnose | --version | --help"
+    echo
+    msg help_source_title
+    for name in auto selection clipboard; do
+        printf '  %-18s %s\n' "$name" "$(msg "help_source_$name")"
+    done
+    echo
+    msg help_options_title
+    for name in speed voice lang stop pause resume list-voices download-voice diagnose version help; do
+        printf '  %-18s %s\n' "--$name" "$(msg "help_opt_${name//-/_}")"
+    done
+    echo
+    msg help_settings_title
+    echo "  1. $(msg help_settings_option)"
+    echo "  2. $(msg help_settings_env)"
+    echo "  3. $(msg help_settings_file "$(config_file_path)")"
+    echo
+    msg help_more
+}
+
 # --- ARGUMENTS ---
 PARSE_ERROR=""
 parse_arguments() {
@@ -277,7 +308,7 @@ parse_arguments() {
     MODE="auto"
     while [ $# -gt 0 ]; do
         case "$1" in
-            --stop|--pause|--resume|--diagnose|--list-voices|auto|selection|clipboard) MODE="$1" ;;
+            --stop|--pause|--resume|--diagnose|--list-voices|--help|auto|selection|clipboard) MODE="$1" ;;
             --download-voice)
                 MODE="$1"
                 while [ $# -gt 1 ] && [[ "$2" != -* ]]; do DOWNLOAD_NAMES+=("$2"); shift; done
@@ -340,6 +371,11 @@ if [[ "$PARSE_ERROR" == missing:* ]]; then
 elif [ -n "$PARSE_ERROR" ]; then
     alert unknown_option "$PARSE_ERROR"
     exit 2
+fi
+# L'aide répond même si un réglage est invalide : c'est là qu'on cherche la valeur juste.
+if [ "$MODE" == "--help" ]; then
+    print_help
+    exit 0
 fi
 if [ "$LANG_STATUS" -eq 2 ]; then refuse_option; fi
 

@@ -12,7 +12,7 @@ piperread - leer en voz alta el texto seleccionado o copiado, sin conexión, con
 
 **piperread** {**\--stop** | **\--pause** | **\--resume**}
 
-**piperread** {**\--version** | **\--diagnose**}
+**piperread** {**\--version** | **\--diagnose** | **\--help**}
 
 **piperread** **\--list-voices**
 
@@ -80,6 +80,10 @@ una vez con **\--download-voice** y después funciona sin red.
 
 **\--version**
 :   Mostrar la versión y salir.
+
+**\--help**
+:   Mostrar un resumen de las opciones, en el idioma de los mensajes, y
+    salir.
 
 # CONFIGURACIÓN
 
