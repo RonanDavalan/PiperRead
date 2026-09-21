@@ -36,9 +36,36 @@ Permite leer en voz alta cualquier texto seleccionado con el ratón o copiado en
 
 ---
 
+## Instalación desde un paquete
+
+La vía más sencilla. Descargue el paquete de su sistema desde la [página de descargas](https://piperread.davalan.fr/es/download/) o desde la [última Release](https://github.com/RonanDavalan/PiperRead/releases/latest) e instálelo:
+
+```bash
+# Debian 12 y 13, Ubuntu 22.04 y 24.04, Linux Mint
+sudo apt install ./piperread_0.2.0~alpha_all.deb
+
+# Fedora 42
+sudo dnf install ./piperread-0.2.0~alpha-1.fc42.noarch.rpm
+
+# openSUSE Leap 15.6
+sudo zypper install ./piperread-0.2.0~alpha-1.leap156.noarch.rpm
+
+# Arch Linux
+sudo pacman -U piperread-0.2.0alpha-1-any.pkg.tar.zst
+```
+
+El paquete instala el motor Piper con `pip` al configurarse: unos 75 MB de descarga (200 a 250 MB una vez instalado), con acceso a la red solo en ese momento. No incluye ninguna voz. Descargue una y compruebe después la instalación:
+
+```bash
+piperread --download-voice
+piperread --diagnose
+```
+
+Los paquetes se validaron en contenedores (instalación, diagnóstico y desinstalación) en cada distribución y versión indicadas arriba. El manual está disponible como página (`man piperread`) y como PDF en cuatro idiomas en la página de descargas.
+
 ## Requisitos previos
 
-Antes de la instalación, asegúrese de que su sistema dispone de las herramientas de audio y portapapeles necesarias.
+Antes de la instalación desde las fuentes, asegúrese de que su sistema dispone de las herramientas de audio y portapapeles necesarias.
 
 ```bash
 # Actualización del sistema
@@ -51,7 +78,7 @@ sudo apt install -y python3 python3-venv python3-pip alsa-utils wl-clipboard xse
 
 ---
 
-## Instalación
+## Instalación desde las fuentes
 
 Dado que este proyecto se basa en modelos vocales pesados y un entorno virtual específico, debe inicializar el proyecto después de clonarlo.
 
@@ -117,7 +144,7 @@ update-desktop-database $HOME/.local/share/applications
 
 ### Detener la lectura
 
-*Limitación Alpha actual*: para detener la lectura en curso, ejecute `pkill -f aplay` en una terminal.
+Ejecute `piperread --stop` (o `./read.sh --stop` desde un clon) para terminar la lectura, `--pause` para suspenderla y `--resume` para reanudarla donde se detuvo. Asigne estos comandos a atajos de teclado si lo desea.
 
 ---
 

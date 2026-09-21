@@ -36,9 +36,36 @@ Es ermöglicht das Vorlesen jedes mit der Maus ausgewählten oder in die Zwische
 
 ---
 
+## Installation aus einem Paket
+
+Der einfachste Weg. Laden Sie das Paket für Ihr System von der [Download-Seite](https://piperread.davalan.fr/de/download/) oder aus dem [neuesten Release](https://github.com/RonanDavalan/PiperRead/releases/latest) herunter und installieren Sie es:
+
+```bash
+# Debian 12 und 13, Ubuntu 22.04 und 24.04, Linux Mint
+sudo apt install ./piperread_0.2.0~alpha_all.deb
+
+# Fedora 42
+sudo dnf install ./piperread-0.2.0~alpha-1.fc42.noarch.rpm
+
+# openSUSE Leap 15.6
+sudo zypper install ./piperread-0.2.0~alpha-1.leap156.noarch.rpm
+
+# Arch Linux
+sudo pacman -U piperread-0.2.0alpha-1-any.pkg.tar.zst
+```
+
+Das Paket installiert die Piper-Engine beim Konfigurieren mit `pip`: etwa 75 MB Download (200 bis 250 MB nach der Installation), Netzzugriff nur in diesem Moment. Es enthält keine Stimme. Laden Sie eine herunter und prüfen Sie dann die Installation:
+
+```bash
+piperread --download-voice
+piperread --diagnose
+```
+
+Die Pakete wurden in Containern (Installation, Diagnose und Entfernung) auf jeder oben genannten Distribution und Version validiert. Das Handbuch gibt es als Handbuchseite (`man piperread`) und als PDF in vier Sprachen auf der Download-Seite.
+
 ## Voraussetzungen
 
-Stellen Sie vor der Installation sicher, dass Ihr System über die erforderlichen Audio- und Zwischenablage-Tools verfügt.
+Stellen Sie vor der Installation aus den Quellen sicher, dass Ihr System über die erforderlichen Audio- und Zwischenablage-Tools verfügt.
 
 ```bash
 # Systemaktualisierung
@@ -51,7 +78,7 @@ sudo apt install -y python3 python3-venv python3-pip alsa-utils wl-clipboard xse
 
 ---
 
-## Installation
+## Installation aus den Quellen
 
 Da dieses Projekt auf großen Sprachmodellen und einer spezifischen virtuellen Umgebung basiert, müssen Sie das Projekt nach dem Klonen initialisieren.
 
@@ -117,7 +144,7 @@ update-desktop-database $HOME/.local/share/applications
 
 ### Wiedergabe stoppen
 
-*Aktuelle Alpha-Einschränkung*: Um die laufende Wiedergabe zu stoppen, führen Sie `pkill -f aplay` in einem Terminal aus.
+Führen Sie `piperread --stop` (aus einem Klon `./read.sh --stop`) aus, um das Vorlesen zu beenden, `--pause`, um es zu unterbrechen, und `--resume`, um es dort fortzusetzen, wo es stehen blieb. Binden Sie diese Befehle bei Bedarf an Tastenkürzel.
 
 ---
 

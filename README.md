@@ -37,9 +37,36 @@ It allows you to read aloud any text selected with the mouse or copied to the cl
 
 ---
 
+## Installation from a package
+
+The simplest way. Download the package for your system from the [download page](https://piperread.davalan.fr/download/) or from the [latest release](https://github.com/RonanDavalan/PiperRead/releases/latest), then install it:
+
+```bash
+# Debian 12 and 13, Ubuntu 22.04 and 24.04, Linux Mint
+sudo apt install ./piperread_0.2.0~alpha_all.deb
+
+# Fedora 42
+sudo dnf install ./piperread-0.2.0~alpha-1.fc42.noarch.rpm
+
+# openSUSE Leap 15.6
+sudo zypper install ./piperread-0.2.0~alpha-1.leap156.noarch.rpm
+
+# Arch Linux
+sudo pacman -U piperread-0.2.0alpha-1-any.pkg.tar.zst
+```
+
+The package installs the Piper engine with `pip` when it is configured: about 75 MB to download (200 to 250 MB once installed), with network access needed at that moment only. It ships no voice. Download one, then check the installation:
+
+```bash
+piperread --download-voice
+piperread --diagnose
+```
+
+The packages were validated in containers (installation, diagnostic and removal) on each distribution and version listed above. The manual is available as a page (`man piperread`) and as a PDF in four languages on the download page.
+
 ## Prerequisites
 
-Before installing, ensure your system has the required audio and clipboard tools.
+Before installing from the sources, ensure your system has the required audio and clipboard tools.
 
 ```bash
 # System update
@@ -52,7 +79,7 @@ sudo apt install -y python3 python3-venv python3-pip alsa-utils wl-clipboard xse
 
 ---
 
-## Installation
+## Installation from the sources
 
 Since this project relies on large voice models and a specific virtual environment, you must initialize the project after cloning it.
 
@@ -118,7 +145,7 @@ update-desktop-database $HOME/.local/share/applications
 
 ### Stopping Playback
 
-*Current Alpha Limitation*: To stop reading while it is playing, run `pkill -f aplay` in a terminal.
+Run `piperread --stop` (or `./read.sh --stop` from a clone) to end the reading, `--pause` to suspend it and `--resume` to continue where it stopped. Bind these commands to keyboard shortcuts if you like.
 
 ---
 
