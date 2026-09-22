@@ -5,8 +5,13 @@ Pourquoi ce fichier existe :
     Sépare la présentation (icône, menu, activation/désactivation des
     entrées selon l'état) de la logique de lecture (`controller.py`), pour
     que l'une puisse être testée sans l'autre. Les libellés viennent des
-    mêmes fichiers `lang/*.txt` que le noyau (`i18n.py`, session 3) : ce
-    fichier ne contient plus aucun texte affiché à l'utilisateur en dur.
+    mêmes fichiers `lang/*.txt` que le noyau (`i18n.py`) : ce fichier ne
+    contient aucun texte affiché à l'utilisateur en dur.
+
+    Un clic gauche sur l'icône lit, met en pause ou reprend selon l'état :
+    contrairement à un raccourci clavier, le tray connaît l'état courant et
+    peut offrir ce geste unique sans ambiguïté. Le menu n'a donc pas
+    d'entrée « Reprendre » : « Lire » en pause reprend déjà la lecture.
 
 Entrée / sortie :
     Entrée : un `PlaybackController` déjà construit (dont les messages
@@ -38,7 +43,6 @@ class PiperReadTray(QSystemTrayIcon):
         self._menu = QMenu()
         self._action_lire = self._menu.addAction("", self._controller.lire)
         self._action_pause = self._menu.addAction("", self._controller.pause)
-        self._action_reprendre = self._menu.addAction("", self._controller.reprendre)
         self._action_arreter = self._menu.addAction("", self._controller.arreter)
         self._menu.addSeparator()
         self._action_precedente = self._menu.addAction("", self._controller.phrase_precedente)
@@ -51,6 +55,7 @@ class PiperReadTray(QSystemTrayIcon):
 
         self._actualiser_textes()
 
+        self.activated.connect(self._sur_activation)
         self._controller.etat_change.connect(self._sur_changement_etat)
         self._controller.erreur.connect(self._sur_erreur)
         self._sur_changement_etat(Etat.ARRET)
@@ -59,7 +64,6 @@ class PiperReadTray(QSystemTrayIcon):
         messages = self._controller.messages
         self._action_lire.setText(msg(messages, "gui_menu_play"))
         self._action_pause.setText(msg(messages, "gui_menu_pause"))
-        self._action_reprendre.setText(msg(messages, "gui_menu_resume"))
         self._action_arreter.setText(msg(messages, "gui_menu_stop"))
         self._action_precedente.setText(msg(messages, "gui_menu_previous"))
         self._action_suivante.setText(msg(messages, "gui_menu_next"))
@@ -70,10 +74,17 @@ class PiperReadTray(QSystemTrayIcon):
     def _sur_changement_etat(self, etat: Etat) -> None:
         self._action_lire.setEnabled(etat != Etat.LECTURE)
         self._action_pause.setEnabled(etat == Etat.LECTURE)
-        self._action_reprendre.setEnabled(etat == Etat.PAUSE)
         self._action_arreter.setEnabled(etat != Etat.ARRET)
         self._action_precedente.setEnabled(etat != Etat.ARRET)
         self._action_suivante.setEnabled(etat != Etat.ARRET)
+
+    def _sur_activation(self, raison: QSystemTrayIcon.ActivationReason) -> None:
+        if raison != QSystemTrayIcon.ActivationReason.Trigger:
+            return
+        if self._controller.etat == Etat.LECTURE:
+            self._controller.pause()
+        else:
+            self._controller.lire()
 
     def _sur_erreur(self, message: str) -> None:
         if self.isVisible():

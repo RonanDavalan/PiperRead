@@ -81,7 +81,6 @@ help_settings_file=the configuration file {1}
 help_more=More: https://piperread.davalan.fr/
 gui_menu_play=Play
 gui_menu_pause=Pause
-gui_menu_resume=Resume
 gui_menu_stop=Stop
 gui_menu_previous=Previous sentence
 gui_menu_next=Next sentence
