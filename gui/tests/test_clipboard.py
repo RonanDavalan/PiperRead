@@ -54,6 +54,59 @@ def test_repli_sur_xsel_si_wayland_vide(monkeypatch):
     assert clipboard.read_clipboard() == "texte x11"
 
 
+def test_selection_prioritaire_sur_le_presse_papiers(monkeypatch):
+    monkeypatch.setattr(clipboard.shutil, "which", lambda binaire: "/usr/bin/" + binaire)
+
+    appels = []
+
+    def faux_run(command, **_kwargs):
+        appels.append(command)
+        if "--primary" in command:
+            return _resultat("texte sélectionné")
+        return _resultat("texte copié")
+
+    monkeypatch.setattr(clipboard.subprocess, "run", faux_run)
+
+    assert clipboard.read_clipboard() == "texte sélectionné"
+    assert appels == [["wl-paste", "--primary", "--no-newline"]]
+
+
+def test_repli_sur_le_presse_papiers_si_selection_vide(monkeypatch):
+    monkeypatch.setattr(clipboard.shutil, "which", lambda binaire: "/usr/bin/" + binaire)
+
+    appels = []
+
+    def faux_run(command, **_kwargs):
+        appels.append(command)
+        if "--primary" in command:
+            return _resultat(" \n\t")
+        return _resultat("texte copié")
+
+    monkeypatch.setattr(clipboard.subprocess, "run", faux_run)
+
+    assert clipboard.read_clipboard() == "texte copié"
+    assert appels == [
+        ["wl-paste", "--primary", "--no-newline"],
+        ["xsel", "--primary", "--output"],
+        ["wl-paste", "--no-newline"],
+    ]
+
+
+def test_selection_x11_avant_presse_papiers_wayland(monkeypatch):
+    monkeypatch.setattr(clipboard.shutil, "which", lambda binaire: "/usr/bin/" + binaire)
+
+    def faux_run(command, **_kwargs):
+        if command[0] == "xsel" and "--primary" in command:
+            return _resultat("sélection x11")
+        if "--primary" in command:
+            return _resultat("")
+        return _resultat("texte copié")
+
+    monkeypatch.setattr(clipboard.subprocess, "run", faux_run)
+
+    assert clipboard.read_clipboard() == "sélection x11"
+
+
 def test_chaine_vide_si_aucun_outil(monkeypatch):
     monkeypatch.setattr(clipboard.shutil, "which", lambda binaire: None)
     assert clipboard.read_clipboard() == ""
