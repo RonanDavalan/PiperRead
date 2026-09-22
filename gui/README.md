@@ -7,10 +7,11 @@ programme externe, par le serveur HTTP que Piper fournit lui-même
 `127.0.0.1` uniquement. Décision et raison complètes dans
 `_CADRE/SPECIFICATIONS/CONCEPTION_PIPERREAD.md`, fiche « interface graphique ».
 
-État actuel (session 1 de `_CADRE/SPECIFICATIONS/ROADMAP.md`, chantier
-« Interface graphique ») : la chaîne complète fonctionne en ligne de commande,
-sans fenêtre — presse-papiers → découpage en phrases → serveur local →
-lecture audio. La fenêtre, le tray et le menu sont la session suivante.
+État actuel (session 2 de `_CADRE/SPECIFICATIONS/ROADMAP.md`, chantier
+« Interface graphique ») : icône de tray et menu (Lire, Pause, Reprendre,
+Arrêter, Phrase précédente/suivante, Réglages, Quitter) branchés sur la
+chaîne de la session 1. Le dialogue de réglages, la configuration partagée
+avec le noyau et le paquet sont les sessions suivantes.
 
 ## Structure
 
@@ -22,8 +23,12 @@ gui/
 │   ├── sentences.py        — découpage en phrases (pysbd, langues en/fr/de/es)
 │   ├── server.py           — cycle de vie du serveur HTTP local de Piper
 │   ├── synth_client.py     — client HTTP vers /synthesize
-│   ├── player.py           — lecture du WAV reçu (sounddevice)
-│   └── cli.py               — boucle de test en ligne de commande
+│   ├── player.py           — lecture du WAV reçu (sounddevice), interruptible (arrêt, pause)
+│   ├── controller.py       — état de lecture (arrêt/lecture/pause), fil de fond
+│   ├── notifier.py         — notification système par `notify-send`, indépendante du tray
+│   ├── tray.py              — icône de tray, menu, détection de l'absence d'hôte de tray
+│   ├── app.py                — point d'entrée : assemble tray, contrôleur et boucle Qt
+│   └── cli.py                 — boucle de test en ligne de commande, sans fenêtre
 └── tests/                  — tests unitaires (pytest), sans dépendance réseau ni matériel audio
 ```
 
@@ -45,8 +50,12 @@ cd ~/git/PiperRead/PiperRead/gui
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
-python3 -m pytest
+env -u LD_LIBRARY_PATH QT_QPA_PLATFORM=offscreen python3 -m pytest
 ```
+
+`LD_LIBRARY_PATH` neutralisé pour la même raison que plus bas (bibliothèques
+Qt du système en conflit) ; `QT_QPA_PLATFORM=offscreen` pour que les tests du
+tray (`test_tray.py`) s'exécutent sans écran réel.
 
 Essai réel de la chaîne complète, sans fenêtre — copier un texte, puis :
 
@@ -59,6 +68,31 @@ python3 -m piperread_gui.cli --lang fr
 `--model <chemin>` force une voix précise ; sans cette option, la première
 voix trouvée dans `../voices/*.onnx` est utilisée. `--lang` choisit la langue
 du découpeur de phrases parmi `en`, `fr`, `de`, `es` (défaut `fr`).
+
+Lancer l'interface graphique (icône de tray et menu) — copier un texte, puis :
+
+```bash
+cd ~/git/PiperRead/PiperRead/gui
+source .venv/bin/activate
+python3 -m piperread_gui.app --lang fr
+```
+
+**Piège de plateforme (constaté en session 2, KDE Plasma) :** si le shell
+définit `LD_LIBRARY_PATH` (par exemple pour CUDA), il masque les
+bibliothèques Qt embarquées par PySide6 au profit de celles, plus anciennes,
+du système, avec un plantage immédiat (`undefined symbol` puis
+segmentation fault). Neutraliser la variable avant de lancer l'interface :
+
+```bash
+env -u LD_LIBRARY_PATH python3 -m piperread_gui.app --lang fr
+```
+
+Menu du tray : Lire, Pause, Reprendre, Arrêter, Phrase précédente/suivante
+(actifs pendant la lecture ou la pause), Réglages (désactivé, session
+suivante), Quitter. Sur un bureau qui n'expose aucune zone de notification
+système (GNOME sans l'extension « AppIndicator and KStatusNotifierItem
+Support »), une notification de bureau unique explique la situation au
+démarrage ; l'interface continue de fonctionner.
 
 Contrôle d'isolation du moteur — le code de l'interface ne doit contenir
 aucun `import` direct du module `piper` :

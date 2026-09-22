@@ -19,6 +19,7 @@ dev = [
 
 [project.scripts]
 piperread-gui-cli = "piperread_gui.cli:main"
+piperread-gui = "piperread_gui.app:main"
 
 [build-system]
 requires = ["setuptools>=68"]

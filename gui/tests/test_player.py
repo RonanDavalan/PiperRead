@@ -1,4 +1,5 @@
 import io
+import threading
 import wave
 
 import pytest
@@ -57,3 +58,56 @@ def test_largeur_non_geree_leve(monkeypatch):
 
     with pytest.raises(player.ErreurLecture):
         player.play_wav_bytes(_wav_de_test(largeur=1))
+
+
+def test_arret_interrompt_l_ecriture(monkeypatch):
+    flux_captures = []
+
+    def faux_flux(samplerate, channels, dtype):
+        flux = _FluxFactice(samplerate, channels, dtype)
+        flux_captures.append(flux)
+        return flux
+
+    monkeypatch.setattr(player.sd, "RawOutputStream", faux_flux)
+    monkeypatch.setattr(player, "_TAILLE_BLOC_TRAMES", 1)
+
+    arret = threading.Event()
+    arret.set()
+
+    player.play_wav_bytes(
+        _wav_de_test(canaux=1, frequence=22050, trames=b"\x00\x01" * 5),
+        stop_event=arret,
+    )
+
+    (flux,) = flux_captures
+    assert flux.ecrit == b""
+
+
+def test_pause_bloque_l_ecriture_jusqu_a_liberation(monkeypatch):
+    flux_captures = []
+
+    def faux_flux(samplerate, channels, dtype):
+        flux = _FluxFactice(samplerate, channels, dtype)
+        flux_captures.append(flux)
+        return flux
+
+    monkeypatch.setattr(player.sd, "RawOutputStream", faux_flux)
+    monkeypatch.setattr(player, "_TAILLE_BLOC_TRAMES", 1)
+
+    pause = threading.Event()
+
+    fil = threading.Thread(
+        target=player.play_wav_bytes,
+        args=(_wav_de_test(canaux=1, frequence=22050, trames=b"\x00\x01" * 3),),
+        kwargs={"pause_event": pause},
+    )
+    fil.start()
+    fil.join(timeout=0.2)
+    assert fil.is_alive()
+
+    pause.set()
+    fil.join(timeout=2.0)
+    assert not fil.is_alive()
+
+    (flux,) = flux_captures
+    assert flux.ecrit == b"\x00\x01" * 3
