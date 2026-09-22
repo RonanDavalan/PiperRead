@@ -5,23 +5,30 @@ Pourquoi ce fichier existe :
     Assemble ce que les autres fichiers du paquet ne font qu'un par un :
     une `QApplication` (obligatoire avant toute instanciation de
     `QSystemTrayIcon`, sous peine de crash immédiat sur PySide6), le
-    `PlaybackController` de la session, et le tray qui l'expose. L'icône
-    provient de `Ressources/piperread.svg`, déjà dessinée pour le paquet
+    `PlaybackController` de la session, le tray qui l'expose et la socket de
+    pilotage (`control_server.py`) qui reste la seule surface sur un bureau
+    sans zone de notification. L'icône provient de `Ressources/piperread.svg`,
+    déjà dessinée pour le paquet
     (`_CADRE/SPECIFICATIONS/PROCEDURES_LLM/instance/TACHE_dessiner-icone-svg.md`) —
     aucune nouvelle icône n'est dessinée pour ce chantier.
 
 Entrée / sortie :
     Entrée : options de ligne de commande, mêmes que `cli.py` (`--model`,
-    `--lang`). Sortie : aucune (boucle d'événements Qt, sans fenêtre visible
+    `--lang`), plus sept options de pilotage d'une instance déjà lancée
+    (`--play`, `--pause`, `--resume`, `--stop`, `--next`, `--previous`,
+    `--quit`). Sortie : aucune (boucle d'événements Qt, sans fenêtre visible
     tant qu'aucun dialogue de réglages n'existe — session suivante).
 """
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
 from PySide6.QtWidgets import QApplication
 
+from piperread_gui.control_client import ErreurAucuneInstance, envoyer_commande
+from piperread_gui.control_server import ControlServer, ErreurControleIndisponible
 from piperread_gui.controller import PlaybackController
 from piperread_gui.tray import PiperReadTray, avertir_si_tray_absent
 
@@ -53,11 +60,61 @@ def _analyser_arguments(argv: list[str]) -> argparse.Namespace:
         choices=("en", "fr", "de", "es"),
         help="Langue du découpage en phrases (défaut : fr).",
     )
+
+    groupe_pilotage = analyseur.add_mutually_exclusive_group()
+    groupe_pilotage.add_argument(
+        "--play", dest="commande", action="store_const", const="lire",
+        help="Démarre ou reprend la lecture du presse-papiers sur l'instance déjà lancée.",
+    )
+    groupe_pilotage.add_argument(
+        "--pause", dest="commande", action="store_const", const="pause",
+        help="Met en pause l'instance déjà lancée.",
+    )
+    groupe_pilotage.add_argument(
+        "--resume", dest="commande", action="store_const", const="reprendre",
+        help="Reprend la lecture de l'instance déjà lancée.",
+    )
+    groupe_pilotage.add_argument(
+        "--stop", dest="commande", action="store_const", const="arreter",
+        help="Arrête la lecture de l'instance déjà lancée.",
+    )
+    groupe_pilotage.add_argument(
+        "--next", dest="commande", action="store_const", const="phrase_suivante",
+        help="Passe à la phrase suivante sur l'instance déjà lancée.",
+    )
+    groupe_pilotage.add_argument(
+        "--previous", dest="commande", action="store_const", const="phrase_precedente",
+        help="Revient à la phrase précédente sur l'instance déjà lancée.",
+    )
+    groupe_pilotage.add_argument(
+        "--quit", dest="commande", action="store_const", const="quitter",
+        help="Ferme l'instance déjà lancée (tray et socket compris).",
+    )
+
     return analyseur.parse_args(argv)
+
+
+def _piloter_instance_existante(commande: str) -> int:
+    if os.name != "posix":
+        print(
+            "Le pilotage d'une instance déjà lancée n'est pris en charge que sur Linux/Unix.",
+            file=sys.stderr,
+        )
+        return 1
+    try:
+        reponse = envoyer_commande(commande)
+    except ErreurAucuneInstance as erreur:
+        print(str(erreur), file=sys.stderr)
+        return 1
+    print(reponse)
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
     arguments = _analyser_arguments(sys.argv[1:] if argv is None else argv)
+
+    if arguments.commande is not None:
+        return _piloter_instance_existante(arguments.commande)
 
     if arguments.model is None:
         print(
@@ -75,7 +132,32 @@ def main(argv: list[str] | None = None) -> int:
     tray = PiperReadTray(controller, _ICONE)
     tray.show()
 
-    return application.exec()
+    control_server = None
+    if os.name == "posix":
+        control_server = ControlServer()
+        try:
+            control_server.demarrer()
+        except ErreurControleIndisponible as erreur:
+            print(str(erreur), file=sys.stderr)
+            return 1
+
+        repartiteur = {
+            "lire": controller.lire,
+            "pause": controller.pause,
+            "reprendre": controller.reprendre,
+            "arreter": controller.arreter,
+            "phrase_precedente": controller.phrase_precedente,
+            "phrase_suivante": controller.phrase_suivante,
+            "quitter": lambda: (controller.arreter(), application.quit()),
+        }
+        control_server.commande.connect(lambda ligne: repartiteur.get(ligne, lambda: None)())
+
+    code_sortie = application.exec()
+
+    if control_server is not None:
+        control_server.arreter()
+
+    return code_sortie
 
 
 if __name__ == "__main__":
