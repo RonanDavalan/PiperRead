@@ -161,7 +161,7 @@ Trois réglages sont ajustables : la vitesse de lecture `speed` (un multiplicate
     voice=fr_FR-siwis-low
     lang=fr
     ```
-4.  **Défaut** — vitesse naturelle, première voix installée par ordre alphabétique, messages en anglais.
+4.  **Valeur par défaut** — vitesse naturelle, première voix installée par ordre alphabétique, messages en anglais.
 
 Une valeur invalide à un niveau autre que l'option est ignorée et le niveau suivant est essayé ; une option en ligne de commande invalide arrête la lecture.
 
