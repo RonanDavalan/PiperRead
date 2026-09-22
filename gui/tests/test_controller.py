@@ -55,6 +55,24 @@ def test_lire_joue_les_phrases_dans_l_ordre(monkeypatch):
     assert controleur.etat == Etat.ARRET
 
 
+def test_lire_nettoie_le_markdown_avant_le_decoupage(monkeypatch):
+    monkeypatch.setattr(controller_module, "play_wav_bytes", lambda audio, **_kw: None)
+    controleur = _controleur_pret(monkeypatch, ["test test"])
+
+    recus = []
+    monkeypatch.setattr(
+        controller_module,
+        "split_sentences",
+        lambda texte, lang: recus.append(texte) or [texte],
+    )
+    monkeypatch.setattr(controller_module, "read_clipboard", lambda: "**test** test")
+
+    controleur.lire()
+    controleur._fil.join(timeout=2.0)
+
+    assert recus == ["test test"]
+
+
 def test_presse_papiers_vide_ne_demarre_rien(monkeypatch):
     monkeypatch.setattr(controller_module, "read_clipboard", lambda: "   ")
     controleur = PlaybackController(model_path="modele.onnx", lang="fr")

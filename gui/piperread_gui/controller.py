@@ -4,22 +4,24 @@ controller.py — état de lecture, piloté par le tray, exécuté sur un fil de
 Pourquoi ce fichier existe :
     Le tray (`tray.py`) ne doit jamais bloquer la boucle d'événements Qt le
     temps d'une synthèse ou d'une lecture audio ; ce fichier isole la chaîne
-    de la session 1 (presse-papiers → phrases → serveur → audio) dans un fil
-    Python séparé, piloté par des signaux Qt et deux événements
-    (`threading.Event`) pour la pause et l'arrêt.
+    de lecture (capture → nettoyage Markdown → phrases → serveur → audio)
+    dans un fil Python séparé, piloté par des signaux Qt et deux événements
+    (`threading.Event`) pour la pause et l'arrêt. Le nettoyage précède le
+    découpage, dans le même ordre que le noyau (capture → nettoyage →
+    synthèse).
 
 Entrée / sortie :
     Entrée : le chemin du modèle de voix, la langue de découpage et la
     vitesse (multiplicateur, 1.0 = voix naturelle), fixés à la construction
-    puis modifiables par `appliquer_reglages` (dialogue de réglages, session
-    3). Sortie : trois signaux Qt — `etat_change` (nouvel `Etat`),
+    puis modifiables par `appliquer_reglages` (dialogue de réglages).
+    Sortie : trois signaux Qt — `etat_change` (nouvel `Etat`),
     `phrase_courante` (numéro, total) et `erreur` (message, dans la langue
     résolue) — que le tray relie à l'affichage du menu.
 
 Dépend de :
-    `PySide6.QtCore` pour les signaux ; `clipboard.py`, `sentences.py`,
-    `server.py`, `synth_client.py`, `player.py` de la session 1 ; `config.py`
-    (`speed_to_length_scale`) et `i18n.py` de la session 3.
+    `PySide6.QtCore` pour les signaux ; `clipboard.py`, `cleaner.py`,
+    `sentences.py`, `server.py`, `synth_client.py`, `player.py` ;
+    `config.py` (`speed_to_length_scale`) et `i18n.py`.
 """
 
 import threading
@@ -28,6 +30,7 @@ from pathlib import Path
 
 from PySide6.QtCore import QObject, Signal
 
+from piperread_gui.cleaner import clean_markdown
 from piperread_gui.clipboard import read_clipboard
 from piperread_gui.config import speed_to_length_scale
 from piperread_gui.i18n import load_messages, msg
@@ -107,7 +110,7 @@ class PlaybackController(QObject):
         if not texte.strip():
             self.erreur.emit(msg(self._messages, "gui_clipboard_empty"))
             return
-        phrases = split_sentences(texte, self._lang)
+        phrases = split_sentences(clean_markdown(texte), self._lang)
         if not phrases:
             self.erreur.emit(msg(self._messages, "gui_no_sentences"))
             return
