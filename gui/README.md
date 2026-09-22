@@ -35,8 +35,11 @@ gui/
 │   ├── notifier.py         — notification système par `notify-send`, indépendante du tray
 │   ├── tray.py              — icône de tray, menu traduit, détection de l'absence d'hôte de tray
 │   ├── settings_dialog.py  — dialogue de réglages (voix, vitesse, langue), écrit `piperread.conf`
+│   ├── frozen.py            — dossier réel de l'exécutable gelé (PyInstaller), à la place de `Path(__file__)`
+│   ├── piper_server_entry.py — point d'entrée gelé séparément pour `piper-http-server.exe` (paquet Windows)
 │   ├── app.py                — point d'entrée : résout la configuration, assemble tray, contrôleur et boucle Qt
 │   └── cli.py                 — boucle de test en ligne de commande, sans fenêtre
+├── packaging/windows/       — `.spec` PyInstaller, icône `.ico`, `README.txt` livré avec le paquet Windows
 └── tests/                  — tests unitaires (pytest), sans dépendance réseau ni matériel audio
 ```
 
@@ -139,3 +142,33 @@ ss -tlnp
 ```
 
 Le port du serveur n'apparaît que sur `127.0.0.1`, jamais sur `0.0.0.0`.
+
+## Paquet Windows
+
+Deux exécutables autonomes (`piperread-gui.exe`, `piper-http-server.exe` —
+processus séparé, même frontière GPL que `server.py`), gelés par PyInstaller
+sur un vrai runner Windows (pas de construction croisée depuis Linux) :
+`_CADRE/SPECIFICATIONS/PROCEDURES_LLM/TACHE_construire-paquet-windows.md`. Déclencher
+la construction (nécessite d'être poussé sur `main`) :
+
+```bash
+gh workflow run build-windows-gui.yml --repo RonanDavalan/PiperRead
+gh run list --repo RonanDavalan/PiperRead --workflow build-windows-gui.yml --limit 1
+gh run download <id-de-l-exécution> --repo RonanDavalan/PiperRead
+```
+
+L'archive produite (`piperread-gui-windows.zip`) contient les deux
+exécutables, `lang/`, `piperread.ico`, un dossier `voices/` vide (voix jamais
+livrées, voir la décision « voix jamais livrées ni téléchargées sans
+demande ») et `README.txt` (anglais, instructions de lancement).
+
+Essai à blanc reproductible côté Linux (ELF, inutilisable tel quel, mais
+révèle un piège de résolution de chemin ou de données Piper embarquées avant
+de dépenser une exécution CI Windows) :
+
+```bash
+cd gui
+.venv/bin/pip install pyinstaller "piper-tts[http]"
+env -u LD_LIBRARY_PATH .venv/bin/pyinstaller --noconfirm --distpath /tmp/dist-essai packaging/windows/piper-http-server.spec
+env -u LD_LIBRARY_PATH .venv/bin/pyinstaller --noconfirm --distpath /tmp/dist-essai packaging/windows/piperread-gui.spec
+```

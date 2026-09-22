@@ -39,6 +39,46 @@ def test_trouver_interprete_absent_leve(tmp_path, monkeypatch):
         server._trouver_interprete()
 
 
+def test_trouver_executable_windows_prefere_a_cote_de_lexecutable(tmp_path, monkeypatch):
+    monkeypatch.setattr(server.sys, "executable", str(tmp_path / "piperread-gui.exe"))
+    executable = tmp_path / server._NOM_EXECUTABLE_WINDOWS
+    executable.touch()
+
+    assert server._trouver_executable_windows() == executable
+
+
+def test_trouver_executable_windows_absent_leve(tmp_path, monkeypatch):
+    monkeypatch.setattr(server.sys, "executable", str(tmp_path / "piperread-gui.exe"))
+
+    with pytest.raises(server.ErreurServeurPiper, match="piper-http-server.exe"):
+        server._trouver_executable_windows()
+
+
+def test_commande_serveur_windows_invoque_lexecutable_directement(tmp_path, monkeypatch):
+    monkeypatch.setattr(server.sys, "platform", "win32")
+    monkeypatch.setattr(server.sys, "executable", str(tmp_path / "piperread-gui.exe"))
+    executable = tmp_path / server._NOM_EXECUTABLE_WINDOWS
+    executable.touch()
+    modele = tmp_path / "voix.onnx"
+
+    commande = server._commande_serveur(5000, modele)
+
+    assert commande[0] == str(executable)
+    assert "-m" not in commande
+    assert commande[commande.index("--port") + 1] == "5000"
+
+
+def test_commande_serveur_posix_passe_par_linterprete(tmp_path, monkeypatch):
+    monkeypatch.setattr(server.sys, "platform", "linux")
+    monkeypatch.setattr(server, "_trouver_interprete", lambda: tmp_path / "python3")
+    modele = tmp_path / "voix.onnx"
+
+    commande = server._commande_serveur(5000, modele)
+
+    assert commande[0] == str(tmp_path / "python3")
+    assert commande[1:3] == ["-m", "piper.http_server"]
+
+
 def test_modele_absent_leve(tmp_path):
     with pytest.raises(server.ErreurServeurPiper):
         server.PiperHttpServer(tmp_path / "aucun-modele.onnx")

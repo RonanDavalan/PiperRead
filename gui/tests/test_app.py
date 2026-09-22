@@ -63,3 +63,12 @@ def test_resoudre_icone_clone_prioritaire(tmp_path):
 
 def test_resoudre_icone_repli_installee(tmp_path):
     assert app._resoudre_icone(tmp_path) == app._ICONE_INSTALLEE
+
+
+def test_resoudre_icone_gelee_ignore_le_clone(monkeypatch, tmp_path):
+    ressources = tmp_path / "Ressources"
+    ressources.mkdir()
+    (ressources / "piperread.svg").touch()
+    monkeypatch.setattr(app.frozen, "installation_dir", lambda: tmp_path)
+
+    assert app._resoudre_icone(tmp_path) == tmp_path / app._ICONE_GELEE

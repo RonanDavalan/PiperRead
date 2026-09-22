@@ -19,3 +19,7 @@ voices/*.json
 
 # Fichiers temporaires ou logs
 *.log
+
+# Sorties de construction PyInstaller (gui/packaging/windows/*.spec)
+dist/
+build/

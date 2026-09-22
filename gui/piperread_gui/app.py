@@ -15,7 +15,11 @@ Pourquoi ce fichier existe :
     aucune nouvelle icône n'est dessinée pour ce chantier. Le dossier des voix
     suit la même priorité (`config.default_voices_dir`, clone puis
     `$XDG_DATA_HOME/piperread/voices`, même règle que `BASE_DIR`/`DATA_DIR`
-    de `read.sh`). La résolution de la vitesse, de la voix et de la langue
+    de `read.sh`). Sur l'exécutable Windows gelé, la racine de résolution est
+    le dossier réel de `piperread-gui.exe` (`frozen.installation_dir`), pas
+    le dossier d'extraction temporaire que donnerait `Path(__file__)` — même
+    principe que `server._trouver_executable_windows`. La résolution de la
+    vitesse, de la voix et de la langue
     (`config.resolve_settings`, session 3) suit le même ordre de priorité que
     `read.sh` : option de ligne de commande > variable d'environnement >
     `piperread.conf` > défaut.
@@ -38,18 +42,21 @@ from pathlib import Path
 
 from PySide6.QtWidgets import QApplication
 
-from piperread_gui import config, i18n
+from piperread_gui import config, frozen, i18n
 from piperread_gui.control_client import ErreurAucuneInstance, envoyer_commande
 from piperread_gui.control_server import ControlServer, ErreurControleIndisponible
 from piperread_gui.controller import PlaybackController
 from piperread_gui.tray import PiperReadTray, avertir_si_tray_absent
 
 _GUI_DIR = Path(__file__).resolve().parent.parent
-_REPO_ROOT = _GUI_DIR.parent
+_REPO_ROOT = frozen.installation_dir() or _GUI_DIR.parent
 _ICONE_INSTALLEE = Path("/usr/share/icons/hicolor/scalable/apps/piperread.svg")
+_ICONE_GELEE = "piperread.ico"
 
 
 def _resoudre_icone(repo_root: Path) -> Path:
+    if frozen.installation_dir() is not None:
+        return repo_root / _ICONE_GELEE
     candidat = repo_root / "Ressources" / "piperread.svg"
     return candidat if candidat.is_file() else _ICONE_INSTALLEE
 

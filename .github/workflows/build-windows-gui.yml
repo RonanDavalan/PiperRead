@@ -1,0 +1,47 @@
+name: Build Windows package (piperread-gui)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+          pip install "piper-tts[http]"
+          pip install .\gui
+
+      - name: Build piperread-gui.exe
+        run: pyinstaller --noconfirm packaging\windows\piperread-gui.spec
+        working-directory: gui
+
+      - name: Build piper-http-server.exe
+        run: pyinstaller --noconfirm packaging\windows\piper-http-server.spec
+        working-directory: gui
+
+      - name: Assemble the distributable folder
+        run: |
+          New-Item -ItemType Directory -Path dist-windows\piperread-gui\voices | Out-Null
+          Copy-Item gui\dist\piperread-gui.exe dist-windows\piperread-gui\
+          Copy-Item gui\dist\piper-http-server.exe dist-windows\piperread-gui\
+          Copy-Item gui\packaging\windows\piperread.ico dist-windows\piperread-gui\
+          Copy-Item lang dist-windows\piperread-gui\lang -Recurse
+          Copy-Item gui\packaging\windows\README.txt dist-windows\piperread-gui\
+          Set-Content -Path dist-windows\piperread-gui\voices\README.txt -Value "Put a Piper voice here (<name>.onnx and <name>.onnx.json), for example from https://huggingface.co/rhasspy/piper-voices"
+
+      - name: Compress to a single archive
+        run: Compress-Archive -Path dist-windows\piperread-gui -DestinationPath dist-windows\piperread-gui-windows.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: piperread-gui-windows
+          path: dist-windows\piperread-gui-windows.zip

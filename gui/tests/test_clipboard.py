@@ -1,6 +1,12 @@
 import subprocess
 
+from PySide6.QtWidgets import QApplication
+
 from piperread_gui import clipboard
+
+
+def _application() -> QApplication:
+    return QApplication.instance() or QApplication([])
 
 
 def _resultat(stdout: str) -> subprocess.CompletedProcess:
@@ -50,4 +56,27 @@ def test_repli_sur_xsel_si_wayland_vide(monkeypatch):
 
 def test_chaine_vide_si_aucun_outil(monkeypatch):
     monkeypatch.setattr(clipboard.shutil, "which", lambda binaire: None)
+    assert clipboard.read_clipboard() == ""
+
+
+def test_windows_lit_le_presse_papiers_qt(monkeypatch):
+    application = _application()
+    application.clipboard().setText("texte windows")
+    monkeypatch.setattr(clipboard.sys, "platform", "win32")
+
+    appels = []
+    monkeypatch.setattr(
+        clipboard.subprocess, "run", lambda *a, **kw: appels.append((a, kw))
+    )
+
+    assert clipboard.read_clipboard() == "texte windows"
+    assert appels == []
+
+
+def test_windows_chaine_vide_sans_application_qt(monkeypatch):
+    monkeypatch.setattr(clipboard.sys, "platform", "win32")
+    monkeypatch.setattr(
+        "PySide6.QtWidgets.QApplication.instance", staticmethod(lambda: None)
+    )
+
     assert clipboard.read_clipboard() == ""

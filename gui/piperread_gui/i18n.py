@@ -18,14 +18,18 @@ Dépend de :
     `flatfile.py` ; `<racine du dépôt>/lang/*.txt` du clone en priorité, sinon
     `/usr/lib/piperread/lang/` du paquet noyau installé (`piperread-gui` en
     dépend), même logique de résolution que `server.py` pour l'interpréteur
-    du moteur.
+    du moteur. Sur l'exécutable Windows gelé, `frozen.installation_dir` (le
+    dossier réel de `piperread-gui.exe`) remplace le dépôt cloné comme
+    racine candidate — `Path(__file__)` y pointerait vers un dossier
+    d'extraction temporaire, jamais vers l'installation.
 """
 
 from pathlib import Path
 
+from piperread_gui import frozen
 from piperread_gui.flatfile import read_flat_file
 
-_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+_REPO_ROOT = frozen.installation_dir() or Path(__file__).resolve().parent.parent.parent
 
 
 _LANG_DIR_INSTALLEE = Path("/usr/lib/piperread/lang")

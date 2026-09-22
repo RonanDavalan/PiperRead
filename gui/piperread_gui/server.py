@@ -20,11 +20,16 @@ Dépend de :
     Un interpréteur Python disposant du paquet `piper-tts[http]` — celui du
     clone (`<racine du dépôt>/piper-env/`) en priorité, sinon celui du paquet
     installé (`/usr/lib/piperread/venv/`), même logique de résolution que
-    `read.sh` (`BASE_DIR`/`VENV_PATH`).
+    `read.sh` (`BASE_DIR`/`VENV_PATH`). Sur Windows, il n'existe ni venv ni
+    paquet noyau séparé : l'exécutable autonome `piper-http-server.exe`,
+    gelé par PyInstaller à côté de `piperread-gui.exe`
+    (`gui/packaging/windows/`), en tient lieu et se lance directement, sans
+    interpréteur ni option `-m`.
 """
 
 import socket
 import subprocess
+import sys
 import time
 import urllib.error
 import urllib.request
@@ -33,6 +38,7 @@ from pathlib import Path
 _GUI_DIR = Path(__file__).resolve().parent.parent
 _REPO_ROOT = _GUI_DIR.parent
 _VENV_PAQUET = Path("/usr/lib/piperread/venv")
+_NOM_EXECUTABLE_WINDOWS = "piper-http-server.exe"
 _HOTE_LOCAL = "127.0.0.1"
 _DELAI_PRET_SECONDES = 20.0
 _INTERVALLE_SONDAGE_SECONDES = 0.2
@@ -54,6 +60,34 @@ def _trouver_interprete() -> Path:
             f"\"{venv_dir}/bin/pip\" install \"piper-tts[http]\""
         )
     return interprete
+
+
+def _trouver_executable_windows() -> Path:
+    repertoire = Path(sys.executable).resolve().parent
+    executable = repertoire / _NOM_EXECUTABLE_WINDOWS
+    if not executable.is_file():
+        raise ErreurServeurPiper(
+            f"Exécutable du serveur de synthèse introuvable : {executable}. "
+            f"Il doit être installé à côté de piperread-gui.exe."
+        )
+    return executable
+
+
+def _commande_serveur(port: int, model_path: Path) -> list[str]:
+    if sys.platform == "win32":
+        return [
+            str(_trouver_executable_windows()),
+            "--host", _HOTE_LOCAL,
+            "--port", str(port),
+            "--model", str(model_path),
+        ]
+    return [
+        str(_trouver_interprete()),
+        "-m", "piper.http_server",
+        "--host", _HOTE_LOCAL,
+        "--port", str(port),
+        "--model", str(model_path),
+    ]
 
 
 def _port_libre(host: str) -> int:
@@ -80,21 +114,10 @@ class PiperHttpServer:
         if self._processus is not None:
             raise ErreurServeurPiper("Le serveur est déjà démarré.")
 
-        interprete = _trouver_interprete()
         self.port = _port_libre(_HOTE_LOCAL)
 
         self._processus = subprocess.Popen(
-            [
-                str(interprete),
-                "-m",
-                "piper.http_server",
-                "--host",
-                _HOTE_LOCAL,
-                "--port",
-                str(self.port),
-                "--model",
-                str(self._model_path),
-            ],
+            _commande_serveur(self.port, self._model_path),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
