@@ -1,3 +1,5 @@
+# Template: the clone path below is substituted by the install commands
+# in README.md, "Desktop Integration". Never copy this file verbatim.
 [Desktop Entry]
 Type=Application
 Name=Read Selection
@@ -8,7 +10,7 @@ Comment=Text-to-speech using PiperRead
 Comment[fr]=Lecture vocale avec PiperRead
 Comment[de]=Vorlesen mit PiperRead
 Comment[es]=Leer texto con PiperRead
-Exec=/bin/bash -c 'source $HOME/git/piper/PiperRead/piper-env/bin/activate && $HOME/git/piper/PiperRead/read.sh auto'
-Icon=audio-volume-high
+Exec=/bin/bash -c "source $HOME/git/piper/PiperRead/piper-env/bin/activate && $HOME/git/piper/PiperRead/read.sh auto"
+Icon=piperread
 Terminal=false
-Categories=Utility;Accessibility;AudioVideo;
+Categories=Utility;Accessibility;

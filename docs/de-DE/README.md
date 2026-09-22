@@ -117,11 +117,14 @@ chmod 700 read.sh
 Um PiperRead wie eine native Anwendung zu starten:
 
 ```bash
-# Erstellung des Ordners für lokale Anwendungen
-mkdir -p $HOME/.local/share/applications
+# Erstellung der Ordner für lokale Anwendungen und Icons
+mkdir -p $HOME/.local/share/applications $HOME/.local/share/icons/hicolor/scalable/apps
 
-# Kopieren der Desktop-Datei
-cp Ressources/PiperRead.desktop $HOME/.local/share/applications/
+# Installation des Icons
+cp Ressources/piperread.svg $HOME/.local/share/icons/hicolor/scalable/apps/
+
+# Erzeugen der Desktop-Datei mit dem tatsächlichen Installationspfad
+sed "s|\$HOME/git/piper/PiperRead|$(pwd)|g" Ressources/PiperRead.desktop > $HOME/.local/share/applications/piperread.desktop
 
 # Aktualisierung der Menü-Datenbank
 update-desktop-database $HOME/.local/share/applications
