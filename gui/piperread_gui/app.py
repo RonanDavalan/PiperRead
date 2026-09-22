@@ -7,13 +7,18 @@ Pourquoi ce fichier existe :
     `QSystemTrayIcon`, sous peine de crash immédiat sur PySide6), le
     `PlaybackController` de la session, le tray qui l'expose et la socket de
     pilotage (`control_server.py`) qui reste la seule surface sur un bureau
-    sans zone de notification. L'icône provient de `Ressources/piperread.svg`,
-    déjà dessinée pour le paquet
+    sans zone de notification. L'icône provient de `Ressources/piperread.svg`
+    du clone en priorité, sinon de l'icône du thème installée par le paquet
+    noyau (`/usr/share/icons/hicolor/scalable/apps/piperread.svg`, dont
+    `piperread-gui` dépend) — déjà dessinée pour le paquet
     (`_CADRE/SPECIFICATIONS/PROCEDURES_LLM/instance/TACHE_dessiner-icone-svg.md`) —
-    aucune nouvelle icône n'est dessinée pour ce chantier. La résolution de la
-    vitesse, de la voix et de la langue (`config.resolve_settings`, session 3)
-    suit le même ordre de priorité que `read.sh` : option de ligne de
-    commande > variable d'environnement > `piperread.conf` > défaut.
+    aucune nouvelle icône n'est dessinée pour ce chantier. Le dossier des voix
+    suit la même priorité (`config.default_voices_dir`, clone puis
+    `$XDG_DATA_HOME/piperread/voices`, même règle que `BASE_DIR`/`DATA_DIR`
+    de `read.sh`). La résolution de la vitesse, de la voix et de la langue
+    (`config.resolve_settings`, session 3) suit le même ordre de priorité que
+    `read.sh` : option de ligne de commande > variable d'environnement >
+    `piperread.conf` > défaut.
 
 Entrée / sortie :
     Entrée : options de ligne de commande, mêmes que `cli.py` (`--model`,
@@ -41,8 +46,16 @@ from piperread_gui.tray import PiperReadTray, avertir_si_tray_absent
 
 _GUI_DIR = Path(__file__).resolve().parent.parent
 _REPO_ROOT = _GUI_DIR.parent
-_ICONE = _REPO_ROOT / "Ressources" / "piperread.svg"
-_VOICES_DIR = _REPO_ROOT / "voices"
+_ICONE_INSTALLEE = Path("/usr/share/icons/hicolor/scalable/apps/piperread.svg")
+
+
+def _resoudre_icone(repo_root: Path) -> Path:
+    candidat = repo_root / "Ressources" / "piperread.svg"
+    return candidat if candidat.is_file() else _ICONE_INSTALLEE
+
+
+_ICONE = _resoudre_icone(_REPO_ROOT)
+_VOICES_DIR = config.default_voices_dir(_REPO_ROOT)
 
 
 def _analyser_arguments(argv: list[str]) -> argparse.Namespace:

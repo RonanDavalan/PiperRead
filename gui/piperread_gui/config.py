@@ -43,6 +43,14 @@ def config_file_path() -> Path:
     return Path(base) / "piperread" / "piperread.conf"
 
 
+def default_voices_dir(repo_root: Path) -> Path:
+    candidat = repo_root / "voices"
+    if candidat.is_dir():
+        return candidat
+    base = os.environ.get("XDG_DATA_HOME") or str(Path.home() / ".local" / "share")
+    return Path(base) / "piperread" / "voices"
+
+
 def load_config_file() -> tuple[dict[str, str], list[str]]:
     brut = read_flat_file(config_file_path())
     valeurs: dict[str, str] = {}

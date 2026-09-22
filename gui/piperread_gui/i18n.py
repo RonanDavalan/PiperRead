@@ -15,7 +15,10 @@ Entrée / sortie :
     `{2}`, `{3}` dans un message.
 
 Dépend de :
-    `flatfile.py` ; `<racine du dépôt>/lang/*.txt`.
+    `flatfile.py` ; `<racine du dépôt>/lang/*.txt` du clone en priorité, sinon
+    `/usr/lib/piperread/lang/` du paquet noyau installé (`piperread-gui` en
+    dépend), même logique de résolution que `server.py` pour l'interpréteur
+    du moteur.
 """
 
 from pathlib import Path
@@ -25,8 +28,12 @@ from piperread_gui.flatfile import read_flat_file
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
+_LANG_DIR_INSTALLEE = Path("/usr/lib/piperread/lang")
+
+
 def _lang_dir() -> Path:
-    return _REPO_ROOT / "lang"
+    candidat = _REPO_ROOT / "lang"
+    return candidat if candidat.is_dir() else _LANG_DIR_INSTALLEE
 
 
 def load_messages(lang: str) -> dict[str, str]:

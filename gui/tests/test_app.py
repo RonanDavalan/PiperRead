@@ -1,5 +1,6 @@
 import pytest
 
+from piperread_gui import app
 from piperread_gui.app import _analyser_arguments
 
 
@@ -48,3 +49,17 @@ def test_lang_absente_par_defaut():
 def test_model_absent_par_defaut():
     arguments = _analyser_arguments([])
     assert arguments.model is None
+
+
+# --- _resoudre_icone ---
+
+
+def test_resoudre_icone_clone_prioritaire(tmp_path):
+    ressources = tmp_path / "Ressources"
+    ressources.mkdir()
+    (ressources / "piperread.svg").touch()
+    assert app._resoudre_icone(tmp_path) == ressources / "piperread.svg"
+
+
+def test_resoudre_icone_repli_installee(tmp_path):
+    assert app._resoudre_icone(tmp_path) == app._ICONE_INSTALLEE

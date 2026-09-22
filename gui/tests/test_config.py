@@ -263,3 +263,25 @@ def test_write_config_values_derniere_occurrence_gagne(tmp_path):
     config.write_config_values({"speed": "2.0"})
     contenu = config.config_file_path().read_text(encoding="utf-8")
     assert contenu.splitlines() == ["speed=1.0", "speed=2.0"]
+
+
+# --- default_voices_dir ---
+
+
+def test_default_voices_dir_clone_prioritaire(tmp_path):
+    depot = tmp_path / "depot"
+    (depot / "voices").mkdir(parents=True)
+    assert config.default_voices_dir(depot) == depot / "voices"
+
+
+def test_default_voices_dir_repli_xdg_data_home(tmp_path, monkeypatch):
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
+    depot = tmp_path / "depot_installe"
+    assert config.default_voices_dir(depot) == tmp_path / "data" / "piperread" / "voices"
+
+
+def test_default_voices_dir_repli_home_sans_xdg_data_home(tmp_path, monkeypatch):
+    monkeypatch.delenv("XDG_DATA_HOME", raising=False)
+    monkeypatch.setattr(config.Path, "home", lambda: tmp_path / "home")
+    depot = tmp_path / "depot_installe"
+    assert config.default_voices_dir(depot) == tmp_path / "home" / ".local" / "share" / "piperread" / "voices"

@@ -1,3 +1,4 @@
+from piperread_gui import i18n
 from piperread_gui.i18n import load_messages, msg
 
 
@@ -26,3 +27,15 @@ def test_msg_substitue_les_arguments_positionnels():
 
 def test_msg_cle_absente_rend_la_cle():
     assert msg({}, "cle_inconnue") == "cle_inconnue"
+
+
+# --- _lang_dir ---
+
+
+def test_lang_dir_clone_prioritaire():
+    assert i18n._lang_dir() == i18n._REPO_ROOT / "lang"
+
+
+def test_lang_dir_repli_installe(monkeypatch, tmp_path):
+    monkeypatch.setattr(i18n, "_REPO_ROOT", tmp_path)
+    assert i18n._lang_dir() == i18n._LANG_DIR_INSTALLEE
