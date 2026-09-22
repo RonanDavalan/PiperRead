@@ -4,9 +4,8 @@ cli.py — boucle de test en ligne de commande : presse-papiers jusqu'au son.
 Pourquoi ce fichier existe :
     Faire la preuve, avant toute fenêtre, que la chaîne complète tient :
     démarrage du serveur local, découpage en phrases, synthèse phrase par
-    phrase, lecture audio, arrêt propre. Session 1 du chantier « Interface
-    graphique » (`ROADMAP.md`) — la fenêtre, le tray et le menu viennent
-    ensuite, branchés sur cette même chaîne.
+    phrase, lecture audio, arrêt propre. Le tray et le menu (`app.py`) sont
+    branchés sur cette même chaîne.
 
 Entrée / sortie :
     Entrée : options de ligne de commande (voir `--help`). Sortie : le texte

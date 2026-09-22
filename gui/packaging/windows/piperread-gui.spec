@@ -1,9 +1,8 @@
 # piperread-gui.spec — gèle l'interface graphique en exécutable Windows autonome.
 #
 # Pourquoi ce fichier existe :
-#     Session 5 du chantier « Interface graphique »
-#     (_CADRE/SPECIFICATIONS/ROADMAP.md) : livrer piperread-gui comme actif de
-#     la Release GitHub pour Windows. PyInstaller gèle un point d'entrée par
+#     Livrer piperread-gui comme actif de la Release GitHub pour Windows.
+#     PyInstaller gèle un point d'entrée par
 #     exécutable ; le serveur HTTP de Piper (processus séparé, jamais lié
 #     dans ce même exécutable — frontière GPL actée dans server.py) a le sien,
 #     piper-http-server.spec, à construire et livrer à côté de celui-ci.

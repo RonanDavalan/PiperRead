@@ -20,8 +20,10 @@ Running
 -------
 
 Double-click piperread-gui.exe. A tray icon appears; right-click it for
-the menu (Play, Pause, Resume, Stop, Previous/Next sentence, Settings,
-Quit). Copy some text to the clipboard, then choose "Play" from the menu.
+the menu (Play, Pause, Stop, Previous/Next sentence, Settings, Quit).
+Copy some text to the clipboard, then left-click the icon: it plays when
+stopped, pauses while playing, and resumes when paused. Markdown markup
+(**bold**, # headings, [links](...)) is not read aloud.
 
 Settings (voice, speed, language) are saved in:
 

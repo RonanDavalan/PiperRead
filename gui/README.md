@@ -7,15 +7,19 @@ programme externe, par le serveur HTTP que Piper fournit lui-même
 `127.0.0.1` uniquement. Décision et raison complètes dans
 `_CADRE/SPECIFICATIONS/CONCEPTION_PIPERREAD.md`, fiche « interface graphique ».
 
-État actuel (session 3 de `_CADRE/SPECIFICATIONS/ROADMAP.md`, chantier
-« Interface graphique ») : icône de tray et menu (Lire, Pause, Reprendre,
-Arrêter, Phrase précédente/suivante, Réglages, Quitter) branchés sur la
-chaîne de la session 1, tous les libellés tirés des mêmes fichiers
-`lang/*.txt` que le noyau. La configuration (`piperread.conf`, mêmes clés
-`speed`/`voice`/`lang`, même ordre de priorité) est lue et écrite en Python
-(`config.py`) ; le dialogue de réglages (menu « Réglages… ») l'écrit
-réellement, et la vitesse choisie s'applique à la synthèse (`length_scale`).
-Le paquet est la session suivante.
+État actuel : icône de tray et menu (Lire, Pause, Arrêter, Phrase
+précédente/suivante, Réglages, Quitter) branchés sur la chaîne de lecture
+(capture → nettoyage Markdown → phrases → serveur → audio) ; un clic gauche
+sur l'icône lit, met en pause ou reprend selon l'état. Le texte lu est la
+sélection souris, ou à défaut le presse-papiers (Linux, même ordre que le
+mode `auto` du noyau ; presse-papiers seul sous Windows), débarrassé du
+balisage Markdown par les mêmes règles que `utils/cleaner.sh`. Tous les
+libellés sont tirés des mêmes fichiers `lang/*.txt` que le noyau. La
+configuration (`piperread.conf`, mêmes clés `speed`/`voice`/`lang`, même
+ordre de priorité) est lue et écrite en Python (`config.py`) ; le dialogue
+de réglages (menu « Réglages… ») l'écrit réellement, et la vitesse choisie
+s'applique à la synthèse (`length_scale`). Paquets Linux (`piperread-gui`)
+et exécutable Windows (`packaging/windows/`).
 
 ## Structure
 
@@ -23,7 +27,8 @@ Le paquet est la session suivante.
 gui/
 ├── pyproject.toml          — métadonnées et dépendances (PySide6, requests, pysbd, sounddevice)
 ├── piperread_gui/
-│   ├── clipboard.py        — capture du presse-papiers (wl-paste puis xsel, ordre du noyau)
+│   ├── clipboard.py        — capture : sélection souris puis presse-papiers (wl-paste puis xsel, ordre du noyau)
+│   ├── cleaner.py          — retrait du balisage Markdown (port de `utils/cleaner.sh`)
 │   ├── sentences.py        — découpage en phrases (pysbd, langues en/fr/de/es)
 │   ├── server.py           — cycle de vie du serveur HTTP local de Piper
 │   ├── synth_client.py     — client HTTP vers /synthesize, avec `length_scale` optionnel
@@ -120,9 +125,11 @@ segmentation fault). Neutraliser la variable avant de lancer l'interface :
 env -u LD_LIBRARY_PATH python3 -m piperread_gui.app --lang fr
 ```
 
-Menu du tray, libellés dans la langue résolue : Lire, Pause, Reprendre,
+Menu du tray (clic droit), libellés dans la langue résolue : Lire, Pause,
 Arrêter, Phrase précédente/suivante (actifs pendant la lecture ou la pause),
-Réglages…, Quitter. Sur un bureau qui n'expose aucune zone de notification
+Réglages…, Quitter. « Lire » pendant une pause reprend là où la lecture
+s'était arrêtée. Clic gauche sur l'icône : lire à l'arrêt, mettre en pause
+pendant la lecture, reprendre en pause. Sur un bureau qui n'expose aucune zone de notification
 système (GNOME sans l'extension « AppIndicator and KStatusNotifierItem
 Support »), une notification de bureau unique explique la situation au
 démarrage ; l'interface continue de fonctionner.

@@ -5,14 +5,14 @@ Pourquoi ce fichier existe :
     Assemble ce que les autres fichiers du paquet ne font qu'un par un :
     une `QApplication` (obligatoire avant toute instanciation de
     `QSystemTrayIcon`, sous peine de crash immédiat sur PySide6), le
-    `PlaybackController` de la session, le tray qui l'expose et la socket de
+    `PlaybackController`, le tray qui l'expose et la socket de
     pilotage (`control_server.py`) qui reste la seule surface sur un bureau
     sans zone de notification. L'icône provient de `Ressources/piperread.svg`
     du clone en priorité, sinon de l'icône du thème installée par le paquet
     noyau (`/usr/share/icons/hicolor/scalable/apps/piperread.svg`, dont
     `piperread-gui` dépend) — déjà dessinée pour le paquet
     (`_CADRE/SPECIFICATIONS/PROCEDURES_LLM/instance/TACHE_dessiner-icone-svg.md`) —
-    aucune nouvelle icône n'est dessinée pour ce chantier. Le dossier des voix
+    l'interface n'a pas d'icône propre. Le dossier des voix
     suit la même priorité (`config.default_voices_dir`, clone puis
     `$XDG_DATA_HOME/piperread/voices`, même règle que `BASE_DIR`/`DATA_DIR`
     de `read.sh`). Sur l'exécutable Windows gelé, la racine de résolution est
@@ -20,15 +20,15 @@ Pourquoi ce fichier existe :
     le dossier d'extraction temporaire que donnerait `Path(__file__)` — même
     principe que `server._trouver_executable_windows`. La résolution de la
     vitesse, de la voix et de la langue
-    (`config.resolve_settings`, session 3) suit le même ordre de priorité que
+    (`config.resolve_settings`) suit le même ordre de priorité que
     `read.sh` : option de ligne de commande > variable d'environnement >
     `piperread.conf` > défaut.
 
 Entrée / sortie :
     Entrée : options de ligne de commande, mêmes que `cli.py` (`--model`,
-    `--lang`), plus `--speed` (session 3, vitesse de 0.5 à 3.0 — pas de
-    `--voice` distinct : `--model` sert déjà ce rôle en désignant directement
-    le fichier, choix de session 1 conservé par immuabilité des identifiants),
+    `--lang`), plus `--speed` (vitesse de 0.5 à 3.0 — pas de `--voice`
+    distinct : `--model` sert déjà ce rôle en désignant directement le
+    fichier, nom conservé par immuabilité des identifiants),
     plus sept options de pilotage d'une instance déjà lancée (`--play`,
     `--pause`, `--resume`, `--stop`, `--next`, `--previous`, `--quit`).
     Sortie : aucune (boucle d'événements Qt, sans fenêtre visible tant
