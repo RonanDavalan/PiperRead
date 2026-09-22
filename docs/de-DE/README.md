@@ -149,6 +149,22 @@ update-desktop-database $HOME/.local/share/applications
 
 Führen Sie `piperread --stop` (aus einem Klon `./read.sh --stop`) aus, um das Vorlesen zu beenden, `--pause`, um es zu unterbrechen, und `--resume`, um es dort fortzusetzen, wo es stehen blieb. Binden Sie diese Befehle bei Bedarf an Tastenkürzel.
 
+### Konfiguration
+
+Drei Einstellungen lassen sich anpassen: die Lesegeschwindigkeit `speed` (ein Multiplikator von 0,5 bis 3,0, 1 ist die natürliche Stimme), die Stimme `voice` (der Modellname, wie von `--list-voices` aufgelistet) und die Sprache `lang` der Meldungen (`en`, `fr`, `de` oder `es`). Jede wird in dieser Reihenfolge aufgelöst — die erste Ebene mit einem gültigen Wert gewinnt:
+
+1.  **Befehlszeilenoption** — `--speed 1.25`, `--voice de_DE-thorsten-medium`, `--lang de`.
+2.  **Umgebungsvariable** — `PIPERREAD_SPEED`, `PIPERREAD_VOICE`, `PIPERREAD_LANG`.
+3.  **Konfigurationsdatei** — `~/.config/piperread/piperread.conf`, eine Zeile `Schlüssel=Wert` pro Einstellung:
+    ```
+    speed=1.25
+    voice=de_DE-thorsten-medium
+    lang=de
+    ```
+4.  **Standard** — natürliche Geschwindigkeit, erste installierte Stimme in alphabetischer Reihenfolge, englische Meldungen.
+
+Ein ungültiger Wert auf einer anderen Ebene als der Option wird ignoriert, und die nächste Ebene wird versucht; eine ungültige Befehlszeilenoption bricht das Vorlesen ab.
+
 ---
 
 ## Qualität

@@ -149,6 +149,22 @@ update-desktop-database $HOME/.local/share/applications
 
 Lancez `piperread --stop` (ou `./read.sh --stop` depuis un clone) pour terminer la lecture, `--pause` pour la suspendre et `--resume` pour la reprendre là où elle s'est arrêtée. Liez ces commandes à des raccourcis clavier si vous le souhaitez.
 
+### Configuration
+
+Trois réglages sont ajustables : la vitesse de lecture `speed` (un multiplicateur de 0,5 à 3,0, 1 est la voix naturelle), la voix `voice` (le nom du modèle, tel que listé par `--list-voices`) et la langue `lang` des messages (`en`, `fr`, `de` ou `es`). Chacun est résolu dans cet ordre — le premier niveau qui fournit une valeur valide l'emporte :
+
+1.  **Option en ligne de commande** — `--speed 1.25`, `--voice fr_FR-siwis-low`, `--lang fr`.
+2.  **Variable d'environnement** — `PIPERREAD_SPEED`, `PIPERREAD_VOICE`, `PIPERREAD_LANG`.
+3.  **Fichier de configuration** — `~/.config/piperread/piperread.conf`, une ligne `clé=valeur` par réglage :
+    ```
+    speed=1.25
+    voice=fr_FR-siwis-low
+    lang=fr
+    ```
+4.  **Défaut** — vitesse naturelle, première voix installée par ordre alphabétique, messages en anglais.
+
+Une valeur invalide à un niveau autre que l'option est ignorée et le niveau suivant est essayé ; une option en ligne de commande invalide arrête la lecture.
+
 ---
 
 ## Qualité
