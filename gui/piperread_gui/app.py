@@ -10,14 +10,20 @@ Pourquoi ce fichier existe :
     sans zone de notification. L'icône provient de `Ressources/piperread.svg`,
     déjà dessinée pour le paquet
     (`_CADRE/SPECIFICATIONS/PROCEDURES_LLM/instance/TACHE_dessiner-icone-svg.md`) —
-    aucune nouvelle icône n'est dessinée pour ce chantier.
+    aucune nouvelle icône n'est dessinée pour ce chantier. La résolution de la
+    vitesse, de la voix et de la langue (`config.resolve_settings`, session 3)
+    suit le même ordre de priorité que `read.sh` : option de ligne de
+    commande > variable d'environnement > `piperread.conf` > défaut.
 
 Entrée / sortie :
     Entrée : options de ligne de commande, mêmes que `cli.py` (`--model`,
-    `--lang`), plus sept options de pilotage d'une instance déjà lancée
-    (`--play`, `--pause`, `--resume`, `--stop`, `--next`, `--previous`,
-    `--quit`). Sortie : aucune (boucle d'événements Qt, sans fenêtre visible
-    tant qu'aucun dialogue de réglages n'existe — session suivante).
+    `--lang`), plus `--speed` (session 3, vitesse de 0.5 à 3.0 — pas de
+    `--voice` distinct : `--model` sert déjà ce rôle en désignant directement
+    le fichier, choix de session 1 conservé par immuabilité des identifiants),
+    plus sept options de pilotage d'une instance déjà lancée (`--play`,
+    `--pause`, `--resume`, `--stop`, `--next`, `--previous`, `--quit`).
+    Sortie : aucune (boucle d'événements Qt, sans fenêtre visible tant
+    qu'aucun réglage n'est ouvert depuis le menu du tray).
 """
 
 import argparse
@@ -27,6 +33,7 @@ from pathlib import Path
 
 from PySide6.QtWidgets import QApplication
 
+from piperread_gui import config, i18n
 from piperread_gui.control_client import ErreurAucuneInstance, envoyer_commande
 from piperread_gui.control_server import ControlServer, ErreurControleIndisponible
 from piperread_gui.controller import PlaybackController
@@ -35,12 +42,7 @@ from piperread_gui.tray import PiperReadTray, avertir_si_tray_absent
 _GUI_DIR = Path(__file__).resolve().parent.parent
 _REPO_ROOT = _GUI_DIR.parent
 _ICONE = _REPO_ROOT / "Ressources" / "piperread.svg"
-
-
-def _modele_par_defaut() -> Path | None:
-    dossier_voix = _REPO_ROOT / "voices"
-    modeles = sorted(dossier_voix.glob("*.onnx"))
-    return modeles[0] if modeles else None
+_VOICES_DIR = _REPO_ROOT / "voices"
 
 
 def _analyser_arguments(argv: list[str]) -> argparse.Namespace:
@@ -51,14 +53,19 @@ def _analyser_arguments(argv: list[str]) -> argparse.Namespace:
     analyseur.add_argument(
         "--model",
         type=Path,
-        default=_modele_par_defaut(),
-        help="Chemin du modèle de voix .onnx (défaut : la première voix de voices/).",
+        default=None,
+        help="Chemin du modèle de voix .onnx (défaut : résolu depuis piperread.conf, sinon la première voix de voices/).",
     )
     analyseur.add_argument(
         "--lang",
-        default="fr",
+        default=None,
         choices=("en", "fr", "de", "es"),
-        help="Langue du découpage en phrases (défaut : fr).",
+        help="Langue des messages et du découpage en phrases (défaut : résolue depuis piperread.conf).",
+    )
+    analyseur.add_argument(
+        "--speed",
+        default=None,
+        help="Vitesse de 0.5 à 3.0, point ou virgule (défaut : résolue depuis piperread.conf, sinon 1.0).",
     )
 
     groupe_pilotage = analyseur.add_mutually_exclusive_group()
@@ -110,13 +117,44 @@ def _piloter_instance_existante(commande: str) -> int:
     return 0
 
 
+def _emettre_avertissements(
+    messages: dict[str, str],
+    warnings: list[tuple[str, str, str]],
+    model_path: Path | None,
+) -> None:
+    for cle, valeur, source in warnings:
+        if cle == "voice" and model_path is not None:
+            print(i18n.msg(messages, "voice_fallback", valeur, source, model_path.stem), file=sys.stderr)
+        else:
+            print(i18n.msg(messages, "setting_invalid", cle, valeur, source), file=sys.stderr)
+
+
 def main(argv: list[str] | None = None) -> int:
     arguments = _analyser_arguments(sys.argv[1:] if argv is None else argv)
 
     if arguments.commande is not None:
         return _piloter_instance_existante(arguments.commande)
 
-    if arguments.model is None:
+    resolu = config.resolve_settings(
+        _VOICES_DIR,
+        speed_option=arguments.speed,
+        voice_option=None,
+        lang_option=arguments.lang,
+    )
+    messages = i18n.load_messages(resolu.lang)
+
+    if resolu.invalid is not None:
+        cle, valeur, source = resolu.invalid
+        if cle == "voice" and config.valid_voice_name(valeur):
+            print(i18n.msg(messages, "voice_not_found", valeur), file=sys.stderr)
+        else:
+            print(i18n.msg(messages, "option_invalid", source, valeur), file=sys.stderr)
+        return 2
+
+    _emettre_avertissements(messages, resolu.warnings, resolu.model_path)
+
+    model_path = arguments.model if arguments.model is not None else resolu.model_path
+    if model_path is None:
         print(
             "Aucun modèle de voix trouvé ; préciser --model <chemin vers un .onnx>.",
             file=sys.stderr,
@@ -126,9 +164,8 @@ def main(argv: list[str] | None = None) -> int:
     application = QApplication(sys.argv[:1])
     application.setQuitOnLastWindowClosed(False)
 
-    avertir_si_tray_absent()
-
-    controller = PlaybackController(arguments.model, arguments.lang)
+    controller = PlaybackController(model_path, resolu.lang, resolu.speed)
+    avertir_si_tray_absent(controller.messages)
     tray = PiperReadTray(controller, _ICONE)
     tray.show()
 

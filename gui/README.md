@@ -7,11 +7,15 @@ programme externe, par le serveur HTTP que Piper fournit lui-même
 `127.0.0.1` uniquement. Décision et raison complètes dans
 `_CADRE/SPECIFICATIONS/CONCEPTION_PIPERREAD.md`, fiche « interface graphique ».
 
-État actuel (session 2 de `_CADRE/SPECIFICATIONS/ROADMAP.md`, chantier
+État actuel (session 3 de `_CADRE/SPECIFICATIONS/ROADMAP.md`, chantier
 « Interface graphique ») : icône de tray et menu (Lire, Pause, Reprendre,
 Arrêter, Phrase précédente/suivante, Réglages, Quitter) branchés sur la
-chaîne de la session 1. Le dialogue de réglages, la configuration partagée
-avec le noyau et le paquet sont les sessions suivantes.
+chaîne de la session 1, tous les libellés tirés des mêmes fichiers
+`lang/*.txt` que le noyau. La configuration (`piperread.conf`, mêmes clés
+`speed`/`voice`/`lang`, même ordre de priorité) est lue et écrite en Python
+(`config.py`) ; le dialogue de réglages (menu « Réglages… ») l'écrit
+réellement, et la vitesse choisie s'applique à la synthèse (`length_scale`).
+Le paquet est la session suivante.
 
 ## Structure
 
@@ -22,12 +26,16 @@ gui/
 │   ├── clipboard.py        — capture du presse-papiers (wl-paste puis xsel, ordre du noyau)
 │   ├── sentences.py        — découpage en phrases (pysbd, langues en/fr/de/es)
 │   ├── server.py           — cycle de vie du serveur HTTP local de Piper
-│   ├── synth_client.py     — client HTTP vers /synthesize
+│   ├── synth_client.py     — client HTTP vers /synthesize, avec `length_scale` optionnel
 │   ├── player.py           — lecture du WAV reçu (sounddevice), interruptible (arrêt, pause)
-│   ├── controller.py       — état de lecture (arrêt/lecture/pause), fil de fond
+│   ├── flatfile.py         — lecture « clé=valeur » sans exécution (port de `utils/flatfile.sh`)
+│   ├── config.py           — résolution et écriture de `piperread.conf` (port de `utils/config.sh`)
+│   ├── i18n.py              — chargement des mêmes `lang/*.txt` que le noyau, plus les clés `gui_*`
+│   ├── controller.py       — état de lecture (arrêt/lecture/pause), fil de fond, réglages courants
 │   ├── notifier.py         — notification système par `notify-send`, indépendante du tray
-│   ├── tray.py              — icône de tray, menu, détection de l'absence d'hôte de tray
-│   ├── app.py                — point d'entrée : assemble tray, contrôleur et boucle Qt
+│   ├── tray.py              — icône de tray, menu traduit, détection de l'absence d'hôte de tray
+│   ├── settings_dialog.py  — dialogue de réglages (voix, vitesse, langue), écrit `piperread.conf`
+│   ├── app.py                — point d'entrée : résout la configuration, assemble tray, contrôleur et boucle Qt
 │   └── cli.py                 — boucle de test en ligne de commande, sans fenêtre
 └── tests/                  — tests unitaires (pytest), sans dépendance réseau ni matériel audio
 ```
@@ -67,14 +75,36 @@ python3 -m piperread_gui.cli --lang fr
 
 `--model <chemin>` force une voix précise ; sans cette option, la première
 voix trouvée dans `../voices/*.onnx` est utilisée. `--lang` choisit la langue
-du découpeur de phrases parmi `en`, `fr`, `de`, `es` (défaut `fr`).
+du découpeur de phrases parmi `en`, `fr`, `de`, `es` (défaut `fr`). `cli.py`
+ne lit pas `piperread.conf` — c'est une boucle de test minimale ; la
+résolution de la configuration se fait dans `app.py` (ci-dessous).
 
 Lancer l'interface graphique (icône de tray et menu) — copier un texte, puis :
 
 ```bash
 cd ~/git/PiperRead/PiperRead/gui
 source .venv/bin/activate
-python3 -m piperread_gui.app --lang fr
+python3 -m piperread_gui.app
+```
+
+Sans option, la voix, la vitesse et la langue sont résolues dans le même
+ordre que `read.sh` : variables `PIPERREAD_VOICE`/`PIPERREAD_SPEED`/
+`PIPERREAD_LANG`, puis `$XDG_CONFIG_HOME/piperread/piperread.conf` (mêmes
+clés), puis la première voix trouvée dans `../voices/*.onnx` (et l'anglais
+pour la langue, à défaut de la locale système). `--lang` et `--speed`
+remplacent cette résolution pour la session en cours :
+`python3 -m piperread_gui.app --lang de --speed 1,5`. `--model` tient lieu
+d'option de voix (chemin direct vers un `.onnx`, plutôt qu'un nom à
+résoudre — choix de session 1, conservé) et prime sur tout le reste. Le menu
+« Réglages… » ouvre un dialogue (voix, vitesse, langue) qui réécrit
+`piperread.conf` sans toucher au reste de son contenu.
+
+Contrôle du couple configuration/traduction, sans dépendre d'un fichier réel
+(la configuration réelle de la machine n'est jamais touchée par les tests) :
+
+```bash
+cd ~/git/PiperRead/PiperRead/gui
+env -u LD_LIBRARY_PATH QT_QPA_PLATFORM=offscreen .venv/bin/python3 -m pytest tests/test_config.py tests/test_i18n.py tests/test_settings_dialog.py
 ```
 
 **Piège de plateforme (constaté en session 2, KDE Plasma) :** si le shell
@@ -87,9 +117,9 @@ segmentation fault). Neutraliser la variable avant de lancer l'interface :
 env -u LD_LIBRARY_PATH python3 -m piperread_gui.app --lang fr
 ```
 
-Menu du tray : Lire, Pause, Reprendre, Arrêter, Phrase précédente/suivante
-(actifs pendant la lecture ou la pause), Réglages (désactivé, session
-suivante), Quitter. Sur un bureau qui n'expose aucune zone de notification
+Menu du tray, libellés dans la langue résolue : Lire, Pause, Reprendre,
+Arrêter, Phrase précédente/suivante (actifs pendant la lecture ou la pause),
+Réglages…, Quitter. Sur un bureau qui n'expose aucune zone de notification
 système (GNOME sans l'extension « AppIndicator and KStatusNotifierItem
 Support »), une notification de bureau unique explique la situation au
 démarrage ; l'interface continue de fonctionner.

@@ -4,32 +4,30 @@ tray.py — icône de tray et menu, branchés sur `PlaybackController`.
 Pourquoi ce fichier existe :
     Sépare la présentation (icône, menu, activation/désactivation des
     entrées selon l'état) de la logique de lecture (`controller.py`), pour
-    que l'une puisse être testée sans l'autre.
+    que l'une puisse être testée sans l'autre. Les libellés viennent des
+    mêmes fichiers `lang/*.txt` que le noyau (`i18n.py`, session 3) : ce
+    fichier ne contient plus aucun texte affiché à l'utilisateur en dur.
 
 Entrée / sortie :
-    Entrée : un `PlaybackController` déjà construit et le chemin de l'icône
-    SVG du projet. Sortie : aucune (objet Qt vivant tant que l'application
-    tourne).
+    Entrée : un `PlaybackController` déjà construit (dont les messages
+    traduits, `controller.messages`) et le chemin de l'icône SVG du projet.
+    Sortie : aucune (objet Qt vivant tant que l'application tourne).
 
 Dépend de :
     `PySide6.QtWidgets` (`QSystemTrayIcon`, `QMenu`) ; `notifier.py` pour la
-    notification unique en l'absence d'hôte de tray.
+    notification unique en l'absence d'hôte de tray ; `i18n.py` pour les
+    libellés ; `settings_dialog.py` pour le dialogue de réglages.
 """
 
 from pathlib import Path
 
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
+from PySide6.QtWidgets import QApplication, QDialog, QMenu, QSystemTrayIcon
 
 from piperread_gui.controller import Etat, PlaybackController
+from piperread_gui.i18n import msg
 from piperread_gui.notifier import notifier
-
-MESSAGE_TRAY_ABSENT = (
-    "Aucune zone de notification système détectée : PiperRead continue de "
-    "fonctionner, mais son menu n'est accessible que si le bureau expose une "
-    "zone de notification. Sur GNOME, installer l'extension « AppIndicator "
-    "and KStatusNotifierItem Support » pour retrouver l'icône."
-)
+from piperread_gui.settings_dialog import SettingsDialog
 
 
 class PiperReadTray(QSystemTrayIcon):
@@ -37,30 +35,37 @@ class PiperReadTray(QSystemTrayIcon):
         super().__init__(QIcon(str(icon_path)))
         self._controller = controller
 
-        menu = QMenu()
-        self._action_lire = menu.addAction("Lire", self._controller.lire)
-        self._action_pause = menu.addAction("Pause", self._controller.pause)
-        self._action_reprendre = menu.addAction("Reprendre", self._controller.reprendre)
-        self._action_arreter = menu.addAction("Arrêter", self._controller.arreter)
-        menu.addSeparator()
-        self._action_precedente = menu.addAction(
-            "Phrase précédente", self._controller.phrase_precedente
-        )
-        self._action_suivante = menu.addAction(
-            "Phrase suivante", self._controller.phrase_suivante
-        )
-        menu.addSeparator()
-        self._action_reglages = menu.addAction("Réglages")
-        self._action_reglages.setEnabled(False)
-        self._action_reglages.setToolTip("Sessions suivantes du chantier « Interface graphique ».")
-        menu.addSeparator()
-        menu.addAction("Quitter", self._quitter)
-        self.setContextMenu(menu)
-        self.setToolTip("PiperRead")
+        self._menu = QMenu()
+        self._action_lire = self._menu.addAction("", self._controller.lire)
+        self._action_pause = self._menu.addAction("", self._controller.pause)
+        self._action_reprendre = self._menu.addAction("", self._controller.reprendre)
+        self._action_arreter = self._menu.addAction("", self._controller.arreter)
+        self._menu.addSeparator()
+        self._action_precedente = self._menu.addAction("", self._controller.phrase_precedente)
+        self._action_suivante = self._menu.addAction("", self._controller.phrase_suivante)
+        self._menu.addSeparator()
+        self._action_reglages = self._menu.addAction("", self._ouvrir_reglages)
+        self._menu.addSeparator()
+        self._action_quitter = self._menu.addAction("", self._quitter)
+        self.setContextMenu(self._menu)
+
+        self._actualiser_textes()
 
         self._controller.etat_change.connect(self._sur_changement_etat)
         self._controller.erreur.connect(self._sur_erreur)
         self._sur_changement_etat(Etat.ARRET)
+
+    def _actualiser_textes(self) -> None:
+        messages = self._controller.messages
+        self._action_lire.setText(msg(messages, "gui_menu_play"))
+        self._action_pause.setText(msg(messages, "gui_menu_pause"))
+        self._action_reprendre.setText(msg(messages, "gui_menu_resume"))
+        self._action_arreter.setText(msg(messages, "gui_menu_stop"))
+        self._action_precedente.setText(msg(messages, "gui_menu_previous"))
+        self._action_suivante.setText(msg(messages, "gui_menu_next"))
+        self._action_reglages.setText(msg(messages, "gui_menu_settings"))
+        self._action_quitter.setText(msg(messages, "gui_menu_quit"))
+        self.setToolTip("PiperRead")
 
     def _sur_changement_etat(self, etat: Etat) -> None:
         self._action_lire.setEnabled(etat != Etat.LECTURE)
@@ -76,13 +81,18 @@ class PiperReadTray(QSystemTrayIcon):
         else:
             notifier("PiperRead", message)
 
+    def _ouvrir_reglages(self) -> None:
+        dialogue = SettingsDialog(self._controller)
+        if dialogue.exec() == QDialog.DialogCode.Accepted:
+            self._actualiser_textes()
+
     def _quitter(self) -> None:
         self._controller.arreter()
         QApplication.quit()
 
 
-def avertir_si_tray_absent() -> bool:
+def avertir_si_tray_absent(messages: dict[str, str]) -> bool:
     disponible = QSystemTrayIcon.isSystemTrayAvailable()
     if not disponible:
-        notifier("PiperRead", MESSAGE_TRAY_ABSENT)
+        notifier("PiperRead", msg(messages, "gui_tray_absent"))
     return disponible

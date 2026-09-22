@@ -1,5 +1,7 @@
 import time
+from pathlib import Path
 
+import pytest
 from PySide6.QtCore import Qt
 
 from piperread_gui import controller as controller_module
@@ -26,7 +28,7 @@ def _controleur_pret(monkeypatch, phrases):
     monkeypatch.setattr(
         controller_module,
         "synthesize",
-        lambda base_url, phrase: b"audio:" + phrase.encode(),
+        lambda base_url, phrase, length_scale=None: b"audio:" + phrase.encode(),
     )
     return PlaybackController(model_path="modele.onnx", lang="fr")
 
@@ -117,3 +119,62 @@ def test_phrase_suivante_interrompt_et_avance(monkeypatch):
     assert phrases_jouees[:2] == [1, 2]
     controleur.arreter()
     assert controleur.etat == Etat.ARRET
+
+
+def test_reglages_par_defaut():
+    controleur = PlaybackController(model_path="modele.onnx", lang="fr")
+    assert controleur.model_path == Path("modele.onnx")
+    assert controleur.lang == "fr"
+    assert controleur.speed == 1.0
+    assert controleur.messages["gui_menu_play"] == "Lire"
+
+
+def test_appliquer_reglages_met_a_jour_le_controleur():
+    controleur = PlaybackController(model_path="modele.onnx", lang="fr")
+    controleur.appliquer_reglages(Path("autre.onnx"), "en", 1.5)
+
+    assert controleur.model_path == Path("autre.onnx")
+    assert controleur.lang == "en"
+    assert controleur.speed == 1.5
+    assert controleur.messages["gui_menu_play"] == "Play"
+    assert controleur._length_scale == pytest.approx(1 / 1.5)
+
+
+def test_appliquer_reglages_meme_langue_ne_recharge_pas_les_messages():
+    controleur = PlaybackController(model_path="modele.onnx", lang="fr")
+    messages_avant = controleur.messages
+    controleur.appliquer_reglages(Path("modele.onnx"), "fr", 2.0)
+    assert controleur.messages is messages_avant
+
+
+def test_lire_transmet_le_length_scale_a_la_synthese(monkeypatch):
+    appels = []
+    monkeypatch.setattr(controller_module, "read_clipboard", lambda: "texte")
+    monkeypatch.setattr(
+        controller_module, "split_sentences", lambda texte, lang: ["une."]
+    )
+    monkeypatch.setattr(controller_module, "PiperHttpServer", _ServeurFactice)
+    monkeypatch.setattr(controller_module, "play_wav_bytes", lambda audio, **_kw: None)
+
+    def synthese_captee(base_url, phrase, length_scale=None):
+        appels.append(length_scale)
+        return b"audio"
+
+    monkeypatch.setattr(controller_module, "synthesize", synthese_captee)
+
+    controleur = PlaybackController(model_path="modele.onnx", lang="fr", speed=2.0)
+    controleur.lire()
+    controleur._fil.join(timeout=2.0)
+
+    assert appels == [pytest.approx(0.5)]
+
+
+def test_presse_papiers_vide_message_traduit_en(monkeypatch):
+    monkeypatch.setattr(controller_module, "read_clipboard", lambda: "   ")
+    controleur = PlaybackController(model_path="modele.onnx", lang="en")
+
+    erreurs = []
+    controleur.erreur.connect(erreurs.append)
+    controleur.lire()
+
+    assert erreurs == ["Clipboard empty: nothing to read."]

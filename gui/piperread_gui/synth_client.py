@@ -7,8 +7,10 @@ Pourquoi ce fichier existe :
     côté du port local.
 
 Entrée / sortie :
-    Entrée : l'URL de base du serveur (`http://127.0.0.1:<port>`) et le texte
-    d'une phrase. Sortie : les octets d'un fichier WAV.
+    Entrée : l'URL de base du serveur (`http://127.0.0.1:<port>`), le texte
+    d'une phrase et, en option, le `length_scale` calculé depuis la vitesse
+    résolue (`config.speed_to_length_scale`), même calcul que `read.sh`.
+    Sortie : les octets d'un fichier WAV.
 
 Dépend de :
     `requests`.
@@ -23,14 +25,18 @@ class ErreurSynthese(RuntimeError):
     pass
 
 
-def synthesize(base_url: str, text: str) -> bytes:
+def synthesize(base_url: str, text: str, length_scale: float | None = None) -> bytes:
     if not text.strip():
         raise ValueError("Texte vide : rien à synthétiser.")
+
+    corps = {"text": text}
+    if length_scale is not None:
+        corps["length_scale"] = length_scale
 
     try:
         reponse = requests.post(
             f"{base_url}/synthesize",
-            json={"text": text},
+            json=corps,
             timeout=_DELAI_REQUETE_SECONDES,
         )
     except requests.RequestException as erreur:

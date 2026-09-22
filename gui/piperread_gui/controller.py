@@ -9,14 +9,17 @@ Pourquoi ce fichier existe :
     (`threading.Event`) pour la pause et l'arrêt.
 
 Entrée / sortie :
-    Entrée : le chemin du modèle de voix et la langue de découpage, fixés à
-    la construction (mêmes options que `cli.py`). Sortie : trois signaux Qt —
-    `etat_change` (nouvel `Etat`), `phrase_courante` (numéro, total) et
-    `erreur` (message) — que le tray relie à l'affichage du menu.
+    Entrée : le chemin du modèle de voix, la langue de découpage et la
+    vitesse (multiplicateur, 1.0 = voix naturelle), fixés à la construction
+    puis modifiables par `appliquer_reglages` (dialogue de réglages, session
+    3). Sortie : trois signaux Qt — `etat_change` (nouvel `Etat`),
+    `phrase_courante` (numéro, total) et `erreur` (message, dans la langue
+    résolue) — que le tray relie à l'affichage du menu.
 
 Dépend de :
     `PySide6.QtCore` pour les signaux ; `clipboard.py`, `sentences.py`,
-    `server.py`, `synth_client.py`, `player.py` de la session 1.
+    `server.py`, `synth_client.py`, `player.py` de la session 1 ; `config.py`
+    (`speed_to_length_scale`) et `i18n.py` de la session 3.
 """
 
 import threading
@@ -26,6 +29,8 @@ from pathlib import Path
 from PySide6.QtCore import QObject, Signal
 
 from piperread_gui.clipboard import read_clipboard
+from piperread_gui.config import speed_to_length_scale
+from piperread_gui.i18n import load_messages, msg
 from piperread_gui.player import play_wav_bytes
 from piperread_gui.sentences import split_sentences
 from piperread_gui.server import ErreurServeurPiper, PiperHttpServer
@@ -43,10 +48,13 @@ class PlaybackController(QObject):
     phrase_courante = Signal(int, int)
     erreur = Signal(str)
 
-    def __init__(self, model_path: Path, lang: str):
+    def __init__(self, model_path: Path, lang: str, speed: float = 1.0):
         super().__init__()
-        self._model_path = model_path
+        self._model_path = Path(model_path)
         self._lang = lang
+        self._speed = speed
+        self._length_scale = speed_to_length_scale(speed)
+        self._messages = load_messages(lang)
         self._etat = Etat.ARRET
         self._phrases: list[str] = []
         self._index = 0
@@ -59,6 +67,30 @@ class PlaybackController(QObject):
     @property
     def etat(self) -> Etat:
         return self._etat
+
+    @property
+    def model_path(self) -> Path:
+        return self._model_path
+
+    @property
+    def lang(self) -> str:
+        return self._lang
+
+    @property
+    def speed(self) -> float:
+        return self._speed
+
+    @property
+    def messages(self) -> dict[str, str]:
+        return self._messages
+
+    def appliquer_reglages(self, model_path: Path, lang: str, speed: float) -> None:
+        self._model_path = Path(model_path)
+        if lang != self._lang:
+            self._lang = lang
+            self._messages = load_messages(lang)
+        self._speed = speed
+        self._length_scale = speed_to_length_scale(speed)
 
     def _definir_etat(self, etat: Etat) -> None:
         self._etat = etat
@@ -73,11 +105,11 @@ class PlaybackController(QObject):
 
         texte = read_clipboard()
         if not texte.strip():
-            self.erreur.emit("Presse-papiers vide : rien à lire.")
+            self.erreur.emit(msg(self._messages, "gui_clipboard_empty"))
             return
         phrases = split_sentences(texte, self._lang)
         if not phrases:
-            self.erreur.emit("Aucune phrase reconnue dans le texte du presse-papiers.")
+            self.erreur.emit(msg(self._messages, "gui_no_sentences"))
             return
 
         self._phrases = phrases
@@ -136,7 +168,7 @@ class PlaybackController(QObject):
                     phrase = self._phrases[self._index]
                     self.phrase_courante.emit(self._index + 1, len(self._phrases))
                     try:
-                        audio = synthesize(serveur.base_url, phrase)
+                        audio = synthesize(serveur.base_url, phrase, length_scale=self._length_scale)
                     except ErreurSynthese as erreur:
                         self.erreur.emit(str(erreur))
                         return

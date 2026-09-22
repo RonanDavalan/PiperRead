@@ -46,6 +46,32 @@ def test_reponse_vide_leve(monkeypatch):
         synth_client.synthesize("http://127.0.0.1:5000", "Bonjour.")
 
 
+def test_length_scale_transmis_si_fourni(monkeypatch):
+    corps_captes = {}
+
+    def post_capte(url, json, timeout):
+        corps_captes.update(json)
+        return _ReponseFactice()
+
+    monkeypatch.setattr(synth_client.requests, "post", post_capte)
+    synth_client.synthesize("http://127.0.0.1:5000", "Bonjour.", length_scale=0.8)
+
+    assert corps_captes == {"text": "Bonjour.", "length_scale": 0.8}
+
+
+def test_length_scale_absent_si_non_fourni(monkeypatch):
+    corps_captes = {}
+
+    def post_capte(url, json, timeout):
+        corps_captes.update(json)
+        return _ReponseFactice()
+
+    monkeypatch.setattr(synth_client.requests, "post", post_capte)
+    synth_client.synthesize("http://127.0.0.1:5000", "Bonjour.")
+
+    assert corps_captes == {"text": "Bonjour."}
+
+
 def test_erreur_reseau_convertie(monkeypatch):
     def leve(*_a, **_kw):
         raise requests.ConnectionError("refus de connexion")
