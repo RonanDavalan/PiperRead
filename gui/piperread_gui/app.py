@@ -36,7 +36,6 @@ Entrée / sortie :
 """
 
 import argparse
-import os
 import sys
 from pathlib import Path
 
@@ -122,12 +121,6 @@ def _analyser_arguments(argv: list[str]) -> argparse.Namespace:
 
 
 def _piloter_instance_existante(commande: str) -> int:
-    if os.name != "posix":
-        print(
-            "Le pilotage d'une instance déjà lancée n'est pris en charge que sur Linux/Unix.",
-            file=sys.stderr,
-        )
-        return 1
     try:
         reponse = envoyer_commande(commande)
     except ErreurAucuneInstance as erreur:
@@ -189,30 +182,27 @@ def main(argv: list[str] | None = None) -> int:
     tray = PiperReadTray(controller, _ICONE)
     tray.show()
 
-    control_server = None
-    if os.name == "posix":
-        control_server = ControlServer()
-        try:
-            control_server.demarrer()
-        except ErreurControleIndisponible as erreur:
-            print(str(erreur), file=sys.stderr)
-            return 1
+    control_server = ControlServer()
+    try:
+        control_server.demarrer()
+    except ErreurControleIndisponible as erreur:
+        print(str(erreur), file=sys.stderr)
+        return 1
 
-        repartiteur = {
-            "lire": controller.lire,
-            "pause": controller.pause,
-            "reprendre": controller.reprendre,
-            "arreter": controller.arreter,
-            "phrase_precedente": controller.phrase_precedente,
-            "phrase_suivante": controller.phrase_suivante,
-            "quitter": lambda: (controller.arreter(), application.quit()),
-        }
-        control_server.commande.connect(lambda ligne: repartiteur.get(ligne, lambda: None)())
+    repartiteur = {
+        "lire": controller.lire,
+        "pause": controller.pause,
+        "reprendre": controller.reprendre,
+        "arreter": controller.arreter,
+        "phrase_precedente": controller.phrase_precedente,
+        "phrase_suivante": controller.phrase_suivante,
+        "quitter": lambda: (controller.arreter(), application.quit()),
+    }
+    control_server.commande.connect(lambda ligne: repartiteur.get(ligne, lambda: None)())
 
     code_sortie = application.exec()
 
-    if control_server is not None:
-        control_server.arreter()
+    control_server.arreter()
 
     return code_sortie
 
