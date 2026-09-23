@@ -31,7 +31,7 @@ from typing import Callable
 
 from piperread_gui.flatfile import read_flat_file
 
-KNOWN_KEYS = ("speed", "voice", "lang")
+KNOWN_KEYS = ("speed", "voice", "lang", "telemetry")
 LANGS = ("en", "fr", "de", "es")
 
 _CLE_VALIDE = re.compile(r"[a-z][a-z_]*")
@@ -79,6 +79,10 @@ def speed_to_length_scale(speed: float) -> float:
 
 def valid_lang(value: str) -> str | None:
     return value if value in LANGS else None
+
+
+def valid_telemetry(value: str) -> str | None:
+    return value if value in ("on", "off") else None
 
 
 def valid_voice_name(value: str) -> bool:
@@ -139,6 +143,8 @@ class ResolvedSettings:
     model_path: Path | None
     lang: str
     lang_source: str
+    telemetry: str
+    telemetry_source: str
     warnings: list[tuple[str, str, str]]
     unknown_keys: list[str]
     invalid: tuple[str, str, str] | None
@@ -180,6 +186,12 @@ def resolve_settings(
     voice_name = voice_resolved.value or default_voice_name(voices_dir)
     model_path = voices_dir / f"{voice_name}.onnx" if voice_name else None
 
+    telemetry_resolved = resolve_setting("telemetry", valid_telemetry, None, config_values)
+    warnings += telemetry_resolved.warnings
+    if invalid is None and telemetry_resolved.invalid is not None:
+        invalid = telemetry_resolved.invalid
+    telemetry = telemetry_resolved.value or "off"
+
     return ResolvedSettings(
         speed=speed,
         speed_source=speed_resolved.source,
@@ -188,6 +200,8 @@ def resolve_settings(
         model_path=model_path,
         lang=lang,
         lang_source=lang_source,
+        telemetry=telemetry,
+        telemetry_source=telemetry_resolved.source,
         warnings=warnings,
         unknown_keys=unknown_keys,
         invalid=invalid,

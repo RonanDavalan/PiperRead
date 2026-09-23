@@ -242,6 +242,15 @@ play_text() {
     if [ -z "$MODEL_PATH" ]; then alert voice_missing; exit 1; fi
     rate=$(voice_rate "$MODEL_PATH")
 
+    # onnxruntime (moteur tiré par piper) envoie de la télémétrie à Microsoft
+    # dès qu'il tourne quelques secondes ; coupée par défaut, réactivable par
+    # `telemetry=on` (piperread.conf) ou PIPERREAD_TELEMETRY=on.
+    if [ "$TELEMETRY" == "on" ]; then
+        unset ORT_DISABLE_TELEMETRY
+    else
+        export ORT_DISABLE_TELEMETRY=1
+    fi
+
     # Activation environnement virtuel
     if [ -f "$VENV_PATH/bin/activate" ]; then
         source "$VENV_PATH/bin/activate"
@@ -388,6 +397,10 @@ if [ -n "$RESOLVED_VALUE" ]; then
 else
     MODEL_PATH=$(default_voice) || MODEL_PATH=""
 fi
+
+resolve_setting telemetry valid_telemetry || refuse_option
+TELEMETRY="${RESOLVED_VALUE:-off}"
+
 case "$MODE" in
     --diagnose|--list-voices|--download-voice) ;;
     *) emit_setting_warnings ;;

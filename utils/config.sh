@@ -47,6 +47,13 @@ valid_lang() {
     esac
 }
 
+valid_telemetry() {
+    case "$1" in
+        on|off) echo "$1" ;;
+        *) return 1 ;;
+    esac
+}
+
 # Un nom de voix n'est accepté que si le modèle existe dans le dossier des voix.
 validate_voice() {
     valid_voice_name "$1" > /dev/null && [ -f "$VOICES_DIR/$1.onnx" ] && echo "$1"
@@ -80,7 +87,7 @@ load_config_file() {
         value="${value#"${value%%[![:space:]]*}"}"
         value="${value%"${value##*[![:space:]]}"}"
         case "$key" in
-            speed|voice|lang) CONFIG_FILE_VALUES["$key"]="$value" ;;
+            speed|voice|lang|telemetry) CONFIG_FILE_VALUES["$key"]="$value" ;;
             *) CONFIG_UNKNOWN_KEYS+=("$key") ;;
         esac
     done

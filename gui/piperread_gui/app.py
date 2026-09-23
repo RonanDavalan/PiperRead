@@ -19,10 +19,11 @@ Pourquoi ce fichier existe :
     le dossier réel de `piperread-gui.exe` (`frozen.installation_dir`), pas
     le dossier d'extraction temporaire que donnerait `Path(__file__)` — même
     principe que `server._trouver_executable_windows`. La résolution de la
-    vitesse, de la voix et de la langue
+    vitesse, de la voix, de la langue et de la télémétrie du moteur
     (`config.resolve_settings`) suit le même ordre de priorité que
     `read.sh` : option de ligne de commande > variable d'environnement >
-    `piperread.conf` > défaut.
+    `piperread.conf` > défaut (télémétrie exclue, sans option dédiée : voir
+    `controller.py`).
 
 Entrée / sortie :
     Entrée : options de ligne de commande, mêmes que `cli.py` (`--model`,
@@ -177,7 +178,7 @@ def main(argv: list[str] | None = None) -> int:
     application = QApplication(sys.argv[:1])
     application.setQuitOnLastWindowClosed(False)
 
-    controller = PlaybackController(model_path, resolu.lang, resolu.speed)
+    controller = PlaybackController(model_path, resolu.lang, resolu.speed, resolu.telemetry)
     avertir_si_tray_absent(controller.messages)
     tray = PiperReadTray(controller, _ICONE)
     tray.show()

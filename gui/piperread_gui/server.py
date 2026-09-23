@@ -11,10 +11,14 @@ Pourquoi ce fichier existe :
     `CONCEPTION_PIPERREAD.md`, fiche « interface graphique ».
 
 Entrée / sortie :
-    Entrée : le chemin du modèle de voix (`.onnx`). Sortie : un objet
-    `PiperHttpServer` démarré, dont l'attribut `base_url` pointe vers
-    `http://127.0.0.1:<port>`, port choisi automatiquement et jamais exposé
-    au-delà de la boucle locale.
+    Entrée : le chemin du modèle de voix (`.onnx`) et la préférence de
+    télémétrie résolue par `config.resolve_settings` (`telemetry`, "off" par
+    défaut) — posée comme `ORT_DISABLE_TELEMETRY=1` dans l'environnement du
+    sous-processus sauf si l'utilisateur l'a explicitement réactivée (décision
+    « télémétrie du moteur d'inférence » de `CONCEPTION_PIPERREAD.md`).
+    Sortie : un objet `PiperHttpServer` démarré, dont l'attribut `base_url`
+    pointe vers `http://127.0.0.1:<port>`, port choisi automatiquement et
+    jamais exposé au-delà de la boucle locale.
 
 Dépend de :
     Un interpréteur Python disposant du paquet `piper-tts[http]` — celui du
@@ -27,6 +31,7 @@ Dépend de :
     interpréteur ni option `-m`.
 """
 
+import os
 import socket
 import subprocess
 import sys
@@ -97,10 +102,11 @@ def _port_libre(host: str) -> int:
 
 
 class PiperHttpServer:
-    def __init__(self, model_path: str | Path):
+    def __init__(self, model_path: str | Path, telemetry: str = "off"):
         self._model_path = Path(model_path)
         if not self._model_path.is_file():
             raise ErreurServeurPiper(f"Modèle de voix introuvable : {self._model_path}")
+        self._telemetry = telemetry
         self._processus: subprocess.Popen | None = None
         self.port: int | None = None
 
@@ -116,11 +122,18 @@ class PiperHttpServer:
 
         self.port = _port_libre(_HOTE_LOCAL)
 
+        environnement = os.environ.copy()
+        if self._telemetry == "on":
+            environnement.pop("ORT_DISABLE_TELEMETRY", None)
+        else:
+            environnement["ORT_DISABLE_TELEMETRY"] = "1"
+
         self._processus = subprocess.Popen(
             _commande_serveur(self.port, self._model_path),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
+            env=environnement,
         )
         self._attendre_disponibilite()
 

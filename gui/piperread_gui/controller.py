@@ -11,9 +11,12 @@ Pourquoi ce fichier existe :
     synthèse).
 
 Entrée / sortie :
-    Entrée : le chemin du modèle de voix, la langue de découpage et la
-    vitesse (multiplicateur, 1.0 = voix naturelle), fixés à la construction
-    puis modifiables par `appliquer_reglages` (dialogue de réglages).
+    Entrée : le chemin du modèle de voix, la langue de découpage, la
+    vitesse (multiplicateur, 1.0 = voix naturelle) et la préférence de
+    télémétrie du moteur (`telemetry`, "off" par défaut, transmise telle
+    quelle à `PiperHttpServer`), fixés à la construction puis modifiables par
+    `appliquer_reglages` (dialogue de réglages, télémétrie exclue : préférence
+    globale réglée dans `piperread.conf`, pas par lecture).
     Sortie : trois signaux Qt — `etat_change` (nouvel `Etat`),
     `phrase_courante` (numéro, total) et `erreur` (message, dans la langue
     résolue) — que le tray relie à l'affichage du menu.
@@ -51,11 +54,12 @@ class PlaybackController(QObject):
     phrase_courante = Signal(int, int)
     erreur = Signal(str)
 
-    def __init__(self, model_path: Path, lang: str, speed: float = 1.0):
+    def __init__(self, model_path: Path, lang: str, speed: float = 1.0, telemetry: str = "off"):
         super().__init__()
         self._model_path = Path(model_path)
         self._lang = lang
         self._speed = speed
+        self._telemetry = telemetry
         self._length_scale = speed_to_length_scale(speed)
         self._messages = load_messages(lang)
         self._etat = Etat.ARRET
@@ -163,7 +167,7 @@ class PlaybackController(QObject):
 
     def _boucle_lecture(self) -> None:
         try:
-            with PiperHttpServer(self._model_path) as serveur:
+            with PiperHttpServer(self._model_path, telemetry=self._telemetry) as serveur:
                 self._definir_etat(Etat.LECTURE)
                 while self._index < len(self._phrases):
                     if self._evenement_arret.is_set() and self._index_demande is None:
