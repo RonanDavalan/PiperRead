@@ -1,5 +1,5 @@
 """
-settings_dialog.py — dialogue minimal de réglages (voix, vitesse, langue), écrit dans piperread.conf.
+settings_dialog.py — dialogue minimal de réglages (voix, vitesse, langue, lancement à l'ouverture de session).
 
 Pourquoi ce fichier existe :
     Sépare la présentation Qt de la résolution de configuration (`config.py`) :
@@ -7,16 +7,21 @@ Pourquoi ce fichier existe :
     l'utilisateur en choisir de nouvelles parmi les mêmes contraintes que le
     noyau (bornes de vitesse 0,5 à 3,0, voix installées, quatre langues), puis
     délègue l'écriture du fichier à `config.write_config_values` — le même
-    fichier, les mêmes clés que `read.sh`.
+    fichier, les mêmes clés que `read.sh`. Le lancement à l'ouverture de
+    session n'est pas une clé de ce fichier : la case lit et écrit le
+    mécanisme du système (`autostart.py`).
 
 Entrée / sortie :
     Entrée : le `PlaybackController` de la session (voix, vitesse, langue et
-    messages traduits déjà résolus). Sortie : à la validation,
-    `piperread.conf` est réécrit et le contrôleur reçoit les nouveaux réglages
-    (`appliquer_reglages`) ; à l'annulation, rien n'est modifié.
+    messages traduits déjà résolus) et le chemin de l'icône, repris par
+    l'entrée de lancement automatique d'un clone. Sortie : à la validation,
+    `piperread.conf` est réécrit, le contrôleur reçoit les nouveaux réglages
+    (`appliquer_reglages`) et le lancement à l'ouverture de session est
+    activé ou désactivé s'il a changé ; à l'annulation, rien n'est modifié.
 """
 
 from PySide6.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QDialog,
     QDialogButtonBox,
@@ -24,16 +29,17 @@ from PySide6.QtWidgets import (
     QFormLayout,
 )
 
-from piperread_gui import config
+from piperread_gui import autostart, config
 from piperread_gui.i18n import msg
 
 _NOMS_LANGUES = {"en": "English", "fr": "Français", "de": "Deutsch", "es": "Español"}
 
 
 class SettingsDialog(QDialog):
-    def __init__(self, controller, parent=None):
+    def __init__(self, controller, icone=None, parent=None):
         super().__init__(parent)
         self._controller = controller
+        self._icone = icone
         messages = controller.messages
         self.setWindowTitle(msg(messages, "gui_settings_title"))
 
@@ -63,10 +69,15 @@ class SettingsDialog(QDialog):
         if controller.lang in codes:
             self._langue.setCurrentIndex(codes.index(controller.lang))
 
+        self._lancement_auto = QCheckBox(msg(messages, "gui_settings_autostart"))
+        self._lancement_auto_initial = autostart.est_active()
+        self._lancement_auto.setChecked(self._lancement_auto_initial)
+
         agencement = QFormLayout(self)
         agencement.addRow(msg(messages, "gui_settings_voice"), self._voix)
         agencement.addRow(msg(messages, "gui_settings_speed"), self._vitesse)
         agencement.addRow(msg(messages, "gui_settings_lang"), self._langue)
+        agencement.addRow(self._lancement_auto)
 
         boutons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
@@ -90,4 +101,11 @@ class SettingsDialog(QDialog):
 
         modele = voix_dir / f"{nom_voix}.onnx" if nom_voix else self._controller.model_path
         self._controller.appliquer_reglages(modele, langue, vitesse)
+
+        lancement_auto = self._lancement_auto.isChecked()
+        if lancement_auto != self._lancement_auto_initial:
+            if lancement_auto:
+                autostart.activer(self._icone)
+            else:
+                autostart.desactiver()
         self.accept()

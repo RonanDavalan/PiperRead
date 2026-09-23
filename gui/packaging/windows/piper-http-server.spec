@@ -1,8 +1,9 @@
 # piper-http-server.spec — gèle le serveur HTTP de Piper en exécutable Windows autonome.
 #
 # Pourquoi ce fichier existe :
-#     Compagnon de piperread-gui.exe (piperread-gui.spec), livré à côté de
-#     lui dans le même dossier d'installation. server.py l'invoque en
+#     Compagnon de piperread-gui.exe (piperread-gui.spec), livré dans le
+#     sous-dossier piper-http-server\ de son dossier, en mode dossier comme
+#     lui (chaque exécutable a son propre _internal\). server.py l'invoque en
 #     sous-processus, jamais en import direct : c'est la frontière GPL déjà
 #     actée pour le lien au noyau (CONCEPTION_PIPERREAD.md, fiche « interface
 #     graphique »), transposée à Windows où il n'existe ni venv ni paquet
@@ -54,13 +55,21 @@ pyz = PYZ(a.pure)
 exe = EXE(
     pyz,
     a.scripts,
-    a.binaries,
-    a.datas,
     [],
+    exclude_binaries=True,
     name="piper-http-server",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=False,
     console=False,
+)
+
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.datas,
+    strip=False,
+    upx=False,
+    name="piper-http-server",
 )

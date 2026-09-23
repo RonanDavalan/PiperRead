@@ -39,12 +39,21 @@ def test_trouver_interprete_absent_leve(tmp_path, monkeypatch):
         server._trouver_interprete()
 
 
-def test_trouver_executable_windows_prefere_a_cote_de_lexecutable(tmp_path, monkeypatch):
+def test_trouver_executable_windows_dans_son_sous_dossier(tmp_path, monkeypatch):
     monkeypatch.setattr(server.sys, "executable", str(tmp_path / "piperread-gui.exe"))
-    executable = tmp_path / server._NOM_EXECUTABLE_WINDOWS
+    executable = tmp_path / "piper-http-server" / server._NOM_EXECUTABLE_WINDOWS
+    executable.parent.mkdir()
     executable.touch()
 
     assert server._trouver_executable_windows() == executable
+
+
+def test_trouver_executable_windows_ignore_l_ancien_emplacement(tmp_path, monkeypatch):
+    monkeypatch.setattr(server.sys, "executable", str(tmp_path / "piperread-gui.exe"))
+    (tmp_path / server._NOM_EXECUTABLE_WINDOWS).touch()
+
+    with pytest.raises(server.ErreurServeurPiper, match="piper-http-server"):
+        server._trouver_executable_windows()
 
 
 def test_trouver_executable_windows_absent_leve(tmp_path, monkeypatch):
@@ -57,7 +66,8 @@ def test_trouver_executable_windows_absent_leve(tmp_path, monkeypatch):
 def test_commande_serveur_windows_invoque_lexecutable_directement(tmp_path, monkeypatch):
     monkeypatch.setattr(server.sys, "platform", "win32")
     monkeypatch.setattr(server.sys, "executable", str(tmp_path / "piperread-gui.exe"))
-    executable = tmp_path / server._NOM_EXECUTABLE_WINDOWS
+    executable = tmp_path / "piper-http-server" / server._NOM_EXECUTABLE_WINDOWS
+    executable.parent.mkdir()
     executable.touch()
     modele = tmp_path / "voix.onnx"
 
@@ -68,7 +78,7 @@ def test_commande_serveur_windows_invoque_lexecutable_directement(tmp_path, monk
     assert commande[commande.index("--port") + 1] == "5000"
 
 
-def test_commande_serveur_posix_passe_par_linterprete(tmp_path, monkeypatch):
+def test_commande_serveur_posix_execute_le_point_d_entree(tmp_path, monkeypatch):
     monkeypatch.setattr(server.sys, "platform", "linux")
     monkeypatch.setattr(server, "_trouver_interprete", lambda: tmp_path / "python3")
     modele = tmp_path / "voix.onnx"
@@ -76,7 +86,9 @@ def test_commande_serveur_posix_passe_par_linterprete(tmp_path, monkeypatch):
     commande = server._commande_serveur(5000, modele)
 
     assert commande[0] == str(tmp_path / "python3")
-    assert commande[1:3] == ["-m", "piper.http_server"]
+    assert commande[1] == str(server._POINT_D_ENTREE)
+    assert server._POINT_D_ENTREE.is_file()
+    assert "-m" not in commande
 
 
 def test_modele_absent_leve(tmp_path):
@@ -85,15 +97,15 @@ def test_modele_absent_leve(tmp_path):
 
 
 class _ProcessusFactice:
-    def __init__(self, sorti_immediatement: bool):
+    def __init__(self, sorti_immediatement: bool, stderr: str = "message d'erreur du serveur"):
         self._sorti_immediatement = sorti_immediatement
         self.termine = False
         self.tue = False
-        self.stdout = io.StringIO("")
-        self.stderr = io.StringIO("message d'erreur du serveur")
+        self.stdout = None
+        self.stderr = io.StringIO(stderr)
 
     def poll(self):
-        return 1 if self._sorti_immediatement else None
+        return 1 if (self._sorti_immediatement or self.termine) else None
 
     def terminate(self):
         self.termine = True
@@ -145,3 +157,47 @@ def test_start_attend_hote_local(tmp_path, monkeypatch):
         assert serveur.base_url == f"http://127.0.0.1:{serveur.port}"
     finally:
         serveur.stop()
+
+
+def test_start_garde_seulement_les_dernieres_lignes_d_erreur(tmp_path, monkeypatch):
+    modele = tmp_path / "voix.onnx"
+    modele.touch()
+    serveur = server.PiperHttpServer(modele)
+    lignes = "".join(f"ligne {n}\n" for n in range(500))
+
+    monkeypatch.setattr(server, "_trouver_interprete", lambda: tmp_path / "python3")
+    monkeypatch.setattr(
+        server.subprocess,
+        "Popen",
+        lambda *_a, **_kw: _ProcessusFactice(sorti_immediatement=True, stderr=lignes),
+    )
+
+    with pytest.raises(server.ErreurServeurPiper) as erreur:
+        serveur.start()
+
+    assert "ligne 499" in str(erreur.value)
+    assert "ligne 400" not in str(erreur.value)
+
+
+def test_start_transmet_le_pid_de_l_interface_et_ne_garde_aucun_tube_de_sortie(tmp_path, monkeypatch):
+    modele = tmp_path / "voix.onnx"
+    modele.touch()
+    serveur = server.PiperHttpServer(modele)
+    monkeypatch.setattr(server, "_trouver_interprete", lambda: tmp_path / "python3")
+    captures = {}
+
+    def faux_popen(commande, **kwargs):
+        captures.update(kwargs)
+        return _ProcessusFactice(sorti_immediatement=False, stderr="")
+
+    monkeypatch.setattr(server.subprocess, "Popen", faux_popen)
+    monkeypatch.setattr(server.urllib.request, "urlopen", lambda *_a, **_kw: io.BytesIO(b"{}"))
+
+    serveur.start()
+    try:
+        assert captures["env"]["PIPERREAD_PARENT_PID"] == str(server.os.getpid())
+        assert captures["stdout"] == server.subprocess.DEVNULL
+        assert serveur.est_actif
+    finally:
+        serveur.stop()
+    assert not serveur.est_actif

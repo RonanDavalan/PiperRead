@@ -32,6 +32,11 @@ Entrée / sortie :
     fichier, nom conservé par immuabilité des identifiants),
     plus sept options de pilotage d'une instance déjà lancée (`--play`,
     `--pause`, `--resume`, `--stop`, `--next`, `--previous`, `--quit`).
+    `--play` sans instance lancée démarre l'interface puis lit, dès que la
+    voix est chargée : c'est la commande du lanceur de menu, qui doit lire au
+    premier clic, que l'interface tourne ou non. Au démarrage, la voix est
+    chargée en fond et le lancement à l'ouverture de session est posé au
+    premier lancement (`autostart.py`).
     Sortie : aucune (boucle d'événements Qt, sans fenêtre visible tant
     qu'aucun réglage n'est ouvert depuis le menu du tray).
 """
@@ -40,9 +45,10 @@ import argparse
 import sys
 from pathlib import Path
 
+from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QApplication
 
-from piperread_gui import config, frozen, i18n
+from piperread_gui import autostart, config, frozen, i18n
 from piperread_gui.control_client import ErreurAucuneInstance, envoyer_commande
 from piperread_gui.control_server import ControlServer, ErreurControleIndisponible
 from piperread_gui.controller import PlaybackController
@@ -121,10 +127,12 @@ def _analyser_arguments(argv: list[str]) -> argparse.Namespace:
     return analyseur.parse_args(argv)
 
 
-def _piloter_instance_existante(commande: str) -> int:
+def _piloter_instance_existante(commande: str) -> int | None:
     try:
         reponse = envoyer_commande(commande)
     except ErreurAucuneInstance as erreur:
+        if commande == "lire":
+            return None
         print(str(erreur), file=sys.stderr)
         return 1
     print(reponse)
@@ -147,7 +155,9 @@ def main(argv: list[str] | None = None) -> int:
     arguments = _analyser_arguments(sys.argv[1:] if argv is None else argv)
 
     if arguments.commande is not None:
-        return _piloter_instance_existante(arguments.commande)
+        code = _piloter_instance_existante(arguments.commande)
+        if code is not None:
+            return code
 
     resolu = config.resolve_settings(
         _VOICES_DIR,
@@ -178,17 +188,20 @@ def main(argv: list[str] | None = None) -> int:
     application = QApplication(sys.argv[:1])
     application.setQuitOnLastWindowClosed(False)
 
-    controller = PlaybackController(model_path, resolu.lang, resolu.speed, resolu.telemetry)
-    avertir_si_tray_absent(controller.messages)
-    tray = PiperReadTray(controller, _ICONE)
-    tray.show()
-
     control_server = ControlServer()
     try:
         control_server.demarrer()
     except ErreurControleIndisponible as erreur:
         print(str(erreur), file=sys.stderr)
         return 1
+
+    autostart.appliquer_defaut_premier_lancement(_ICONE)
+
+    controller = PlaybackController(model_path, resolu.lang, resolu.speed, resolu.telemetry)
+    controller.demarrer_moteur()
+    avertir_si_tray_absent(controller.messages)
+    tray = PiperReadTray(controller, _ICONE)
+    tray.show()
 
     repartiteur = {
         "lire": controller.lire,
@@ -201,9 +214,13 @@ def main(argv: list[str] | None = None) -> int:
     }
     control_server.commande.connect(lambda ligne: repartiteur.get(ligne, lambda: None)())
 
+    if arguments.commande == "lire":
+        QTimer.singleShot(0, controller.lire)
+
     code_sortie = application.exec()
 
     control_server.arreter()
+    controller.arreter_moteur()
 
     return code_sortie
 

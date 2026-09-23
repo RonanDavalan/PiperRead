@@ -30,9 +30,10 @@ jobs:
 
       - name: Assemble the distributable folder
         run: |
+          New-Item -ItemType Directory -Path dist-windows | Out-Null
+          Copy-Item gui\dist\piperread-gui dist-windows\piperread-gui -Recurse
+          Copy-Item gui\dist\piper-http-server dist-windows\piperread-gui\piper-http-server -Recurse
           New-Item -ItemType Directory -Path dist-windows\piperread-gui\voices | Out-Null
-          Copy-Item gui\dist\piperread-gui.exe dist-windows\piperread-gui\
-          Copy-Item gui\dist\piper-http-server.exe dist-windows\piperread-gui\
           Copy-Item gui\packaging\windows\piperread.ico dist-windows\piperread-gui\
           Copy-Item lang dist-windows\piperread-gui\lang -Recurse
           Copy-Item gui\packaging\windows\README.txt dist-windows\piperread-gui\

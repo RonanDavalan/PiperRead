@@ -76,3 +76,30 @@ def test_annuler_ne_modifie_rien(application, tmp_path):
 
     assert not config.config_file_path().exists()
     assert controleur.speed == 1.0
+
+
+def test_case_de_lancement_automatique_reflete_et_modifie_l_etat(application, tmp_path, monkeypatch):
+    from piperread_gui import autostart
+
+    etat = {"actif": True, "appels": []}
+    monkeypatch.setattr(autostart, "est_active", lambda: etat["actif"])
+    monkeypatch.setattr(autostart, "activer", lambda icone=None: etat["appels"].append(("activer", icone)))
+    monkeypatch.setattr(autostart, "desactiver", lambda: etat["appels"].append(("desactiver",)))
+    voices_dir = _voix(tmp_path, "alpha")
+    controleur = PlaybackController(voices_dir / "alpha.onnx", "fr")
+
+    dialogue = SettingsDialog(controleur, tmp_path / "icone.svg")
+    assert dialogue._lancement_auto.isChecked()
+    dialogue._enregistrer()
+    assert etat["appels"] == []
+
+    dialogue = SettingsDialog(controleur, tmp_path / "icone.svg")
+    dialogue._lancement_auto.setChecked(False)
+    dialogue._enregistrer()
+    assert etat["appels"] == [("desactiver",)]
+
+    etat["actif"] = False
+    dialogue = SettingsDialog(controleur, tmp_path / "icone.svg")
+    dialogue._lancement_auto.setChecked(True)
+    dialogue._enregistrer()
+    assert etat["appels"][-1] == ("activer", tmp_path / "icone.svg")

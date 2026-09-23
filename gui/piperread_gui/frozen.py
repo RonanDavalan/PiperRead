@@ -2,10 +2,10 @@
 frozen.py — répertoire d'installation réel quand l'interface tourne en exécutable gelé.
 
 Pourquoi ce fichier existe :
-    Sous PyInstaller, `Path(__file__)` d'un module résolu depuis l'archive
-    embarquée pointe vers le dossier d'extraction temporaire de l'exécutable
-    (onefile), jamais vers son dossier d'installation réel : `voices/`,
-    `lang/`, l'icône et `piper-http-server.exe`, tous livrés à côté de
+    Sous PyInstaller, `Path(__file__)` d'un module gelé pointe vers le
+    dossier interne des modules (`_internal\` en mode dossier), jamais vers
+    le dossier de l'exécutable : `voices/`, `lang/`, l'icône et le
+    sous-dossier `piper-http-server\`, tous livrés à côté de
     `piperread-gui.exe`, y seraient introuvables. `app.py` et `i18n.py`
     utilisent `installation_dir()` à la place de `Path(__file__)` pour
     calculer leur racine de résolution quand `sys.frozen` est vrai ; `None`

@@ -93,6 +93,7 @@ gui_settings_title=PiperRead settings
 gui_settings_voice=Voice
 gui_settings_speed=Speed
 gui_settings_lang=Language
+gui_settings_autostart=Start with the session
 gui_settings_no_voice=No voice installed.
 gui_settings_save=Save
 gui_settings_cancel=Cancel

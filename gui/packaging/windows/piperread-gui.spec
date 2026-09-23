@@ -5,7 +5,12 @@
 #     PyInstaller gèle un point d'entrée par
 #     exécutable ; le serveur HTTP de Piper (processus séparé, jamais lié
 #     dans ce même exécutable — frontière GPL actée dans server.py) a le sien,
-#     piper-http-server.spec, à construire et livrer à côté de celui-ci.
+#     piper-http-server.spec, livré dans le sous-dossier piper-http-server\.
+#
+#     Mode dossier (COLLECT), pas fichier unique : un exécutable unique
+#     s'extrait dans %TEMP% à chaque lancement, ce qui retardait le démarrage
+#     de plusieurs secondes (décision « exécutable Windows : mode dossier,
+#     comptes à nom accentué »).
 #
 # Construit par :
 #     .github/workflows/build-windows-gui.yml, sur windows-latest — aucune
@@ -39,9 +44,8 @@ pyz = PYZ(a.pure)
 exe = EXE(
     pyz,
     a.scripts,
-    a.binaries,
-    a.datas,
     [],
+    exclude_binaries=True,
     name="piperread-gui",
     debug=False,
     bootloader_ignore_signals=False,
@@ -49,4 +53,13 @@ exe = EXE(
     upx=False,
     console=False,
     icon=str(RACINE_GUI / "packaging" / "windows" / "piperread.ico"),
+)
+
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.datas,
+    strip=False,
+    upx=False,
+    name="piperread-gui",
 )

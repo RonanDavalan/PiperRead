@@ -39,6 +39,7 @@ class PiperReadTray(QSystemTrayIcon):
     def __init__(self, controller: PlaybackController, icon_path: Path):
         super().__init__(QIcon(str(icon_path)))
         self._controller = controller
+        self._icon_path = icon_path
 
         self._menu = QMenu()
         self._action_lire = self._menu.addAction("", self._controller.lire)
@@ -93,7 +94,7 @@ class PiperReadTray(QSystemTrayIcon):
             notifier("PiperRead", message)
 
     def _ouvrir_reglages(self) -> None:
-        dialogue = SettingsDialog(self._controller)
+        dialogue = SettingsDialog(self._controller, self._icon_path)
         if dialogue.exec() == QDialog.DialogCode.Accepted:
             self._actualiser_textes()
 

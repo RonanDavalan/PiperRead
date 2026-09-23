@@ -72,3 +72,30 @@ def test_resoudre_icone_gelee_ignore_le_clone(monkeypatch, tmp_path):
     monkeypatch.setattr(app.frozen, "installation_dir", lambda: tmp_path)
 
     assert app._resoudre_icone(tmp_path) == tmp_path / app._ICONE_GELEE
+
+
+# --- --play sans instance lancée ---
+
+
+def _sans_instance(monkeypatch):
+    def envoyer(_commande):
+        raise app.ErreurAucuneInstance("aucune instance")
+
+    monkeypatch.setattr(app, "envoyer_commande", envoyer)
+
+
+def test_play_sans_instance_laisse_demarrer_l_interface(monkeypatch):
+    _sans_instance(monkeypatch)
+    assert app._piloter_instance_existante("lire") is None
+
+
+@pytest.mark.parametrize("commande", ["pause", "reprendre", "arreter", "phrase_suivante", "phrase_precedente", "quitter"])
+def test_autres_commandes_sans_instance_sortent_en_erreur(monkeypatch, commande):
+    _sans_instance(monkeypatch)
+    assert app._piloter_instance_existante(commande) == 1
+
+
+def test_play_avec_instance_lancee_ne_demarre_rien(monkeypatch, capsys):
+    monkeypatch.setattr(app, "envoyer_commande", lambda commande: "ok")
+    assert app._piloter_instance_existante("lire") == 0
+    assert capsys.readouterr().out.strip() == "ok"

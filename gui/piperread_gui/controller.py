@@ -10,6 +10,16 @@ Pourquoi ce fichier existe :
     découpage, dans le même ordre que le noyau (capture → nettoyage →
     synthèse).
 
+    Le serveur de synthèse garde la voix chargée tant que l'interface vit :
+    le recharger coûte plus d'une seconde, payée sinon à chaque lecture
+    (décision « interface : voix gardée chargée, phrase suivante préparée
+    pendant la lecture »). Démarrage, relance et synthèses passent tous par
+    un unique fil de travail permanent (`_moteur`) : ils sont sérialisés
+    sans verrou, une lecture demandée pendant le chargement attend
+    simplement son tour, et le processus du serveur naît toujours du même
+    fil. Pendant qu'une phrase est jouée, la suivante est déjà demandée à ce
+    fil, pour qu'aucun blanc de synthèse ne s'ajoute entre deux phrases.
+
 Entrée / sortie :
     Entrée : le chemin du modèle de voix, la langue de découpage, la
     vitesse (multiplicateur, 1.0 = voix naturelle) et la préférence de
@@ -19,7 +29,9 @@ Entrée / sortie :
     globale réglée dans `piperread.conf`, pas par lecture).
     Sortie : trois signaux Qt — `etat_change` (nouvel `Etat`),
     `phrase_courante` (numéro, total) et `erreur` (message, dans la langue
-    résolue) — que le tray relie à l'affichage du menu.
+    résolue) — que le tray relie à l'affichage du menu. `demarrer_moteur`
+    charge la voix en fond ; `arreter_moteur` arrête le serveur à la
+    fermeture de l'interface.
 
 Dépend de :
     `PySide6.QtCore` pour les signaux ; `clipboard.py`, `cleaner.py`,
@@ -28,6 +40,8 @@ Dépend de :
 """
 
 import threading
+from concurrent.futures import Future, ThreadPoolExecutor
+from concurrent.futures import TimeoutError as DelaiDepasse
 from enum import Enum, auto
 from pathlib import Path
 
@@ -41,6 +55,9 @@ from piperread_gui.player import play_wav_bytes
 from piperread_gui.sentences import split_sentences
 from piperread_gui.server import ErreurServeurPiper, PiperHttpServer
 from piperread_gui.synth_client import ErreurSynthese, synthesize
+
+
+_INTERVALLE_ATTENTE_SECONDES = 0.1
 
 
 class Etat(Enum):
@@ -70,6 +87,9 @@ class PlaybackController(QObject):
         self._evenement_pause = threading.Event()
         self._evenement_pause.set()
         self._evenement_arret = threading.Event()
+        self._serveur: PiperHttpServer | None = None
+        self._modele_du_serveur: Path | None = None
+        self._moteur = ThreadPoolExecutor(max_workers=1, thread_name_prefix="piperread-moteur")
 
     @property
     def etat(self) -> Etat:
@@ -92,12 +112,66 @@ class PlaybackController(QObject):
         return self._messages
 
     def appliquer_reglages(self, model_path: Path, lang: str, speed: float) -> None:
+        voix_changee = Path(model_path) != self._model_path
         self._model_path = Path(model_path)
         if lang != self._lang:
             self._lang = lang
             self._messages = load_messages(lang)
         self._speed = speed
         self._length_scale = speed_to_length_scale(speed)
+        if voix_changee:
+            self.demarrer_moteur()
+
+    def demarrer_moteur(self) -> None:
+        self._moteur.submit(self._serveur_pret).add_done_callback(self._signaler_echec_moteur)
+
+    def arreter_moteur(self) -> None:
+        self._moteur.submit(self._fermer_serveur).result()
+        self._moteur.shutdown(wait=True)
+
+    def _signaler_echec_moteur(self, futur: Future) -> None:
+        erreur = futur.exception()
+        if erreur is not None:
+            self.erreur.emit(str(erreur))
+
+    def _serveur_pret(self) -> PiperHttpServer:
+        if (
+            self._serveur is not None
+            and self._serveur.est_actif
+            and self._modele_du_serveur == self._model_path
+        ):
+            return self._serveur
+        self._fermer_serveur()
+        modele = self._model_path
+        serveur = PiperHttpServer(modele, telemetry=self._telemetry)
+        serveur.start()
+        self._serveur = serveur
+        self._modele_du_serveur = modele
+        return serveur
+
+    def _fermer_serveur(self) -> None:
+        if self._serveur is None:
+            return
+        self._serveur.stop()
+        self._serveur = None
+        self._modele_du_serveur = None
+
+    def _synthetiser(self, phrase: str, length_scale: float) -> bytes:
+        serveur = self._serveur_pret()
+        return synthesize(serveur.base_url, phrase, length_scale=length_scale)
+
+    def _demander_synthese(self, index: int) -> Future:
+        return self._moteur.submit(self._synthetiser, self._phrases[index], self._length_scale)
+
+    def _attendre_synthese(self, futur: Future) -> bytes | None:
+        # Par intervalles courts : un arrêt demandé pendant le chargement de la voix
+        # n'attend pas la fin de ce chargement.
+        while True:
+            try:
+                return futur.result(timeout=_INTERVALLE_ATTENTE_SECONDES)
+            except DelaiDepasse:
+                if self._evenement_arret.is_set() and self._index_demande is None:
+                    return None
 
     def _definir_etat(self, etat: Etat) -> None:
         self._etat = etat
@@ -166,38 +240,47 @@ class PlaybackController(QObject):
         self._evenement_pause.set()
 
     def _boucle_lecture(self) -> None:
+        preparee: tuple[int, Future] | None = None
         try:
-            with PiperHttpServer(self._model_path, telemetry=self._telemetry) as serveur:
-                self._definir_etat(Etat.LECTURE)
-                while self._index < len(self._phrases):
-                    if self._evenement_arret.is_set() and self._index_demande is None:
-                        return
-                    phrase = self._phrases[self._index]
-                    self.phrase_courante.emit(self._index + 1, len(self._phrases))
-                    try:
-                        audio = synthesize(serveur.base_url, phrase, length_scale=self._length_scale)
-                    except ErreurSynthese as erreur:
-                        self.erreur.emit(str(erreur))
-                        return
-                    play_wav_bytes(
-                        audio,
-                        stop_event=self._evenement_arret,
-                        pause_event=self._evenement_pause,
-                    )
+            self._definir_etat(Etat.LECTURE)
+            while self._index < len(self._phrases):
+                if self._evenement_arret.is_set() and self._index_demande is None:
+                    return
+                index = self._index
+                self.phrase_courante.emit(index + 1, len(self._phrases))
+                if preparee is not None and preparee[0] == index:
+                    futur = preparee[1]
+                else:
+                    if preparee is not None:
+                        preparee[1].cancel()
+                    futur = self._demander_synthese(index)
+                preparee = None
+                audio = self._attendre_synthese(futur)
+                if audio is None:
+                    return
+                if index + 1 < len(self._phrases):
+                    preparee = (index + 1, self._demander_synthese(index + 1))
+                play_wav_bytes(
+                    audio,
+                    stop_event=self._evenement_arret,
+                    pause_event=self._evenement_pause,
+                )
 
-                    if self._index_demande is not None:
-                        self._index = self._index_demande
-                        self._index_demande = None
-                        self._evenement_arret.clear()
-                        if self._etat == Etat.PAUSE:
-                            self._evenement_pause.clear()
-                        continue
+                if self._index_demande is not None:
+                    self._index = self._index_demande
+                    self._index_demande = None
+                    self._evenement_arret.clear()
+                    if self._etat == Etat.PAUSE:
+                        self._evenement_pause.clear()
+                    continue
 
-                    if self._evenement_arret.is_set():
-                        return
-                    self._index += 1
-        except ErreurServeurPiper as erreur:
+                if self._evenement_arret.is_set():
+                    return
+                self._index += 1
+        except (ErreurServeurPiper, ErreurSynthese) as erreur:
             self.erreur.emit(str(erreur))
         finally:
+            if preparee is not None:
+                preparee[1].cancel()
             if self._index_demande is None:
                 self._definir_etat(Etat.ARRET)

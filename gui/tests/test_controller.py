@@ -1,3 +1,4 @@
+import threading
 import time
 from pathlib import Path
 
@@ -9,14 +10,27 @@ from piperread_gui.controller import Etat, PlaybackController
 
 
 class _ServeurFactice:
-    def __init__(self, *_a, **_kw):
+    demarrages: list = []
+    arrets: list = []
+
+    def __init__(self, model_path, telemetry="off"):
+        self.model_path = model_path
         self.base_url = "http://127.0.0.1:0"
+        self.est_actif = False
 
-    def __enter__(self):
-        return self
+    def start(self):
+        _ServeurFactice.demarrages.append(self.model_path)
+        self.est_actif = True
 
-    def __exit__(self, *_exc_info):
-        return False
+    def stop(self):
+        _ServeurFactice.arrets.append(self.model_path)
+        self.est_actif = False
+
+
+@pytest.fixture(autouse=True)
+def _compteurs_remis_a_zero():
+    _ServeurFactice.demarrages = []
+    _ServeurFactice.arrets = []
 
 
 def _controleur_pret(monkeypatch, phrases):
@@ -196,3 +210,149 @@ def test_presse_papiers_vide_message_traduit_en(monkeypatch):
     controleur.lire()
 
     assert erreurs == ["Clipboard empty: nothing to read."]
+
+
+# --- serveur résident ---
+
+
+def _attendre(condition, delai=2.0):
+    limite = time.monotonic() + delai
+    while not condition() and time.monotonic() < limite:
+        time.sleep(0.01)
+    return condition()
+
+
+def test_un_seul_demarrage_de_serveur_pour_deux_lectures(monkeypatch):
+    monkeypatch.setattr(controller_module, "play_wav_bytes", lambda audio, **_kw: None)
+    controleur = _controleur_pret(monkeypatch, ["une.", "deux."])
+
+    controleur.demarrer_moteur()
+    controleur.lire()
+    controleur._fil.join(timeout=2.0)
+    controleur.lire()
+    controleur._fil.join(timeout=2.0)
+
+    assert _ServeurFactice.demarrages == [Path("modele.onnx")]
+
+
+def test_changer_de_voix_relance_le_serveur_et_la_vitesse_non(monkeypatch):
+    controleur = _controleur_pret(monkeypatch, ["une."])
+    controleur.demarrer_moteur()
+    assert _attendre(lambda: len(_ServeurFactice.demarrages) == 1)
+
+    controleur.appliquer_reglages(Path("modele.onnx"), "fr", 2.0)
+    controleur._moteur.submit(lambda: None).result()
+    assert _ServeurFactice.demarrages == [Path("modele.onnx")]
+
+    controleur.appliquer_reglages(Path("autre.onnx"), "fr", 2.0)
+    controleur._moteur.submit(lambda: None).result()
+    assert _ServeurFactice.demarrages == [Path("modele.onnx"), Path("autre.onnx")]
+    assert _ServeurFactice.arrets == [Path("modele.onnx")]
+
+
+def test_serveur_arrete_de_lui_meme_est_relance_a_la_lecture_suivante(monkeypatch):
+    monkeypatch.setattr(controller_module, "play_wav_bytes", lambda audio, **_kw: None)
+    controleur = _controleur_pret(monkeypatch, ["une."])
+
+    controleur.lire()
+    controleur._fil.join(timeout=2.0)
+    controleur._serveur.est_actif = False
+    controleur.lire()
+    controleur._fil.join(timeout=2.0)
+
+    assert len(_ServeurFactice.demarrages) == 2
+
+
+def test_arreter_moteur_arrete_le_serveur(monkeypatch):
+    controleur = _controleur_pret(monkeypatch, ["une."])
+    controleur.demarrer_moteur()
+    assert _attendre(lambda: len(_ServeurFactice.demarrages) == 1)
+
+    controleur.arreter_moteur()
+
+    assert _ServeurFactice.arrets == [Path("modele.onnx")]
+
+
+def test_echec_du_demarrage_du_moteur_est_signale(monkeypatch):
+    class _ServeurEnEchec(_ServeurFactice):
+        def start(self):
+            raise controller_module.ErreurServeurPiper("voix illisible")
+
+    monkeypatch.setattr(controller_module, "PiperHttpServer", _ServeurEnEchec)
+    controleur = PlaybackController(model_path="modele.onnx", lang="fr")
+    erreurs = []
+    controleur.erreur.connect(erreurs.append, Qt.ConnectionType.DirectConnection)
+
+    controleur.demarrer_moteur()
+    controleur._moteur.submit(lambda: None).result(timeout=5.0)
+
+    assert _attendre(lambda: erreurs == ["voix illisible"])
+
+
+# --- phrase suivante préparée pendant la lecture ---
+
+
+def test_phrase_suivante_demandee_pendant_la_lecture_de_la_courante(monkeypatch):
+    controleur = _controleur_pret(monkeypatch, ["une.", "deux."])
+    deuxieme_demandee = threading.Event()
+    vue_pendant_la_premiere = []
+
+    def synthese(base_url, phrase, length_scale=None):
+        if phrase == "deux.":
+            deuxieme_demandee.set()
+        return phrase.encode()
+
+    def jeu(audio, **_kw):
+        if audio == b"une.":
+            vue_pendant_la_premiere.append(deuxieme_demandee.wait(timeout=2.0))
+
+    monkeypatch.setattr(controller_module, "synthesize", synthese)
+    monkeypatch.setattr(controller_module, "play_wav_bytes", jeu)
+
+    controleur.lire()
+    controleur._fil.join(timeout=3.0)
+
+    assert vue_pendant_la_premiere == [True]
+
+
+def test_phrase_preparee_non_jouee_apres_un_retour_en_arriere(monkeypatch):
+    controleur = _controleur_pret(monkeypatch, ["a.", "b.", "c."])
+    jouees = []
+    retour_fait = []
+
+    def jeu(audio, stop_event=None, pause_event=None):
+        jouees.append(audio)
+        if audio == b"audio:b." and not retour_fait:
+            retour_fait.append(True)
+            controleur.phrase_precedente()
+
+    monkeypatch.setattr(controller_module, "play_wav_bytes", jeu)
+
+    controleur.lire()
+    controleur._fil.join(timeout=3.0)
+
+    assert jouees == [b"audio:a.", b"audio:b.", b"audio:a.", b"audio:b.", b"audio:c."]
+
+
+def test_arret_pendant_le_chargement_de_la_voix_n_attend_pas_le_chargement(monkeypatch):
+    liberer = threading.Event()
+
+    class _ServeurLent(_ServeurFactice):
+        def start(self):
+            liberer.wait(timeout=5.0)
+            super().start()
+
+    controleur = _controleur_pret(monkeypatch, ["une."])
+    monkeypatch.setattr(controller_module, "PiperHttpServer", _ServeurLent)
+    monkeypatch.setattr(controller_module, "play_wav_bytes", lambda audio, **_kw: None)
+
+    controleur.lire()
+    assert _attendre(lambda: controleur.etat == Etat.LECTURE)
+    debut = time.monotonic()
+    controleur.arreter()
+    duree = time.monotonic() - debut
+    liberer.set()
+    controleur._moteur.submit(lambda: None).result(timeout=5.0)
+
+    assert duree < 1.0
+    assert controleur.etat == Etat.ARRET
