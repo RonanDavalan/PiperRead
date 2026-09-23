@@ -28,6 +28,21 @@ from PyInstaller.utils.hooks import collect_all
 
 RACINE_GUI = Path(SPECPATH).resolve().parent.parent
 
+# Page de code UTF-8 pour tout le processus (Windows 10 1903 et suivants) :
+# espeak-ng ouvre ses données et énumère ses voix par les API « ANSI » de
+# Windows, qui échouent sur un dossier de profil accentué. La locale de la
+# bibliothèque C ne suffit pas : l'énumération des voix passe par Win32.
+MANIFESTE = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+  <application xmlns="urn:schemas-microsoft-com:asm.v3">
+    <windowsSettings>
+      <longPathAware xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">true</longPathAware>
+      <activeCodePage xmlns="http://schemas.microsoft.com/SMI/2019/WindowsSettings">UTF-8</activeCodePage>
+    </windowsSettings>
+  </application>
+</assembly>
+"""
+
 datas = []
 binaries = []
 hiddenimports = []
@@ -58,6 +73,7 @@ exe = EXE(
     [],
     exclude_binaries=True,
     name="piper-http-server",
+    manifest=MANIFESTE,
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

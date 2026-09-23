@@ -30,19 +30,6 @@ def test_telemetrie_laissee_quand_l_utilisateur_l_a_reactivee(onnxruntime_factic
     assert onnxruntime_factice.appels == 0
 
 
-def test_chemins_utf8_seulement_sous_windows(monkeypatch):
-    appels = []
-    monkeypatch.setattr("locale.setlocale", lambda categorie, valeur: appels.append(valeur))
-
-    monkeypatch.setattr(entree.sys, "platform", "linux")
-    entree.lire_les_chemins_en_utf8()
-    assert appels == []
-
-    monkeypatch.setattr(entree.sys, "platform", "win32")
-    entree.lire_les_chemins_en_utf8()
-    assert appels == [".UTF-8"]
-
-
 @pytest.mark.parametrize("valeur", [None, "", "abc"])
 def test_pas_de_surveillance_sans_pid_valide(valeur):
     environnement = {} if valeur is None else {"PIPERREAD_PARENT_PID": valeur}
@@ -84,7 +71,6 @@ def test_surveillance_ne_quitte_pas_si_le_parent_est_inobservable(monkeypatch):
 def test_main_prepare_tout_avant_de_charger_la_voix(monkeypatch):
     ordre = []
     monkeypatch.setattr(entree, "surveiller_parent", lambda: ordre.append("surveillance"))
-    monkeypatch.setattr(entree, "lire_les_chemins_en_utf8", lambda: ordre.append("utf8"))
     monkeypatch.setattr(entree, "couper_telemetrie_si_demande", lambda: ordre.append("telemetrie"))
     http_server = types.ModuleType("piper.http_server")
     http_server.main = lambda: ordre.append("serveur")
@@ -93,7 +79,7 @@ def test_main_prepare_tout_avant_de_charger_la_voix(monkeypatch):
 
     entree.main()
 
-    assert ordre == ["surveillance", "utf8", "telemetrie", "serveur"]
+    assert ordre == ["surveillance", "telemetrie", "serveur"]
 
 
 def test_execute_comme_script_ne_voit_pas_les_modules_de_l_interface(tmp_path):
@@ -115,3 +101,12 @@ def test_execute_comme_script_ne_voit_pas_les_modules_de_l_interface(tmp_path):
     ).stdout
 
     assert sortie.strip() == "absent"
+
+
+def test_manifeste_du_serveur_gele_en_page_de_code_utf8():
+    from pathlib import Path
+
+    spec = Path(entree.__file__).resolve().parent.parent / "packaging" / "windows" / "piper-http-server.spec"
+    texte = spec.read_text(encoding="utf-8")
+    assert "<activeCodePage" in texte and ">UTF-8</activeCodePage>" in texte
+    assert "manifest=MANIFESTE" in texte

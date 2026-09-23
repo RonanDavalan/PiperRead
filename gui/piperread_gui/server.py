@@ -31,7 +31,7 @@ Dépend de :
     installé (`/usr/lib/piperread/venv/`), même logique de résolution que
     `read.sh` (`BASE_DIR`/`VENV_PATH`). Sur Windows, il n'existe ni venv ni
     paquet noyau séparé : l'exécutable autonome `piper-http-server.exe`,
-    gelé par PyInstaller dans le sous-dossier `piper-http-server\` du dossier
+    gelé par PyInstaller dans le sous-dossier `piper-http-server\\` du dossier
     de `piperread-gui.exe` (`gui/packaging/windows/`), en tient lieu et se
     lance directement, sans interpréteur.
 """

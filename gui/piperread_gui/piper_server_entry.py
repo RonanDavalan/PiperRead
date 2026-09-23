@@ -9,18 +9,16 @@ Pourquoi ce fichier existe :
     l'interface. Les arguments (`--host`, `--port`, `--model`) viennent de
     `server._commande_serveur` et passent tels quels à `piper.http_server`.
 
-    Trois choses doivent précéder le chargement de la voix :
+    Deux choses doivent précéder le chargement de la voix :
     - couper les événements de télémétrie d'onnxruntime par son API quand
       `ORT_DISABLE_TELEMETRY=1` : sous Windows la variable seule n'a aucun
       effet (événements ETW relevés par le service de diagnostic du
       système, décision « télémétrie du moteur d'inférence ») ;
-    - sous Windows, faire lire les chemins en UTF-8 à la bibliothèque C :
-      espeak-ng ouvre ses données par l'API étroite, qui échoue sur un
-      dossier de profil accentué (`C:\\Users\\Zoé\\...`) et se rabat sur
-      son chemin de compilation ;
     - surveiller l'interface (`PIPERREAD_PARENT_PID`) : le serveur garde la
       voix chargée tant qu'elle vit, et ne doit pas lui survivre si elle
       disparaît sans l'avoir arrêté.
+    Sous Windows, les chemins accentués sont réglés par le manifeste de
+    l'exécutable gelé (page de code UTF-8, `piper-http-server.spec`), pas ici.
 
 Dépend de :
     `piper.http_server` (paquet `piper-tts[http]`) et `onnxruntime`.
@@ -48,14 +46,6 @@ def couper_telemetrie_si_demande(environnement=os.environ) -> bool:
 
     onnxruntime.disable_telemetry_events()
     return True
-
-
-def lire_les_chemins_en_utf8() -> None:
-    if sys.platform != "win32":
-        return
-    import locale
-
-    locale.setlocale(locale.LC_ALL, ".UTF-8")
 
 
 def _attendre_fin_windows(pid: int) -> bool:
@@ -95,7 +85,6 @@ def surveiller_parent(environnement=os.environ) -> threading.Thread | None:
 
 def main() -> int:
     surveiller_parent()
-    lire_les_chemins_en_utf8()
     couper_telemetrie_si_demande()
 
     from piper.http_server import main as lancer_serveur
