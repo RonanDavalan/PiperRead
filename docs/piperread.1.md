@@ -91,6 +91,12 @@ sources that defines it:
 2. the environment variable `PIPERREAD_SPEED`, `PIPERREAD_VOICE` or `PIPERREAD_LANG`;
 3. the configuration file.
 
+The setting `telemetry` (`on` or `off`, `off` by default) has no command-line
+option: it is taken from the environment variable `PIPERREAD_TELEMETRY`, then
+from the configuration file. It controls the usage events of the inference
+library that the engine pulls in (onnxruntime), which are turned off by default
+so that reading stays offline.
+
 # FILES
 
 `$XDG_CONFIG_HOME/piperread/piperread.conf`

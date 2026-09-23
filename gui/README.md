@@ -1,75 +1,74 @@
-# PiperRead — interface graphique
+# PiperRead — interface
 
-Projet Python autonome, distinct du noyau Bash (`read.sh`). L'interface ne lie
-jamais le moteur Piper dans son propre processus : elle le pilote comme
-programme externe, par le serveur HTTP que Piper fournit lui-même
-(`piper.http_server`), lancé en sous-processus par `piper_server_entry.py`
-avec l'interpréteur du moteur, et lié à `127.0.0.1` uniquement. Décision et
-raison complètes dans `_CADRE/SPECIFICATIONS/CONCEPTION_PIPERREAD.md`, fiche
-« interface graphique ».
+A standalone Python project, separate from the Bash core (`read.sh`). The
+interface never links the Piper engine into its own process: it drives it as an
+external program, through the HTTP server Piper itself provides
+(`piper.http_server`), started as a subprocess by `piper_server_entry.py` with
+the engine's own interpreter and bound to `127.0.0.1` only. Keeping the engine
+in a separate process is what keeps its GPL-3.0-or-later code out of this one.
 
-L'interface est le mode confort de PiperRead ; le lanceur « Lire la
-sélection » (`read.sh auto`) reste le mode minimal, indépendant d'elle. Elle
-se lance à l'ouverture de session (actif par défaut, case « Lancer à
-l'ouverture de session » dans les réglages) et garde la voix chargée tant
-qu'elle tourne : la lecture démarre sans recharger le moteur, et la phrase
-suivante est synthétisée pendant que la courante est jouée. Le serveur
-s'arrête avec l'interface, y compris si elle disparaît brutalement.
+The interface is the comfortable way to use PiperRead; the "Read the selection"
+launcher (`read.sh auto`) stays the minimal way, independent of it. Neither
+drives the other. The interface starts with your session (on by default; the
+"Start with the session" box in the settings turns it off) and keeps the voice
+loaded while it runs: reading starts without reloading the engine, and the next
+sentence is synthesized while the current one plays. The server stops with the
+interface, even if the interface disappears abruptly.
 
-État actuel : icône de tray et menu (Lire, Pause, Arrêter, Phrase
-précédente/suivante, Réglages, Quitter) branchés sur la chaîne de lecture
-(capture → nettoyage Markdown → phrases → serveur → audio) ; un clic gauche
-sur l'icône lit, met en pause ou reprend selon l'état. Le texte lu est la
-sélection souris, ou à défaut le presse-papiers (Linux, même ordre que le
-mode `auto` du noyau ; presse-papiers seul sous Windows), débarrassé du
-balisage Markdown par les mêmes règles que `utils/cleaner.sh`. Tous les
-libellés sont tirés des mêmes fichiers `lang/*.txt` que le noyau. La
-configuration (`piperread.conf`, mêmes clés `speed`/`voice`/`lang`, même
-ordre de priorité) est lue et écrite en Python (`config.py`) ; le dialogue
-de réglages (menu « Réglages… ») l'écrit réellement, et la vitesse choisie
-s'applique à la synthèse (`length_scale`). Paquets Linux (`piperread-gui`)
-et exécutable Windows (`packaging/windows/`).
+What it does: a tray icon and menu (Play, Pause, Stop, Previous/Next sentence,
+Settings, Quit) wired to the reading chain (capture, Markdown cleanup, sentence
+splitting, server, audio). A left click on the icon plays, pauses or resumes
+according to the state. The text read is the mouse selection, or the clipboard
+when nothing is selected (Linux, the same order as the core's `auto` mode; the
+clipboard only on Windows), stripped of Markdown markup by the same rules as
+`utils/cleaner.sh`. Every label comes from the same `lang/*.txt` files as the
+core. The configuration (`piperread.conf`, the same `speed`/`voice`/`lang` keys,
+the same order of priority) is read and written in Python (`config.py`); the
+settings dialog writes it for real, and the chosen speed applies to synthesis
+(`length_scale`). Linux packages (`piperread-gui`) and a Windows executable
+(`packaging/windows/`) are available.
 
-## Structure
+## Layout
 
 ```
 gui/
-├── pyproject.toml          — métadonnées et dépendances (PySide6, requests, pysbd, sounddevice)
+├── pyproject.toml          — metadata and dependencies (PySide6, requests, pysbd, sounddevice)
 ├── piperread_gui/
-│   ├── clipboard.py        — capture : sélection souris puis presse-papiers (wl-paste puis xsel, ordre du noyau)
-│   ├── cleaner.py          — retrait du balisage Markdown (port de `utils/cleaner.sh`)
-│   ├── sentences.py        — découpage en phrases (pysbd, langues en/fr/de/es)
-│   ├── server.py           — cycle de vie du serveur HTTP local de Piper
-│   ├── piper_server_entry.py — lance le serveur dans le processus du moteur : coupure de télémétrie, surveillance de l'interface, chemins UTF-8 sous Windows
-│   ├── synth_client.py     — client HTTP vers /synthesize, avec `length_scale` optionnel
-│   ├── player.py           — lecture du WAV reçu (sounddevice), interruptible (arrêt, pause)
-│   ├── flatfile.py         — lecture « clé=valeur » sans exécution (port de `utils/flatfile.sh`)
-│   ├── config.py           — résolution et écriture de `piperread.conf` (port de `utils/config.sh`)
-│   ├── i18n.py              — chargement des mêmes `lang/*.txt` que le noyau, plus les clés `gui_*`
-│   ├── controller.py       — état de lecture, serveur gardé chargé, phrase suivante préparée, réglages courants
-│   ├── notifier.py         — notification système par `notify-send`, indépendante du tray
-│   ├── tray.py              — icône de tray, menu traduit, détection de l'absence d'hôte de tray
-│   ├── settings_dialog.py  — dialogue de réglages (voix, vitesse, langue, lancement à l'ouverture de session)
-│   ├── autostart.py        — lancement à l'ouverture de session : autostart XDG (Linux), clé Run (Windows)
-│   ├── frozen.py            — dossier réel de l'exécutable gelé (PyInstaller), à la place de `Path(__file__)`
-│   ├── app.py                — point d'entrée : résout la configuration, assemble tray, contrôleur et boucle Qt
-│   └── cli.py                 — boucle de test en ligne de commande, sans fenêtre
-├── packaging/windows/       — `.spec` PyInstaller, icône `.ico`, `README.txt` livré avec le paquet Windows
-└── tests/                  — tests unitaires (pytest), sans dépendance réseau ni matériel audio
+│   ├── clipboard.py        — capture: mouse selection, then clipboard (wl-paste, then xsel, the core's order)
+│   ├── cleaner.py          — Markdown markup removal (port of `utils/cleaner.sh`)
+│   ├── sentences.py        — sentence splitting (pysbd, languages en/fr/de/es)
+│   ├── server.py           — lifecycle of Piper's local HTTP server
+│   ├── piper_server_entry.py — runs the server in the engine's process: telemetry off, watches the interface, UTF-8 paths on Windows
+│   ├── synth_client.py     — HTTP client for /synthesize, with an optional `length_scale`
+│   ├── player.py           — plays the received WAV (sounddevice), interruptible (stop, pause)
+│   ├── flatfile.py         — reads "key=value" files without executing them (port of `utils/flatfile.sh`)
+│   ├── config.py           — resolution and writing of `piperread.conf` (port of `utils/config.sh`)
+│   ├── i18n.py             — loads the same `lang/*.txt` as the core, plus the `gui_*` keys
+│   ├── controller.py       — reading state, server kept loaded, next sentence prepared, current settings
+│   ├── notifier.py         — desktop notification through `notify-send`, independent of the tray
+│   ├── tray.py             — tray icon, translated menu, detection of a missing tray host
+│   ├── settings_dialog.py  — settings dialog (voice, speed, language, start with the session)
+│   ├── autostart.py        — start with the session: XDG autostart (Linux), Run key (Windows)
+│   ├── control_server.py   — local control channel: Unix socket (POSIX), token-protected TCP on loopback (Windows)
+│   ├── control_client.py   — sends a command to the running interface
+│   ├── frozen.py           — real folder of the frozen executable (PyInstaller), instead of `Path(__file__)`
+│   ├── app.py              — entry point: resolves the configuration, assembles tray, controller and Qt loop
+│   └── cli.py              — command-line test loop, without a window
+├── packaging/windows/      — PyInstaller `.spec` files, `.ico` icon, `README.txt` shipped with the Windows package
+└── tests/                  — unit tests (pytest), with no network or audio hardware needed
 ```
 
-## Comment tester / Comment lancer
+## Running it from a clone
 
-Dépôt cloné avec le noyau déjà installé (`../piper-env/` présent, comme pour
-`read.sh`). Le serveur HTTP est un extra du moteur, pas installé par défaut :
+The clone must already have the core installed (`../piper-env/` present, as for
+`read.sh`). The HTTP server is an extra of the engine, not installed by default:
 
 ```bash
 cd ~/git/PiperRead/PiperRead/piper-env
 bin/pip install "piper-tts[http]"
 ```
 
-Mettre en place l'environnement de l'interface, puis lancer les tests
-unitaires :
+Set up the interface environment, then run the unit tests:
 
 ```bash
 cd ~/git/PiperRead/PiperRead/gui
@@ -79,25 +78,11 @@ pip install -e ".[dev]"
 env -u LD_LIBRARY_PATH QT_QPA_PLATFORM=offscreen python3 -m pytest
 ```
 
-`LD_LIBRARY_PATH` neutralisé pour la même raison que plus bas (bibliothèques
-Qt du système en conflit) ; `QT_QPA_PLATFORM=offscreen` pour que les tests du
-tray (`test_tray.py`) s'exécutent sans écran réel.
+`LD_LIBRARY_PATH` is unset for the reason given below (system Qt libraries in
+conflict); `QT_QPA_PLATFORM=offscreen` lets the tray tests (`test_tray.py`) run
+without a real display.
 
-Essai réel de la chaîne complète, sans fenêtre — copier un texte, puis :
-
-```bash
-cd ~/git/PiperRead/PiperRead/gui
-source .venv/bin/activate
-python3 -m piperread_gui.cli --lang fr
-```
-
-`--model <chemin>` force une voix précise ; sans cette option, la première
-voix trouvée dans `../voices/*.onnx` est utilisée. `--lang` choisit la langue
-du découpeur de phrases parmi `en`, `fr`, `de`, `es` (défaut `fr`). `cli.py`
-ne lit pas `piperread.conf` — c'est une boucle de test minimale ; la
-résolution de la configuration se fait dans `app.py` (ci-dessous).
-
-Lancer l'interface graphique (icône de tray et menu) — copier un texte, puis :
+Run the interface (tray icon and menu), after copying some text:
 
 ```bash
 cd ~/git/PiperRead/PiperRead/gui
@@ -105,92 +90,112 @@ source .venv/bin/activate
 python3 -m piperread_gui.app
 ```
 
-Sans option, la voix, la vitesse et la langue sont résolues dans le même
-ordre que `read.sh` : variables `PIPERREAD_VOICE`/`PIPERREAD_SPEED`/
-`PIPERREAD_LANG`, puis `$XDG_CONFIG_HOME/piperread/piperread.conf` (mêmes
-clés), puis la première voix trouvée dans `../voices/*.onnx` (et l'anglais
-pour la langue, à défaut de la locale système). `--lang` et `--speed`
-remplacent cette résolution pour l'instance lancée :
-`python3 -m piperread_gui.app --lang de --speed 1,5`. `--model` tient lieu
-d'option de voix (chemin direct vers un `.onnx`, plutôt qu'un nom à
-résoudre) et prime sur tout le reste. Le menu
-« Réglages… » ouvre un dialogue (voix, vitesse, langue) qui réécrit
-`piperread.conf` sans toucher au reste de son contenu.
+With no option, the voice, the speed and the language are resolved in the same
+order as `read.sh`: the variables `PIPERREAD_VOICE`/`PIPERREAD_SPEED`/
+`PIPERREAD_LANG`, then `$XDG_CONFIG_HOME/piperread/piperread.conf` (the same
+keys), then the first voice found in `../voices/*.onnx` (and English for the
+language, unless the system locale says otherwise). `--lang` and `--speed`
+override this for the instance being launched, for example
+`python3 -m piperread_gui.app --lang de --speed 1,5`. `--model` stands for the
+voice option (a direct path to an `.onnx` file rather than a name to resolve)
+and takes precedence over everything else. The "Settings…" menu entry opens a
+dialog (voice, speed, language, start with the session) that rewrites
+`piperread.conf` without touching the rest of its content.
 
-Contrôle du couple configuration/traduction, sans dépendre d'un fichier réel
-(la configuration réelle de la machine n'est jamais touchée par les tests) :
+A test loop without a window, for the whole chain: copy some text, then
 
 ```bash
 cd ~/git/PiperRead/PiperRead/gui
-env -u LD_LIBRARY_PATH QT_QPA_PLATFORM=offscreen .venv/bin/python3 -m pytest tests/test_config.py tests/test_i18n.py tests/test_settings_dialog.py
+source .venv/bin/activate
+python3 -m piperread_gui.cli --lang fr
 ```
 
-**Piège de plateforme (constaté sous KDE Plasma) :** si le shell
-définit `LD_LIBRARY_PATH` (par exemple pour CUDA), il masque les
-bibliothèques Qt embarquées par PySide6 au profit de celles, plus anciennes,
-du système, avec un plantage immédiat (`undefined symbol` puis
-segmentation fault). Neutraliser la variable avant de lancer l'interface :
+`--model <path>` forces a given voice; without it, the first voice found in
+`../voices/*.onnx` is used. `--lang` picks the language of the sentence splitter
+among `en`, `fr`, `de`, `es` (default `fr`). `cli.py` does not read
+`piperread.conf`: it is a minimal test loop, and the configuration is resolved
+in `app.py`.
+
+**Platform trap (seen on KDE Plasma):** if the shell defines `LD_LIBRARY_PATH`
+(for CUDA, for example), it hides the Qt libraries bundled with PySide6 in favour
+of the older ones of the system, with an immediate crash (`undefined symbol`, then
+a segmentation fault). Unset the variable before launching the interface:
 
 ```bash
 env -u LD_LIBRARY_PATH python3 -m piperread_gui.app --lang fr
 ```
 
-Au premier lancement, l'interface écrit son entrée de lancement automatique
-(`~/.config/autostart/piperread-gui.desktop` depuis un clone ; le paquet
-installe `/etc/xdg/autostart/piperread-gui.desktop`) et un marqueur
-`$XDG_STATE_HOME/piperread/autostart-default-applied` : un choix fait
-ensuite dans les réglages n'est jamais réécrit. `--play` lit par l'instance
-déjà lancée, ou la démarre puis lit si aucune ne tourne ; c'est la commande
-du lanceur de menu du paquet.
+## Start with the session
 
-Menu du tray (clic droit), libellés dans la langue résolue : Lire, Pause,
-Arrêter, Phrase précédente/suivante (actifs pendant la lecture ou la pause),
-Réglages…, Quitter. « Lire » pendant une pause reprend là où la lecture
-s'était arrêtée. Clic gauche sur l'icône : lire à l'arrêt, mettre en pause
-pendant la lecture, reprendre en pause. Sur un bureau qui n'expose aucune zone de notification
-système (GNOME sans l'extension « AppIndicator and KStatusNotifierItem
-Support »), une notification de bureau unique explique la situation au
-démarrage ; l'interface continue de fonctionner.
+At the first launch, the interface writes its startup entry
+(`~/.config/autostart/piperread-gui.desktop` from a clone; the package installs
+`/etc/xdg/autostart/piperread-gui.desktop`) and a marker,
+`$XDG_STATE_HOME/piperread/autostart-default-applied`: a choice made afterwards in
+the settings is never overwritten. On Windows, the value `PiperRead` under
+`HKCU\Software\Microsoft\Windows\CurrentVersion\Run` plays the same role, and a
+deactivation made in the Startup tab of the Task Manager is respected.
 
-Contrôle d'isolation du moteur — le code de l'interface ne doit contenir
-aucun `import` direct du module `piper` :
+## Controlling a running interface
+
+`piperread-gui --play` reads through the running instance, or starts it and then
+reads if none is running; this is the command of the package's menu launcher. The
+six other options (`--pause`, `--resume`, `--stop`, `--next`, `--previous`,
+`--quit`) act on the running instance and report an error when there is none.
+
+Tray menu (right click), labels in the resolved language: Play, Pause, Stop,
+Previous/Next sentence (active while reading or paused), Settings…, Quit. "Play"
+during a pause resumes where the reading stopped. A left click on the icon plays
+when stopped, pauses while reading, resumes when paused. On a desktop that
+exposes no system notification area (GNOME without the "AppIndicator and
+KStatusNotifierItem Support" extension), a single desktop notification explains
+the situation at startup; the interface keeps working and the options above
+still drive it.
+
+The channel behind those options is a Unix socket on POSIX systems
+(`$XDG_RUNTIME_DIR/piperread/gui.sock`, or `/tmp/piperread-$UID/gui.sock`), and a
+TCP socket on `127.0.0.1` protected by a random one-time token on Windows, where
+Unix sockets are not reliable.
+
+## Checks
+
+The interface code must contain no direct `import` of the `piper` module:
 
 ```bash
 cd ~/git/PiperRead/PiperRead
 grep -rnE 'import[[:space:]]piper' gui/
 ```
 
-Contrôle de la liaison réseau — pendant une lecture, dans un autre terminal :
+Network binding, during a reading, in another terminal:
 
 ```bash
 ss -tlnp
 ```
 
-Le port du serveur n'apparaît que sur `127.0.0.1`, jamais sur `0.0.0.0`.
+The server port only appears on `127.0.0.1`, never on `0.0.0.0`.
 
-## Paquet Windows
+## Windows package
 
-Deux exécutables autonomes en mode dossier (`piperread-gui.exe` et, dans le
-sous-dossier `piper-http-server\`, `piper-http-server.exe` — processus séparé,
-même frontière GPL que `server.py`), gelés par PyInstaller sur un vrai
-Windows (pas de construction croisée depuis Linux) :
-`_CADRE/SPECIFICATIONS/PROCEDURES_LLM/TACHE_construire-paquet-windows.md`. Déclencher
-la construction (nécessite d'être poussé sur `main`) :
+Two self-contained folder-mode executables (`piperread-gui.exe` and, in the
+`piper-http-server\` subfolder, `piper-http-server.exe`, a separate process with
+the same GPL boundary as `server.py`), frozen by PyInstaller on a real Windows
+(no cross-build from Linux). Starting the build requires the code to be pushed to
+`main`:
 
 ```bash
 gh workflow run build-windows-gui.yml --repo RonanDavalan/PiperRead
 gh run list --repo RonanDavalan/PiperRead --workflow build-windows-gui.yml --limit 1
-gh run download <id-de-l-exécution> --repo RonanDavalan/PiperRead
+gh run download <run-id> --repo RonanDavalan/PiperRead
 ```
 
-L'archive produite (`piperread-gui-windows.zip`) contient les deux
-exécutables avec leurs dossiers `_internal\`, `lang/`, `piperread.ico`, un dossier `voices/` vide (voix jamais
-livrées, voir la décision « voix jamais livrées ni téléchargées sans
-demande ») et `README.txt` (anglais, instructions de lancement).
+The archive produced (`piperread-gui-windows.zip`) holds the two executables with
+their `_internal\` folders, `lang/`, `piperread.ico`, an empty `voices/` folder
+(voices are never shipped) and `README.txt` (English, how to launch it). The
+manifest of `piper-http-server.exe` declares the UTF-8 code page for the whole
+process, so that `espeak-ng` finds its data whatever the name of the Windows
+account, accents included.
 
-Essai à blanc reproductible côté Linux (ELF, inutilisable tel quel, mais
-révèle un piège de résolution de chemin ou de données Piper embarquées avant
-de dépenser une exécution CI Windows) :
+A dry run on Linux (an ELF binary, unusable as it is, but it reveals a path
+resolution or bundled-data trap before spending a Windows CI run):
 
 ```bash
 cd gui

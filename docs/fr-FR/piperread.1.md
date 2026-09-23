@@ -94,6 +94,12 @@ sources qui le définit :
 2. la variable d'environnement `PIPERREAD_SPEED`, `PIPERREAD_VOICE` ou `PIPERREAD_LANG` ;
 3. le fichier de configuration.
 
+Le réglage `telemetry` (`on` ou `off`, `off` par défaut) n'a pas d'option de
+ligne de commande : il est pris dans la variable d'environnement
+`PIPERREAD_TELEMETRY`, puis dans le fichier de configuration. Il commande les
+événements d'utilisation de la bibliothèque d'inférence que tire le moteur
+(onnxruntime), désactivés par défaut afin que la lecture reste hors ligne.
+
 # FICHIERS
 
 `$XDG_CONFIG_HOME/piperread/piperread.conf`
