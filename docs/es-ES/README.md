@@ -35,8 +35,10 @@ La interfaz es un icono de la bandeja del sistema; un clic derecho sobre él abr
   <img src="../images/plasma-es.png" width="205" alt="Icono de PiperRead en el panel de KDE Plasma, con su menú abierto: Reproducir, Pausa, Detener, Frase anterior, Frase siguiente, Ajustes…, Reiniciar, Salir">
   &nbsp;&nbsp;&nbsp;
   <img src="../images/gnome-es.png" width="262" alt="Icono de PiperRead en la barra superior de GNOME, con el mismo menú abierto">
+  &nbsp;&nbsp;&nbsp;
+  <img src="../images/windows-es.png" width="280" alt="Icono de PiperRead en el área de notificación de Windows 11, con el mismo menú abierto">
 </p>
-<p align="center"><sub>KDE Plasma y GNOME (con la extensión AppIndicator)</sub></p>
+<p align="center"><sub>KDE Plasma, GNOME (con la extensión AppIndicator) y Windows 11</sub></p>
 
 ## Casos de uso
 

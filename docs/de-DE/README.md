@@ -35,8 +35,10 @@ Die Oberfläche ist ein Tray-Symbol im Benachrichtigungsbereich; ein Rechtsklick
   <img src="../images/plasma-de.png" width="208" alt="PiperRead-Symbol in der Leiste von KDE Plasma, Menü geöffnet: Wiedergabe, Pause, Stopp, Vorheriger Satz, Nächster Satz, Einstellungen…, Neu starten, Beenden">
   &nbsp;&nbsp;&nbsp;
   <img src="../images/gnome-de.png" width="262" alt="PiperRead-Symbol in der oberen Leiste von GNOME, mit demselben geöffneten Menü">
+  &nbsp;&nbsp;&nbsp;
+  <img src="../images/windows-de.png" width="280" alt="PiperRead-Symbol im Infobereich von Windows 11, mit demselben geöffneten Menü">
 </p>
-<p align="center"><sub>KDE Plasma und GNOME (mit der Erweiterung AppIndicator)</sub></p>
+<p align="center"><sub>KDE Plasma, GNOME (mit der Erweiterung AppIndicator) und Windows 11</sub></p>
 
 ## Anwendungsfälle
 

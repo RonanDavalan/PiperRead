@@ -36,8 +36,10 @@ The interface is an icon in the notification area; a right click on it opens its
   <img src="docs/images/plasma-en.png" width="214" alt="PiperRead icon in the KDE Plasma panel, with its menu open: Play, Pause, Stop, Previous sentence, Next sentence, Settings…, Restart, Quit">
   &nbsp;&nbsp;&nbsp;
   <img src="docs/images/gnome-en.png" width="262" alt="PiperRead icon in the GNOME top bar, with the same menu open">
+  &nbsp;&nbsp;&nbsp;
+  <img src="docs/images/windows-en.png" width="280" alt="PiperRead icon in the Windows 11 notification area, with the same menu open">
 </p>
-<p align="center"><sub>KDE Plasma and GNOME (with the AppIndicator extension)</sub></p>
+<p align="center"><sub>KDE Plasma, GNOME (with the AppIndicator extension) and Windows 11</sub></p>
 
 ## Use Cases
 
