@@ -22,3 +22,13 @@ def test_notifier_silencieux_si_absent(monkeypatch):
     monkeypatch.setattr(notifier.subprocess, "run", echoue)
 
     notifier.notifier("Titre", "Message")
+
+
+def test_notifier_abandonne_un_notify_send_bloque(monkeypatch):
+    monkeypatch.setattr(notifier.shutil, "which", lambda _nom: "/usr/bin/notify-send")
+
+    def bloque(commande, **options):
+        raise notifier.subprocess.TimeoutExpired(commande, options["timeout"])
+
+    monkeypatch.setattr(notifier.subprocess, "run", bloque)
+    notifier.notifier("PiperRead", "message")
