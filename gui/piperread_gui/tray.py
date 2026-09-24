@@ -17,7 +17,8 @@ Pourquoi ce fichier existe :
 
 Entrée / sortie :
     Entrée : un `PlaybackController` déjà construit (dont les messages
-    traduits, `controller.messages`) et le chemin de l'icône SVG du projet.
+    traduits, `controller.messages`), le chemin de l'icône SVG du projet et
+    les dossiers de voix que le dialogue de réglages propose.
     Sortie : aucune (objet Qt vivant tant que l'application tourne).
 
 Dépend de :
@@ -41,10 +42,13 @@ from piperread_gui.settings_dialog import SettingsDialog
 class PiperReadTray(QSystemTrayIcon):
     relance_demandee = Signal()
 
-    def __init__(self, controller: PlaybackController, icon_path: Path):
+    def __init__(
+        self, controller: PlaybackController, icon_path: Path, voices_dirs: list[Path] | None = None
+    ):
         super().__init__(QIcon(str(icon_path)))
         self._controller = controller
         self._icon_path = icon_path
+        self._voices_dirs = voices_dirs
 
         self._menu = QMenu()
         self._action_lire = self._menu.addAction("", self._controller.lire)
@@ -101,7 +105,7 @@ class PiperReadTray(QSystemTrayIcon):
             notifier("PiperRead", message)
 
     def _ouvrir_reglages(self) -> None:
-        dialogue = SettingsDialog(self._controller, self._icon_path)
+        dialogue = SettingsDialog(self._controller, self._icon_path, voices_dirs=self._voices_dirs)
         if dialogue.exec() == QDialog.DialogCode.Accepted:
             self._actualiser_textes()
 

@@ -17,6 +17,7 @@ import argparse
 import sys
 from pathlib import Path
 
+from piperread_gui import config
 from piperread_gui.clipboard import read_clipboard
 from piperread_gui.player import play_wav_bytes
 from piperread_gui.sentences import split_sentences
@@ -27,9 +28,9 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
 def _modele_par_defaut() -> Path | None:
-    dossier_voix = _REPO_ROOT / "voices"
-    modeles = sorted(dossier_voix.glob("*.onnx"))
-    return modeles[0] if modeles else None
+    dossiers = config.voices_dirs(_REPO_ROOT)
+    nom = config.default_voice_name(dossiers)
+    return config.find_voice(nom, dossiers) if nom else None
 
 
 def _analyser_arguments(argv: list[str]) -> argparse.Namespace:
@@ -44,7 +45,7 @@ def _analyser_arguments(argv: list[str]) -> argparse.Namespace:
         "--model",
         type=Path,
         default=_modele_par_defaut(),
-        help="Chemin du modèle de voix .onnx (défaut : la première voix de voices/).",
+        help="Chemin du modèle de voix .onnx (défaut : la première voix des dossiers de voix).",
     )
     analyseur.add_argument(
         "--lang",

@@ -66,6 +66,27 @@ def test_enregistrer_ecrit_le_fichier_et_met_a_jour_le_controleur(application, t
     assert controleur.speed == pytest.approx(2.0)
 
 
+def test_voix_des_deux_dossiers_proposees_et_appliquees(application, tmp_path):
+    clone = tmp_path / "clone"
+    clone.mkdir()
+    (clone / "fr_FR-siwis-medium.onnx").touch()
+    utilisateur = tmp_path / "utilisateur"
+    utilisateur.mkdir()
+    (utilisateur / "fr_FR-gilles-low.onnx").touch()
+    (utilisateur / "fr_FR-siwis-medium.onnx").touch()
+    controleur = PlaybackController(clone / "fr_FR-siwis-medium.onnx", "fr", speed=1.0)
+
+    dialogue = SettingsDialog(controleur, voices_dirs=[clone, utilisateur])
+
+    noms = [dialogue._voix.itemText(i) for i in range(dialogue._voix.count())]
+    assert noms == ["fr_FR-gilles-low", "fr_FR-siwis-medium"]
+    assert dialogue._voix.currentText() == "fr_FR-siwis-medium"
+
+    dialogue._voix.setCurrentText("fr_FR-gilles-low")
+    dialogue._enregistrer()
+    assert controleur.model_path == utilisateur / "fr_FR-gilles-low.onnx"
+
+
 def test_annuler_ne_modifie_rien(application, tmp_path):
     voices_dir = _voix(tmp_path, "alpha")
     controleur = PlaybackController(voices_dir / "alpha.onnx", "fr", speed=1.0)

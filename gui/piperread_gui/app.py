@@ -12,10 +12,10 @@ Pourquoi ce fichier existe :
     noyau (`/usr/share/icons/hicolor/scalable/apps/piperread.svg`, dont
     `piperread-gui` dépend) — déjà dessinée pour le paquet
     (`_CADRE/SPECIFICATIONS/PROCEDURES_LLM/instance/TACHE_dessiner-icone-svg.md`) —
-    l'interface n'a pas d'icône propre. Le dossier des voix
-    suit la même priorité (`config.default_voices_dir`, clone puis
-    `$XDG_DATA_HOME/piperread/voices`, même règle que `BASE_DIR`/`DATA_DIR`
-    de `read.sh`). Sur l'exécutable Windows gelé, la racine de résolution est
+    l'interface n'a pas d'icône propre. Les voix se cherchent dans les mêmes
+    dossiers que le noyau (`config.voices_dirs` : `voices/` du clone puis
+    `$XDG_DATA_HOME/piperread/voices`, comme `VOICES_DIRS` de `read.sh`), et
+    dans le seul dossier `voices` de l'exécutable Windows. Sur l'exécutable Windows gelé, la racine de résolution est
     le dossier réel de `piperread-gui.exe` (`frozen.installation_dir`), pas
     le dossier d'extraction temporaire que donnerait `Path(__file__)` — même
     principe que `server._trouver_executable_windows`. La résolution de la
@@ -71,7 +71,7 @@ def _resoudre_icone(repo_root: Path) -> Path:
 
 
 _ICONE = _resoudre_icone(_REPO_ROOT)
-_VOICES_DIR = config.default_voices_dir(_REPO_ROOT)
+_VOICES_DIRS = config.voices_dirs(_REPO_ROOT, frozen=frozen.installation_dir() is not None)
 
 
 def _analyser_arguments(argv: list[str]) -> argparse.Namespace:
@@ -83,7 +83,7 @@ def _analyser_arguments(argv: list[str]) -> argparse.Namespace:
         "--model",
         type=Path,
         default=None,
-        help="Chemin du modèle de voix .onnx (défaut : résolu depuis piperread.conf, sinon la première voix de voices/).",
+        help="Chemin du modèle de voix .onnx (défaut : résolu depuis piperread.conf, sinon la première voix des dossiers de voix).",
     )
     analyseur.add_argument(
         "--lang",
@@ -163,7 +163,7 @@ def main(argv: list[str] | None = None) -> int:
             return code
 
     resolu = config.resolve_settings(
-        _VOICES_DIR,
+        _VOICES_DIRS,
         speed_option=arguments.speed,
         voice_option=None,
         lang_option=arguments.lang,
@@ -203,7 +203,7 @@ def main(argv: list[str] | None = None) -> int:
     controller = PlaybackController(model_path, resolu.lang, resolu.speed, resolu.telemetry)
     controller.demarrer_moteur()
     avertir_si_tray_absent(controller.messages)
-    tray = PiperReadTray(controller, _ICONE)
+    tray = PiperReadTray(controller, _ICONE, _VOICES_DIRS)
     tray.show()
 
     repartiteur = {

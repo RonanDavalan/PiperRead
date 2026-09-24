@@ -43,12 +43,36 @@ def config_file_path() -> Path:
     return Path(base) / "piperread" / "piperread.conf"
 
 
-def default_voices_dir(repo_root: Path) -> Path:
-    candidat = repo_root / "voices"
-    if candidat.is_dir():
-        return candidat
+def voices_dirs(repo_root: Path, frozen: bool = False) -> list[Path]:
+    """Dossiers de voix dans l'ordre de recherche, comme `VOICES_DIRS` de `read.sh`.
+
+    Le `voices/` d'un clone passe avant le dossier de l'utilisateur sans le
+    masquer. L'exécutable Windows ne lit que le dossier voisin de son `.exe`.
+    """
+    clone = repo_root / "voices"
+    if frozen:
+        return [clone]
     base = os.environ.get("XDG_DATA_HOME") or str(Path.home() / ".local" / "share")
-    return Path(base) / "piperread" / "voices"
+    utilisateur = Path(base) / "piperread" / "voices"
+    return [clone, utilisateur] if clone.is_dir() else [utilisateur]
+
+
+def find_voice(name: str, dirs: list[Path]) -> Path | None:
+    for dossier in dirs:
+        modele = dossier / f"{name}.onnx"
+        if modele.is_file():
+            return modele
+    return None
+
+
+def available_voices(dirs: list[Path]) -> dict[str, Path]:
+    """Voix installées par nom, triées ; à nom égal, le premier dossier l'emporte."""
+    voix: dict[str, Path] = {}
+    for dossier in dirs:
+        for modele in dossier.glob("*.onnx"):
+            if modele.is_file():
+                voix.setdefault(modele.stem, modele)
+    return dict(sorted(voix.items()))
 
 
 def load_config_file() -> tuple[dict[str, str], list[str]]:
@@ -89,17 +113,16 @@ def valid_voice_name(value: str) -> bool:
     return bool(_NOM_VOIX_VALIDE.fullmatch(value))
 
 
-def validate_voice(value: str, voices_dir: Path) -> str | None:
+def validate_voice(value: str, dirs: list[Path]) -> str | None:
     if not valid_voice_name(value):
         return None
-    if (voices_dir / f"{value}.onnx").is_file():
+    if find_voice(value, dirs) is not None:
         return value
     return None
 
 
-def default_voice_name(voices_dir: Path) -> str | None:
-    modeles = sorted(p.stem for p in voices_dir.glob("*.onnx") if p.is_file())
-    return modeles[0] if modeles else None
+def default_voice_name(dirs: list[Path]) -> str | None:
+    return next(iter(available_voices(dirs)), None)
 
 
 @dataclass
@@ -151,7 +174,7 @@ class ResolvedSettings:
 
 
 def resolve_settings(
-    voices_dir: Path,
+    voices_dirs: list[Path],
     speed_option: str | None = None,
     voice_option: str | None = None,
     lang_option: str | None = None,
@@ -178,13 +201,13 @@ def resolve_settings(
     speed = float(speed_resolved.value) if speed_resolved.value else 1.0
 
     voice_resolved = resolve_setting(
-        "voice", lambda valeur: validate_voice(valeur, voices_dir), voice_option, config_values
+        "voice", lambda valeur: validate_voice(valeur, voices_dirs), voice_option, config_values
     )
     warnings += voice_resolved.warnings
     if invalid is None and voice_resolved.invalid is not None:
         invalid = voice_resolved.invalid
-    voice_name = voice_resolved.value or default_voice_name(voices_dir)
-    model_path = voices_dir / f"{voice_name}.onnx" if voice_name else None
+    voice_name = voice_resolved.value or default_voice_name(voices_dirs)
+    model_path = find_voice(voice_name, voices_dirs) if voice_name else None
 
     telemetry_resolved = resolve_setting("telemetry", valid_telemetry, None, config_values)
     warnings += telemetry_resolved.warnings

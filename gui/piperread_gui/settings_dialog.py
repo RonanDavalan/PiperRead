@@ -13,8 +13,10 @@ Pourquoi ce fichier existe :
 
 Entrée / sortie :
     Entrée : le `PlaybackController` de la session (voix, vitesse, langue et
-    messages traduits déjà résolus) et le chemin de l'icône, repris par
-    l'entrée de lancement automatique d'un clone. Sortie : à la validation,
+    messages traduits déjà résolus), le chemin de l'icône, repris par
+    l'entrée de lancement automatique d'un clone, et les dossiers de voix
+    (`config.voices_dirs`) ; sans eux, le dossier de la voix courante seul.
+    Sortie : à la validation,
     `piperread.conf` est réécrit, le contrôleur reçoit les nouveaux réglages
     (`appliquer_reglages`) et le lancement à l'ouverture de session est
     activé ou désactivé s'il a changé ; à l'annulation, rien n'est modifié.
@@ -36,15 +38,15 @@ _NOMS_LANGUES = {"en": "English", "fr": "Français", "de": "Deutsch", "es": "Esp
 
 
 class SettingsDialog(QDialog):
-    def __init__(self, controller, icone=None, parent=None):
+    def __init__(self, controller, icone=None, parent=None, voices_dirs=None):
         super().__init__(parent)
         self._controller = controller
         self._icone = icone
         messages = controller.messages
         self.setWindowTitle(msg(messages, "gui_settings_title"))
 
-        voix_dir = controller.model_path.parent
-        noms_voix = sorted(p.stem for p in voix_dir.glob("*.onnx") if p.is_file())
+        self._modeles = config.available_voices(voices_dirs or [controller.model_path.parent])
+        noms_voix = list(self._modeles)
 
         self._voix = QComboBox()
         if noms_voix:
@@ -89,7 +91,6 @@ class SettingsDialog(QDialog):
         agencement.addRow(boutons)
 
     def _enregistrer(self) -> None:
-        voix_dir = self._controller.model_path.parent
         nom_voix = self._voix.currentText() if self._voix.isEnabled() else None
         vitesse = self._vitesse.value()
         langue = self._langue.currentData()
@@ -99,7 +100,7 @@ class SettingsDialog(QDialog):
             valeurs["voice"] = nom_voix
         config.write_config_values(valeurs)
 
-        modele = voix_dir / f"{nom_voix}.onnx" if nom_voix else self._controller.model_path
+        modele = self._modeles[nom_voix] if nom_voix else self._controller.model_path
         self._controller.appliquer_reglages(modele, langue, vitesse)
 
         lancement_auto = self._lancement_auto.isChecked()

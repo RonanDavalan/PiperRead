@@ -99,27 +99,27 @@ def test_valid_lang_refuse_le_reste(code):
 
 def test_validate_voice_accepte_un_fichier_existant(tmp_path):
     voices_dir = _voix(tmp_path, "demo")
-    assert config.validate_voice("demo", voices_dir) == "demo"
+    assert config.validate_voice("demo", [voices_dir]) == "demo"
 
 
 def test_validate_voice_refuse_un_fichier_absent(tmp_path):
     voices_dir = _voix(tmp_path)
-    assert config.validate_voice("fantome", voices_dir) is None
+    assert config.validate_voice("fantome", [voices_dir]) is None
 
 
 def test_validate_voice_refuse_un_nom_avec_barre_oblique(tmp_path):
     voices_dir = _voix(tmp_path, "demo")
-    assert config.validate_voice("../demo", voices_dir) is None
+    assert config.validate_voice("../demo", [voices_dir]) is None
 
 
 def test_default_voice_name_premiere_par_ordre_alphabetique(tmp_path):
     voices_dir = _voix(tmp_path, "zebra", "alpha")
-    assert config.default_voice_name(voices_dir) == "alpha"
+    assert config.default_voice_name([voices_dir]) == "alpha"
 
 
 def test_default_voice_name_aucune_voix(tmp_path):
     voices_dir = _voix(tmp_path)
-    assert config.default_voice_name(voices_dir) is None
+    assert config.default_voice_name([voices_dir]) is None
 
 
 # --- resolve_setting : ordre de priorité ---
@@ -176,7 +176,7 @@ def test_resolve_setting_fichier_invalide_avertit_et_rend_defaut():
 
 def test_resolve_settings_tout_par_defaut(tmp_path):
     voices_dir = _voix(tmp_path, "alpha")
-    resultat = config.resolve_settings(voices_dir)
+    resultat = config.resolve_settings([voices_dir])
     assert resultat.speed == 1.0
     assert resultat.voice == "alpha"
     assert resultat.model_path == voices_dir / "alpha.onnx"
@@ -187,7 +187,7 @@ def test_resolve_settings_tout_par_defaut(tmp_path):
 def test_resolve_settings_lit_le_fichier(tmp_path):
     voices_dir = _voix(tmp_path, "alpha", "beta")
     _ecrire_conf(tmp_path, "speed=1.5\nvoice=beta\nlang=de\n")
-    resultat = config.resolve_settings(voices_dir)
+    resultat = config.resolve_settings([voices_dir])
     assert resultat.speed == 1.5
     assert resultat.voice == "beta"
     assert resultat.lang == "de"
@@ -196,7 +196,7 @@ def test_resolve_settings_lit_le_fichier(tmp_path):
 def test_resolve_settings_option_prioritaire_sur_fichier(tmp_path):
     voices_dir = _voix(tmp_path, "alpha")
     _ecrire_conf(tmp_path, "speed=1.5\nlang=de\n")
-    resultat = config.resolve_settings(voices_dir, speed_option="2.0", lang_option="es")
+    resultat = config.resolve_settings([voices_dir], speed_option="2.0", lang_option="es")
     assert resultat.speed == 2.0
     assert resultat.lang == "es"
 
@@ -204,7 +204,7 @@ def test_resolve_settings_option_prioritaire_sur_fichier(tmp_path):
 def test_resolve_settings_repli_sur_variable_lang_systeme(tmp_path, monkeypatch):
     voices_dir = _voix(tmp_path, "alpha")
     monkeypatch.setenv("LANG", "de_DE.UTF-8")
-    resultat = config.resolve_settings(voices_dir)
+    resultat = config.resolve_settings([voices_dir])
     assert resultat.lang == "de"
     assert resultat.lang_source == "default"
 
@@ -212,14 +212,14 @@ def test_resolve_settings_repli_sur_variable_lang_systeme(tmp_path, monkeypatch)
 def test_resolve_settings_voix_invalide_dans_le_fichier_retombe_sur_le_defaut(tmp_path):
     voices_dir = _voix(tmp_path, "alpha")
     _ecrire_conf(tmp_path, "voice=fantome\n")
-    resultat = config.resolve_settings(voices_dir)
+    resultat = config.resolve_settings([voices_dir])
     assert resultat.voice == "alpha"
     assert resultat.warnings == [("voice", "fantome", "piperread.conf")]
 
 
 def test_resolve_settings_speed_option_invalide_est_signalee(tmp_path):
     voices_dir = _voix(tmp_path, "alpha")
-    resultat = config.resolve_settings(voices_dir, speed_option="99")
+    resultat = config.resolve_settings([voices_dir], speed_option="99")
     assert resultat.invalid == ("speed", "99", "--speed")
 
 
@@ -265,23 +265,76 @@ def test_write_config_values_derniere_occurrence_gagne(tmp_path):
     assert contenu.splitlines() == ["speed=1.0", "speed=2.0"]
 
 
-# --- default_voices_dir ---
+# --- voices_dirs, find_voice, available_voices : deux dossiers ---
 
 
-def test_default_voices_dir_clone_prioritaire(tmp_path):
+def _dossier(racine, *noms):
+    racine.mkdir(parents=True, exist_ok=True)
+    for nom in noms:
+        (racine / f"{nom}.onnx").touch()
+    return racine
+
+
+def test_voices_dirs_clone_puis_utilisateur(tmp_path, monkeypatch):
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
     depot = tmp_path / "depot"
     (depot / "voices").mkdir(parents=True)
-    assert config.default_voices_dir(depot) == depot / "voices"
+    assert config.voices_dirs(depot) == [depot / "voices", tmp_path / "data" / "piperread" / "voices"]
 
 
-def test_default_voices_dir_repli_xdg_data_home(tmp_path, monkeypatch):
+def test_voices_dirs_sans_dossier_du_clone(tmp_path, monkeypatch):
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
     depot = tmp_path / "depot_installe"
-    assert config.default_voices_dir(depot) == tmp_path / "data" / "piperread" / "voices"
+    assert config.voices_dirs(depot) == [tmp_path / "data" / "piperread" / "voices"]
 
 
-def test_default_voices_dir_repli_home_sans_xdg_data_home(tmp_path, monkeypatch):
+def test_voices_dirs_repli_home_sans_xdg_data_home(tmp_path, monkeypatch):
     monkeypatch.delenv("XDG_DATA_HOME", raising=False)
     monkeypatch.setattr(config.Path, "home", lambda: tmp_path / "home")
     depot = tmp_path / "depot_installe"
-    assert config.default_voices_dir(depot) == tmp_path / "home" / ".local" / "share" / "piperread" / "voices"
+    assert config.voices_dirs(depot) == [tmp_path / "home" / ".local" / "share" / "piperread" / "voices"]
+
+
+def test_voices_dirs_executable_windows_seul_son_dossier(tmp_path, monkeypatch):
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
+    installation = tmp_path / "piperread-gui"
+    assert config.voices_dirs(installation, frozen=True) == [installation / "voices"]
+
+
+def test_find_voice_cherche_dans_l_ordre(tmp_path):
+    clone = _dossier(tmp_path / "clone", "b-clone", "c-commune")
+    utilisateur = _dossier(tmp_path / "utilisateur", "a-utilisateur", "c-commune")
+    dossiers = [clone, utilisateur]
+    assert config.find_voice("b-clone", dossiers) == clone / "b-clone.onnx"
+    assert config.find_voice("a-utilisateur", dossiers) == utilisateur / "a-utilisateur.onnx"
+    assert config.find_voice("c-commune", dossiers) == clone / "c-commune.onnx"
+    assert config.find_voice("d-absente", dossiers) is None
+
+
+def test_available_voices_reunit_les_dossiers(tmp_path):
+    clone = _dossier(tmp_path / "clone", "b-clone", "c-commune")
+    utilisateur = _dossier(tmp_path / "utilisateur", "a-utilisateur", "c-commune")
+    voix = config.available_voices([clone, utilisateur])
+    assert list(voix) == ["a-utilisateur", "b-clone", "c-commune"]
+    assert voix["c-commune"] == clone / "c-commune.onnx"
+
+
+def test_available_voices_dossier_absent(tmp_path):
+    assert config.available_voices([tmp_path / "absent"]) == {}
+
+
+def test_resolve_settings_voix_du_dossier_utilisateur_malgre_le_clone(tmp_path):
+    clone = _dossier(tmp_path / "clone", "fr_FR-siwis-medium")
+    utilisateur = _dossier(tmp_path / "utilisateur", "fr_FR-gilles-low")
+    _ecrire_conf(tmp_path, "voice=fr_FR-gilles-low\n")
+    resultat = config.resolve_settings([clone, utilisateur])
+    assert resultat.voice == "fr_FR-gilles-low"
+    assert resultat.model_path == utilisateur / "fr_FR-gilles-low.onnx"
+    assert resultat.warnings == []
+
+
+def test_resolve_settings_defaut_tous_dossiers_confondus(tmp_path):
+    clone = _dossier(tmp_path / "clone", "zebra")
+    utilisateur = _dossier(tmp_path / "utilisateur", "alpha")
+    resultat = config.resolve_settings([clone, utilisateur])
+    assert resultat.model_path == utilisateur / "alpha.onnx"
