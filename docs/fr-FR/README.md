@@ -29,6 +29,15 @@ Les deux sont indépendants : aucun ne pilote l'autre, et chacun fonctionne sans
 
 Lancés ensemble, les deux lisent en même temps (deux voix superposées) : choisissez un seul geste.
 
+L'interface est une icône de la barre d'état ; un clic droit dessus ouvre son menu.
+
+<p align="center">
+  <img src="../images/plasma-fr.png" width="222" alt="Icône de PiperRead dans le panneau de KDE Plasma, menu ouvert : Lire, Pause, Arrêter, Phrase précédente, Phrase suivante, Réglages…, Relancer, Quitter">
+  &nbsp;&nbsp;&nbsp;
+  <img src="../images/gnome-fr.png" width="262" alt="Icône de PiperRead dans la barre supérieure de GNOME, avec le même menu ouvert">
+</p>
+<p align="center"><sub>KDE Plasma et GNOME (avec l'extension AppIndicator)</sub></p>
+
 ## Cas d'usage
 
 *   **Accessibilité** : lecture rapide de contenus pour les personnes ayant une déficience visuelle légère ou une fatigue oculaire.
@@ -191,7 +200,7 @@ Lancez `piperread --stop` (ou `./read.sh --stop` depuis un clone) pour terminer 
 Le paquet `piperread-gui` démarre avec votre session (un bureau Linux lit son entrée de démarrage automatique ; sur Windows, PiperRead s'ajoute aux programmes de démarrage au premier lancement). Une icône de la zone de notification apparaît ; la voix se charge en arrière-plan et reste chargée, et pendant qu'une phrase est lue la suivante est déjà en cours de synthèse.
 
 *   **Clic gauche** sur l'icône : lire à l'arrêt, mettre en pause pendant la lecture, reprendre en pause.
-*   **Clic droit** : le menu (Lire, Pause, Arrêter, Phrase précédente, Phrase suivante, Réglages, Quitter), dans la langue de votre configuration.
+*   **Clic droit** : le menu (Lire, Pause, Arrêter, Phrase précédente, Phrase suivante, Réglages, Relancer, Quitter), dans la langue de votre configuration.
 *   **Ce qui est lu** : la sélection de la souris, ou le presse-papiers quand rien n'est sélectionné (sur Linux, le même ordre que le lanceur) ; le presse-papiers uniquement sur Windows. Le balisage Markdown est d'abord supprimé.
 *   **Réglages** : l'entrée de menu ouvre une boîte de dialogue pour la voix, la vitesse, la langue et « Lancer à l'ouverture de session » (activé par défaut ; décochez-le pour arrêter le démarrage automatique). Elle écrit le même `piperread.conf` que le lanceur.
 

@@ -29,6 +29,15 @@ Ambas son independientes: ninguna controla a la otra, y cada una funciona sin la
 
 Si se inician juntas, ambas leen al mismo tiempo (dos voces superpuestas): elija un gesto.
 
+La interfaz es un icono de la bandeja del sistema; un clic derecho sobre él abre su menú.
+
+<p align="center">
+  <img src="../images/plasma-es.png" width="205" alt="Icono de PiperRead en el panel de KDE Plasma, con su menú abierto: Reproducir, Pausa, Detener, Frase anterior, Frase siguiente, Ajustes…, Reiniciar, Salir">
+  &nbsp;&nbsp;&nbsp;
+  <img src="../images/gnome-es.png" width="262" alt="Icono de PiperRead en la barra superior de GNOME, con el mismo menú abierto">
+</p>
+<p align="center"><sub>KDE Plasma y GNOME (con la extensión AppIndicator)</sub></p>
+
 ## Casos de uso
 
 *   **Accesibilidad**: lectura rápida de contenidos para personas con discapacidad visual leve o fatiga visual.
@@ -191,7 +200,7 @@ Ejecute `piperread --stop` (o `./read.sh --stop` desde un clon) para terminar la
 El paquete `piperread-gui` se inicia con su sesión (un escritorio Linux lee su entrada de inicio automático; en Windows, PiperRead se añade a los programas de inicio en el primer inicio). Aparece un icono en la bandeja; la voz se carga en segundo plano y permanece cargada, y mientras se reproduce una frase la siguiente ya se está sintetizando.
 
 *   **Clic izquierdo** en el icono: leer cuando está detenido, pausar durante la lectura, reanudar cuando está en pausa.
-*   **Clic derecho**: el menú (Reproducir, Pausa, Detener, Frase anterior, Frase siguiente, Ajustes, Salir), en el idioma de su configuración.
+*   **Clic derecho**: el menú (Reproducir, Pausa, Detener, Frase anterior, Frase siguiente, Ajustes, Reiniciar, Salir), en el idioma de su configuración.
 *   **Lo que se lee**: la selección del ratón, o el portapapeles cuando no hay nada seleccionado (Linux, el mismo orden que el lanzador); solo el portapapeles en Windows. El marcado Markdown se elimina primero.
 *   **Ajustes**: la entrada del menú abre un diálogo para la voz, la velocidad, el idioma y "Iniciar con la sesión" (activado por defecto; desmárquelo para detener el inicio automático). Escribe el mismo `piperread.conf` que el lanzador.
 

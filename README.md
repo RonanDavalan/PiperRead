@@ -30,6 +30,15 @@ The two are independent: neither drives the other, and either works without the 
 
 Started together, both read at the same time (two voices overlapping): pick one gesture.
 
+The interface is an icon in the notification area; a right click on it opens its menu.
+
+<p align="center">
+  <img src="docs/images/plasma-en.png" width="214" alt="PiperRead icon in the KDE Plasma panel, with its menu open: Play, Pause, Stop, Previous sentence, Next sentence, Settings…, Restart, Quit">
+  &nbsp;&nbsp;&nbsp;
+  <img src="docs/images/gnome-en.png" width="262" alt="PiperRead icon in the GNOME top bar, with the same menu open">
+</p>
+<p align="center"><sub>KDE Plasma and GNOME (with the AppIndicator extension)</sub></p>
+
 ## Use Cases
 
 *   **Accessibility**: Quick reading of content for people with mild visual impairment or eye fatigue.
@@ -192,7 +201,7 @@ Run `piperread --stop` (or `./read.sh --stop` from a clone) to end the reading, 
 The `piperread-gui` package starts with your session (a Linux desktop reads its autostart entry; on Windows, PiperRead adds itself to the startup programs at the first launch). A tray icon appears; the voice loads in the background and stays loaded, and while a sentence plays the next one is already being synthesized.
 
 *   **Left click** on the icon: read when stopped, pause while reading, resume when paused.
-*   **Right click**: the menu (Play, Pause, Stop, Previous sentence, Next sentence, Settings, Quit), in the language of your configuration.
+*   **Right click**: the menu (Play, Pause, Stop, Previous sentence, Next sentence, Settings, Restart, Quit), in the language of your configuration.
 *   **What is read**: the mouse selection, or the clipboard when nothing is selected (Linux, the same order as the launcher); the clipboard only on Windows. Markdown markup is removed first.
 *   **Settings**: the menu entry opens a dialog for the voice, the speed, the language and "Start with the session" (on by default; untick it to stop the automatic start). It writes the same `piperread.conf` as the launcher.
 

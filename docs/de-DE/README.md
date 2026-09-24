@@ -29,6 +29,15 @@ Beide sind unabhängig: keines steuert das andere, und jedes funktioniert auch o
 
 Zusammen gestartet, lesen beide gleichzeitig vor (zwei sich überlappende Stimmen): Wählen Sie eine Geste.
 
+Die Oberfläche ist ein Tray-Symbol im Benachrichtigungsbereich; ein Rechtsklick darauf öffnet ihr Menü.
+
+<p align="center">
+  <img src="../images/plasma-de.png" width="208" alt="PiperRead-Symbol in der Leiste von KDE Plasma, Menü geöffnet: Wiedergabe, Pause, Stopp, Vorheriger Satz, Nächster Satz, Einstellungen…, Neu starten, Beenden">
+  &nbsp;&nbsp;&nbsp;
+  <img src="../images/gnome-de.png" width="262" alt="PiperRead-Symbol in der oberen Leiste von GNOME, mit demselben geöffneten Menü">
+</p>
+<p align="center"><sub>KDE Plasma und GNOME (mit der Erweiterung AppIndicator)</sub></p>
+
 ## Anwendungsfälle
 
 *   **Barrierefreiheit**: Schnelles Vorlesen von Inhalten für Menschen mit leichter Sehbehinderung oder Augenermüdung.
@@ -191,7 +200,7 @@ Führen Sie `piperread --stop` (aus einem Klon `./read.sh --stop`) aus, um das V
 Das Paket `piperread-gui` startet mit Ihrer Sitzung (ein Linux-Desktop liest seinen Autostart-Eintrag; unter Windows trägt sich PiperRead beim ersten Start in die Autostart-Programme ein). Ein Tray-Symbol erscheint; die Stimme wird im Hintergrund geladen und bleibt geladen, und während ein Satz abgespielt wird, wird der nächste bereits synthetisiert.
 
 *   **Linksklick** auf das Symbol: vorlesen, wenn angehalten, pausieren während des Lesens, fortsetzen, wenn pausiert.
-*   **Rechtsklick**: das Menü (Wiedergabe, Pause, Stopp, Vorheriger Satz, Nächster Satz, Einstellungen, Beenden), in der Sprache Ihrer Konfiguration.
+*   **Rechtsklick**: das Menü (Wiedergabe, Pause, Stopp, Vorheriger Satz, Nächster Satz, Einstellungen, Neu starten, Beenden), in der Sprache Ihrer Konfiguration.
 *   **Was vorgelesen wird**: die Mausauswahl oder die Zwischenablage, wenn nichts ausgewählt ist (Linux, dieselbe Reihenfolge wie beim Starter); nur die Zwischenablage unter Windows. Markdown-Auszeichnungen werden zuerst entfernt.
 *   **Einstellungen**: der Menüeintrag öffnet einen Dialog für die Stimme, die Geschwindigkeit, die Sprache und „Beim Sitzungsstart öffnen“ (standardmäßig aktiviert; deaktivieren Sie die Option, um den automatischen Start zu beenden). Er schreibt dieselbe `piperread.conf` wie der Starter.
 
