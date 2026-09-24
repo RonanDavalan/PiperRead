@@ -34,6 +34,7 @@ _EMPHASES = (
 )
 
 _AVANT_EMPHASES = (
+    (re.compile(r"^\s{0,3}([-*_])(\s*\1){2,}\s*$"), ""),
     (re.compile(r"!\[.*\]\(.*\)"), ""),
     (re.compile(r"\[(.*)\]\(.*\)"), r"\1"),
     (re.compile(r"`"), ""),

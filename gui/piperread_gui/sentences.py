@@ -10,7 +10,9 @@ Pourquoi ce fichier existe :
 Entrée / sortie :
     Entrée : un texte brut et un code de langue (`en`, `fr`, `de`, `es` — les
     quatre langues déjà documentées du projet). Sortie : la liste des phrases,
-    nettoyées des espaces de bord, sans élément vide.
+    nettoyées des espaces de bord, sans élément vide ni élément dépourvu de
+    lettre et de chiffre (`—`, `…`) : le moteur n'en tire aucun phonème, et
+    son serveur HTTP répond alors 500, ce qui arrêterait la lecture.
 
 Dépend de :
     `pysbd`, découpeur de phrases multilingue.
@@ -27,4 +29,5 @@ def split_sentences(text: str, lang: str) -> list[str]:
             f"Langue non gérée : {lang!r} (attendu : {', '.join(_LANGUES_GEREES)})"
         )
     segmenter = pysbd.Segmenter(language=lang, clean=False)
-    return [s.strip() for s in segmenter.segment(text) if s.strip()]
+    phrases = (s.strip() for s in segmenter.segment(text))
+    return [p for p in phrases if any(c.isalnum() for c in p)]

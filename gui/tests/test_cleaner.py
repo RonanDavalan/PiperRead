@@ -24,6 +24,10 @@ CLEANER_SH = Path(__file__).resolve().parents[2] / "utils" / "cleaner.sh"
         ("Voir [le site](https://exemple.fr).", "Voir le site."),
         ("Image ![logo](logo.png) ici", "Image  ici"),
         ("`code` en ligne", "code en ligne"),
+        ("avant\n---\naprès", "avant\n\naprès"),
+        ("  * * *", ""),
+        ("_____", ""),
+        ("- - -\r", ""),
     ],
 )
 def test_retire_le_balisage(brut, attendu):
@@ -52,6 +56,7 @@ CORPUS = [
     "éléphant **été** à_b_c, **mot**, fin.",
     "texte\r\n**windows**\r\n",
     "* * *\n**pas fermé\n#Pas de titre",
+    "Titre\n---\n\n***\n___\n- - -\n    ----\na -- b\nfin ---\n-*-",
 ]
 
 

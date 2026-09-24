@@ -356,3 +356,33 @@ def test_arret_pendant_le_chargement_de_la_voix_n_attend_pas_le_chargement(monke
 
     assert duree < 1.0
     assert controleur.etat == Etat.ARRET
+
+
+def test_filet_et_ponctuation_seule_ne_coupent_pas_la_lecture(monkeypatch):
+    # Même comportement que le serveur HTTP de Piper : un texte sans phonème
+    # n'y produit aucun audio et la route répond 500.
+    def synthese(base_url, phrase, length_scale=None):
+        if not any(c.isalnum() for c in phrase):
+            raise controller_module.ErreurSynthese("Le serveur a répondu 500")
+        return b"audio:" + phrase.encode()
+
+    jouees = []
+    erreurs = []
+    monkeypatch.setattr(
+        controller_module,
+        "read_clipboard",
+        lambda: "Premier paragraphe.\n\n---\n\n### Titre\n\n—\n\n* * *\n\nDernière phrase.",
+    )
+    monkeypatch.setattr(controller_module, "PiperHttpServer", _ServeurFactice)
+    monkeypatch.setattr(controller_module, "synthesize", synthese)
+    monkeypatch.setattr(
+        controller_module, "play_wav_bytes", lambda audio, **_kw: jouees.append(audio)
+    )
+    controleur = PlaybackController(model_path="modele.onnx", lang="fr")
+    controleur.erreur.connect(erreurs.append, Qt.ConnectionType.DirectConnection)
+
+    controleur.lire()
+    controleur._fil.join(timeout=2.0)
+
+    assert jouees == [b"audio:Premier paragraphe.", b"audio:Titre", "audio:Dernière phrase.".encode()]
+    assert erreurs == []

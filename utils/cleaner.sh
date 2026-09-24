@@ -14,7 +14,10 @@ clean_markdown() {
     # Un marqueur d'emphase n'est retiré que s'il entoure un mot : ma_variable
     # et 2*3 restent intacts. Les expressions sont répétées : un marqueur fermant
     # consommé par une correspondance ne peut pas ouvrir la suivante.
+    # Un filet horizontal (---, * * *) ne produit aucun phonème : laissé seul,
+    # il fait échouer le serveur HTTP de Piper qu'utilise l'interface.
     echo "$input" | sed -E \
+        -e 's/^[[:space:]]{0,3}([-*_])([[:space:]]*\1){2,}[[:space:]]*$//' \
         -e 's/!\[.*\]\(.*\)//g' \
         -e 's/\[(.*)\]\(.*\)/\1/g' \
         -e 's/`//g' \
