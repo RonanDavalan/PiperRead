@@ -133,3 +133,15 @@ def test_windows_chaine_vide_sans_application_qt(monkeypatch):
     )
 
     assert clipboard.read_clipboard() == ""
+
+
+def test_outil_bloque_est_abandonne_apres_le_delai(monkeypatch):
+    monkeypatch.setattr(clipboard.shutil, "which", lambda binaire: f"/usr/bin/{binaire}")
+
+    def faux_run(command, **kwargs):
+        if command[0] == "wl-paste":
+            raise subprocess.TimeoutExpired(command, kwargs["timeout"])
+        return _resultat("texte x11")
+
+    monkeypatch.setattr(clipboard.subprocess, "run", faux_run)
+    assert clipboard.read_clipboard() == "texte x11"

@@ -27,6 +27,8 @@ import shutil
 import subprocess
 import sys
 
+_DELAI_SECONDES = 2.0
+
 _SELECTION_COMMANDS = (
     ("wl-paste", ["wl-paste", "--primary", "--no-newline"]),
     ("xsel", ["xsel", "--primary", "--output"]),
@@ -51,9 +53,17 @@ def _first_non_blank(commands) -> str:
     for binary, command in commands:
         if shutil.which(binary) is None:
             continue
-        result = subprocess.run(
-            command, capture_output=True, text=True, check=False
-        )
+        try:
+            result = subprocess.run(
+                command,
+                capture_output=True,
+                text=True,
+                check=False,
+                stdin=subprocess.DEVNULL,
+                timeout=_DELAI_SECONDES,
+            )
+        except subprocess.TimeoutExpired:
+            continue
         if result.stdout.strip():
             return result.stdout
     return ""
