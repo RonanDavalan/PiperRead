@@ -12,6 +12,8 @@ Pourquoi ce fichier existe :
     contrairement à un raccourci clavier, le tray connaît l'état courant et
     peut offrir ce geste unique sans ambiguïté. Le menu n'a donc pas
     d'entrée « Reprendre » : « Lire » en pause reprend déjà la lecture.
+    L'entrée « Relancer » n'agit pas elle-même : elle émet `relance_demandee`,
+    que `app.py` traite après avoir arrêté la lecture.
 
 Entrée / sortie :
     Entrée : un `PlaybackController` déjà construit (dont les messages
@@ -26,6 +28,7 @@ Dépend de :
 
 from pathlib import Path
 
+from PySide6.QtCore import Signal
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QDialog, QMenu, QSystemTrayIcon
 
@@ -36,6 +39,8 @@ from piperread_gui.settings_dialog import SettingsDialog
 
 
 class PiperReadTray(QSystemTrayIcon):
+    relance_demandee = Signal()
+
     def __init__(self, controller: PlaybackController, icon_path: Path):
         super().__init__(QIcon(str(icon_path)))
         self._controller = controller
@@ -50,6 +55,7 @@ class PiperReadTray(QSystemTrayIcon):
         self._action_suivante = self._menu.addAction("", self._controller.phrase_suivante)
         self._menu.addSeparator()
         self._action_reglages = self._menu.addAction("", self._ouvrir_reglages)
+        self._action_relancer = self._menu.addAction("", self.relance_demandee.emit)
         self._menu.addSeparator()
         self._action_quitter = self._menu.addAction("", self._quitter)
         self.setContextMenu(self._menu)
@@ -69,6 +75,7 @@ class PiperReadTray(QSystemTrayIcon):
         self._action_precedente.setText(msg(messages, "gui_menu_previous"))
         self._action_suivante.setText(msg(messages, "gui_menu_next"))
         self._action_reglages.setText(msg(messages, "gui_menu_settings"))
+        self._action_relancer.setText(msg(messages, "gui_menu_restart"))
         self._action_quitter.setText(msg(messages, "gui_menu_quit"))
         self.setToolTip("PiperRead")
 

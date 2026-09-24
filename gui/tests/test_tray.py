@@ -46,6 +46,7 @@ def test_menu_libelles_dans_la_langue_du_controleur(application, tmp_path):
     assert tray._action_precedente.text() == "Phrase précédente"
     assert tray._action_suivante.text() == "Phrase suivante"
     assert tray._action_reglages.text() == "Réglages…"
+    assert tray._action_relancer.text() == "Relancer"
     assert tray._action_quitter.text() == "Quitter"
     assert tray._action_reglages.isEnabled()
 
@@ -64,8 +65,22 @@ def test_menu_sans_entree_reprendre(application, tmp_path):
         "Phrase précédente",
         "Phrase suivante",
         "Réglages…",
+        "Relancer",
         "Quitter",
     ]
+
+
+def test_entree_relancer_emet_le_signal_de_relance(application, tmp_path):
+    icone = tmp_path / "icone.svg"
+    icone.write_text("<svg></svg>")
+    controleur = PlaybackController(model_path="modele.onnx", lang="fr")
+    tray = PiperReadTray(controleur, icone)
+    demandes = []
+    tray.relance_demandee.connect(lambda: demandes.append(True))
+
+    tray._action_relancer.trigger()
+
+    assert demandes == [True]
 
 
 class _ControleurEspion(PlaybackController):

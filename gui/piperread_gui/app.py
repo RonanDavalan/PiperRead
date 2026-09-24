@@ -38,7 +38,9 @@ Entrée / sortie :
     chargée en fond et le lancement à l'ouverture de session est posé au
     premier lancement (`autostart.py`).
     Sortie : aucune (boucle d'événements Qt, sans fenêtre visible tant
-    qu'aucun réglage n'est ouvert depuis le menu du tray).
+    qu'aucun réglage n'est ouvert depuis le menu du tray). L'entrée « Relancer »
+    du menu ferme proprement cette instance puis en lance une neuve
+    (`relance.py`).
 """
 
 import argparse
@@ -52,6 +54,7 @@ from piperread_gui import autostart, config, frozen, i18n
 from piperread_gui.control_client import ErreurAucuneInstance, envoyer_commande
 from piperread_gui.control_server import ControlServer, ErreurControleIndisponible
 from piperread_gui.controller import PlaybackController
+from piperread_gui.relance import relancer_instance
 from piperread_gui.tray import PiperReadTray, avertir_si_tray_absent
 
 _GUI_DIR = Path(__file__).resolve().parent.parent
@@ -214,6 +217,15 @@ def main(argv: list[str] | None = None) -> int:
     }
     control_server.commande.connect(lambda ligne: repartiteur.get(ligne, lambda: None)())
 
+    relance = {"demandee": False}
+
+    def demander_relance() -> None:
+        relance["demandee"] = True
+        controller.arreter()
+        application.quit()
+
+    tray.relance_demandee.connect(demander_relance)
+
     if arguments.commande == "lire":
         QTimer.singleShot(0, controller.lire)
 
@@ -221,6 +233,8 @@ def main(argv: list[str] | None = None) -> int:
 
     control_server.arreter()
     controller.arreter_moteur()
+    if relance["demandee"]:
+        relancer_instance(sys.argv[1:])
 
     return code_sortie
 
