@@ -1,7 +1,7 @@
 # PiperRead
 
 <p align="center">
-  <img src="https://img.shields.io/static/v1?label=Version&message=v0.3.2-alpha&color=orange" alt="Version">
+  <img src="https://img.shields.io/static/v1?label=Version&message=v0.3.3-beta&color=orange" alt="Version">
   <img src="https://img.shields.io/badge/Licence-MIT-green" alt="Licence">
   <img src="https://img.shields.io/badge/Plateforme-Linux_(Wayland_|_X11)-black" alt="OS supporté">
   <img src="https://img.shields.io/badge/Moteur-Piper_Neural_TTS-blueviolet" alt="Moteur audio">
@@ -62,16 +62,16 @@ La voie la plus simple. Téléchargez le paquet de votre système depuis la [pag
 
 ```bash
 # Debian 12 et 13, Ubuntu 22.04 et 24.04, Linux Mint
-sudo apt install ./piperread_0.3.2~alpha_all.deb
+sudo apt install ./piperread_0.3.3~beta_all.deb
 
 # Fedora 42
-sudo dnf install ./piperread-0.3.2~alpha-1.fc42.noarch.rpm
+sudo dnf install ./piperread-0.3.3~beta-1.fc42.noarch.rpm
 
 # openSUSE Leap 15.6
-sudo zypper install ./piperread-0.3.2~alpha-1.leap156.noarch.rpm
+sudo zypper install ./piperread-0.3.3~beta-1.leap156.noarch.rpm
 
 # Arch Linux
-sudo pacman -U piperread-0.3.2alpha-1-any.pkg.tar.zst
+sudo pacman -U piperread-0.3.3beta-1-any.pkg.tar.zst
 ```
 
 Le paquet installe le moteur Piper avec `pip` à sa configuration : environ 75 Mo à télécharger (200 à 250 Mo une fois installé), avec un accès réseau à ce seul moment. Il ne contient aucune voix. Téléchargez-en une, puis vérifiez l'installation :
@@ -85,20 +85,20 @@ Les paquets ont été validés en conteneur (installation, diagnostic et retrait
 
 ### L'interface (facultative)
 
-`piperread-gui` est un paquet séparé qui dépend de `piperread` : installez d'abord le cœur (ou les deux en une seule commande, par exemple `sudo apt install ./piperread_0.3.2~alpha_all.deb ./piperread-gui_0.3.2~alpha_all.deb`).
+`piperread-gui` est un paquet séparé qui dépend de `piperread` : installez d'abord le cœur (ou les deux en une seule commande, par exemple `sudo apt install ./piperread_0.3.3~beta_all.deb ./piperread-gui_0.3.3~beta_all.deb`).
 
 ```bash
 # Debian 12 et 13, Ubuntu 22.04 et 24.04, Linux Mint
-sudo apt install ./piperread-gui_0.3.2~alpha_all.deb
+sudo apt install ./piperread-gui_0.3.3~beta_all.deb
 
 # Fedora 42
-sudo dnf install ./piperread-gui-0.3.2~alpha-1.fc42.noarch.rpm
+sudo dnf install ./piperread-gui-0.3.3~beta-1.fc42.noarch.rpm
 
 # openSUSE Leap 15.6
-sudo zypper install ./piperread-gui-0.3.2~alpha-1.leap156.noarch.rpm
+sudo zypper install ./piperread-gui-0.3.3~beta-1.leap156.noarch.rpm
 
 # Arch Linux
-sudo pacman -U piperread-gui-0.3.2alpha-1-any.pkg.tar.zst
+sudo pacman -U piperread-gui-0.3.3beta-1-any.pkg.tar.zst
 ```
 
 L'interface utilise Qt (PySide6), que les distributions ne fournissent pas : l'installation le récupère avec `pip` dans un environnement virtuel privé, environ 245 Mo à télécharger (650 à 700 Mo une fois installé), avec un accès réseau à ce seul moment. Les mêmes paquets ont été validés en conteneur sur les mêmes distributions.
