@@ -42,7 +42,11 @@ DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/piperread"
 
 # Un clone fonctionne sans installation : ses dossiers, s'ils existent, passent
 # avant ceux d'un paquet, dont le moteur est système et les voix personnelles.
-if [ -d "$BASE_DIR/voices" ]; then VOICES_DIR="$BASE_DIR/voices"; else VOICES_DIR="$DATA_DIR/voices"; fi
+# Les voix du clone ne masquent pas celles de l'utilisateur : les deux dossiers
+# sont lus ; les téléchargements vont dans le premier.
+VOICES_DIRS=("$DATA_DIR/voices")
+if [ -d "$BASE_DIR/voices" ]; then VOICES_DIRS=("$BASE_DIR/voices" "$DATA_DIR/voices"); fi
+VOICES_DIR="${VOICES_DIRS[0]}"
 if [ -d "$BASE_DIR/piper-env" ]; then VENV_PATH="$BASE_DIR/piper-env"; else VENV_PATH="/usr/lib/piperread/venv"; fi
 
 # Les messages citent la commande que l'utilisateur tape : celle du paquet n'est pas read.sh.
@@ -397,7 +401,7 @@ LENGTH_SCALE=$(speed_to_length_scale "${RESOLVED_VALUE:-1}")
 
 resolve_setting voice validate_voice || refuse_option
 if [ -n "$RESOLVED_VALUE" ]; then
-    MODEL_PATH="$VOICES_DIR/$RESOLVED_VALUE.onnx"
+    MODEL_PATH=$(find_voice "$RESOLVED_VALUE")
 else
     MODEL_PATH=$(default_voice) || MODEL_PATH=""
 fi

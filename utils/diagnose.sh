@@ -10,7 +10,7 @@
 #
 # Usage :
 #     Charger ce fichier après read.sh (msg, alert, runtime_dir, read_voice_rate,
-#     VENV_PATH, MODEL_PATH, VOICES_DIR, SETTING_WARNINGS, CONFIG_UNKNOWN_KEYS),
+#     VENV_PATH, MODEL_PATH, SETTING_WARNINGS, CONFIG_UNKNOWN_KEYS),
 #     puis run_diagnose. Chaque check_* affiche ses lignes et laisse son pire
 #     statut (ok, warning ou fail) dans CHECK_STATUS. run_diagnose rend 1 s'il y
 #     a au moins un échec, sinon 0.
@@ -47,14 +47,15 @@ check_engine() {
 }
 
 check_voice() {
-    local rate
+    local rate folder
     CHECK_STATUS="ok"
     if [ -z "$MODEL_PATH" ] || [ ! -f "$MODEL_PATH" ]; then
         finding fail diag_title_voice voice_missing
         return
     fi
+    folder=$(dirname "$MODEL_PATH")
     if rate=$(read_voice_rate "$MODEL_PATH"); then
-        finding ok diag_title_voice diag_voice_ok "$(basename "$MODEL_PATH" .onnx)" "$rate"
+        finding ok diag_title_voice diag_voice_ok "$(basename "$MODEL_PATH" .onnx)" "$rate" "${folder/#$HOME/\~}"
     else
         finding warning diag_title_voice rate_unreadable
     fi

@@ -8,7 +8,7 @@
 #     l'utilisateur la connaisse avant de télécharger.
 #
 # Usage :
-#     Charger ce fichier après read.sh (msg, alert, VOICES_DIR, VENV_PATH,
+#     Charger ce fichier après read.sh (msg, alert, VOICES_DIRS, VOICES_DIR, VENV_PATH,
 #     LANG_CODE), puis list_voices ou download_voices_command. Les noms à
 #     télécharger sont dans DOWNLOAD_NAMES ; vide, la voix recommandée de la
 #     langue est proposée.
@@ -57,7 +57,11 @@ recommended_voice() {
 }
 
 voice_installed() {
-    [ -s "$VOICES_DIR/$1.onnx" ] && [ -s "$VOICES_DIR/$1.onnx.json" ]
+    local dir
+    for dir in "${VOICES_DIRS[@]}"; do
+        [ -s "$dir/$1.onnx" ] && [ -s "$dir/$1.onnx.json" ] && return 0
+    done
+    return 1
 }
 
 voice_license_label() {

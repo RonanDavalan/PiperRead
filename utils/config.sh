@@ -54,19 +54,33 @@ valid_telemetry() {
     esac
 }
 
-# Un nom de voix n'est accepté que si le modèle existe dans le dossier des voix.
-validate_voice() {
-    valid_voice_name "$1" > /dev/null && [ -f "$VOICES_DIR/$1.onnx" ] && echo "$1"
-}
-
-# Première voix par ordre alphabétique : celle que l'installation a téléchargée,
-# quelle que soit la langue.
-default_voice() {
-    local voice
-    for voice in "$VOICES_DIR"/*.onnx; do
-        if [ -f "$voice" ]; then echo "$voice"; return 0; fi
+# Chemin du modèle d'un nom déjà validé, dans l'ordre de VOICES_DIRS : à nom
+# égal, la voix du clone l'emporte.
+find_voice() {
+    local dir
+    for dir in "${VOICES_DIRS[@]}"; do
+        if [ -f "$dir/$1.onnx" ]; then echo "$dir/$1.onnx"; return 0; fi
     done
     return 1
+}
+
+# Un nom de voix n'est accepté que si le modèle existe dans l'un des dossiers des voix.
+validate_voice() {
+    valid_voice_name "$1" > /dev/null && find_voice "$1" > /dev/null && echo "$1"
+}
+
+# Première voix par ordre alphabétique, tous dossiers confondus : celle que
+# l'installation a téléchargée, quelle que soit la langue.
+default_voice() {
+    local dir voice name first=""
+    for dir in "${VOICES_DIRS[@]}"; do
+        for voice in "$dir"/*.onnx; do
+            [ -f "$voice" ] || continue
+            name=$(basename "$voice" .onnx)
+            if [ -z "$first" ] || [[ "$name" < "$first" ]]; then first="$name"; fi
+        done
+    done
+    [ -n "$first" ] && find_voice "$first"
 }
 
 config_file_path() {
