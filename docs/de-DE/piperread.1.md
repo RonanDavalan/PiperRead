@@ -102,6 +102,10 @@ entnommen, danach der Konfigurationsdatei. Sie steuert die Nutzungsereignisse
 der Inferenzbibliothek, die die Engine mitbringt (onnxruntime); standardmäßig
 sind sie ausgeschaltet, damit das Vorlesen offline bleibt.
 
+# GRAFISCHE OBERFLÄCHE
+
+Das optionale Paket **piperread-gui** stellt eine Tray-Oberfläche bereit, die mit dem Befehl `piperread-gui` gestartet wird. Aus einem Klon des Repositorys lautet der Befehl, sobald die Umgebung in `gui/` eingerichtet ist, `gui/.venv/bin/python3 -m piperread_gui.app`. **piperread** selbst startet sie nie.
+
 # DATEIEN
 
 `$XDG_CONFIG_HOME/piperread/piperread.conf`

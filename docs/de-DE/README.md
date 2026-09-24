@@ -165,7 +165,7 @@ update-desktop-database $HOME/.local/share/applications
 
 ### 5. Die Oberfläche (optional)
 
-Die Tray-Oberfläche befindet sich im Ordner `gui/` des Repositorys und läuft auch aus einem Klon heraus, mit eigener Python-Umgebung: siehe [gui/README.md](gui/README.md).
+Die Tray-Oberfläche befindet sich im Ordner `gui/` des Repositorys und läuft auch aus einem Klon heraus, mit eigener Python-Umgebung: siehe [gui/README.md](gui/README.md). Sobald diese Umgebung eingerichtet ist, starten Sie die Oberfläche mit `gui/.venv/bin/python3 -m piperread_gui.app`; bei installiertem Paket `piperread-gui` lautet der Befehl `piperread-gui`.
 
 ---
 

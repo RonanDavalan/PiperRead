@@ -100,6 +100,10 @@ ligne de commande : il est pris dans la variable d'environnement
 événements d'utilisation de la bibliothèque d'inférence que tire le moteur
 (onnxruntime), désactivés par défaut afin que la lecture reste hors ligne.
 
+# INTERFACE GRAPHIQUE
+
+Le paquet optionnel **piperread-gui** fournit une interface de zone de notification, lancée par la commande `piperread-gui`. Depuis un clone du dépôt, une fois l'environnement de `gui/` en place, la commande est `gui/.venv/bin/python3 -m piperread_gui.app`. **piperread** ne la lance jamais lui-même.
+
 # FICHIERS
 
 `$XDG_CONFIG_HOME/piperread/piperread.conf`

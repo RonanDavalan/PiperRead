@@ -165,7 +165,7 @@ update-desktop-database $HOME/.local/share/applications
 
 ### 5. La interfaz (opcional)
 
-La interfaz de bandeja se encuentra en la carpeta `gui/` del repositorio y también se ejecuta desde un clon, con su propio entorno de Python: consulte [gui/README.md](gui/README.md).
+La interfaz de bandeja se encuentra en la carpeta `gui/` del repositorio y también se ejecuta desde un clon, con su propio entorno de Python: consulte [gui/README.md](gui/README.md). Una vez preparado ese entorno, inicie la interfaz con `gui/.venv/bin/python3 -m piperread_gui.app`; con el paquete `piperread-gui` instalado, el comando es `piperread-gui`.
 
 ---
 

@@ -307,6 +307,10 @@ print_help() {
     echo "  2. $(msg help_settings_env)"
     echo "  3. $(msg help_settings_file "$(config_file_path)")"
     echo
+    msg help_gui_title
+    echo "  piperread-gui"
+    echo "  gui/.venv/bin/python3 -m piperread_gui.app   ($(msg help_gui_clone))"
+    echo
     msg help_more
 }
 

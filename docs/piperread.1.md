@@ -97,6 +97,10 @@ from the configuration file. It controls the usage events of the inference
 library that the engine pulls in (onnxruntime), which are turned off by default
 so that reading stays offline.
 
+# GRAPHICAL INTERFACE
+
+The optional **piperread-gui** package provides a tray interface, started with the command `piperread-gui`. From a clone of the repository, once the environment in `gui/` is set up, the command is `gui/.venv/bin/python3 -m piperread_gui.app`. **piperread** itself never starts it.
+
 # FILES
 
 `$XDG_CONFIG_HOME/piperread/piperread.conf`

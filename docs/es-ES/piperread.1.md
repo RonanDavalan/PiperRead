@@ -100,6 +100,10 @@ después del archivo de configuración. Controla los eventos de uso de la
 biblioteca de inferencia que incorpora el motor (onnxruntime), desactivados por
 defecto para que la lectura siga funcionando sin conexión.
 
+# INTERFAZ GRÁFICA
+
+El paquete opcional **piperread-gui** ofrece una interfaz de bandeja, que se inicia con el comando `piperread-gui`. Desde un clon del repositorio, una vez preparado el entorno de `gui/`, el comando es `gui/.venv/bin/python3 -m piperread_gui.app`. **piperread** nunca la inicia por sí mismo.
+
 # ARCHIVOS
 
 `$XDG_CONFIG_HOME/piperread/piperread.conf`

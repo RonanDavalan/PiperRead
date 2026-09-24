@@ -166,7 +166,7 @@ update-desktop-database $HOME/.local/share/applications
 
 ### 5. The interface (optional)
 
-The tray interface lives in the `gui/` folder of the repository and runs from a clone too, with its own Python environment: see [gui/README.md](gui/README.md).
+The tray interface lives in the `gui/` folder of the repository and runs from a clone too, with its own Python environment: see [gui/README.md](gui/README.md). Once that environment is set up, start the interface with `gui/.venv/bin/python3 -m piperread_gui.app`; with the `piperread-gui` package installed, the command is `piperread-gui`.
 
 ---
 

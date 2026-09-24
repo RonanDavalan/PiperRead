@@ -165,7 +165,7 @@ update-desktop-database $HOME/.local/share/applications
 
 ### 5. L’interface (facultative)
 
-L’interface de la zone de notification se trouve dans le dossier `gui/` du dépôt et fonctionne aussi depuis un clone, avec son propre environnement Python : voir [gui/README.md](gui/README.md).
+L’interface de la zone de notification se trouve dans le dossier `gui/` du dépôt et fonctionne aussi depuis un clone, avec son propre environnement Python : voir [gui/README.md](gui/README.md). Une fois cet environnement en place, lancez l’interface avec `gui/.venv/bin/python3 -m piperread_gui.app` ; avec le paquet `piperread-gui` installé, la commande est `piperread-gui`.
 
 ---
 
