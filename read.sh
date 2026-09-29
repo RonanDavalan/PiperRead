@@ -27,7 +27,7 @@
 #     lang/ (messages), piper-env/ (moteur), voices/ (voix .onnx), wl-paste ou xsel, aplay, setsid, flock,
 #     notify-send.
 
-VERSION="0.3.3-beta"
+VERSION="0.4.0-beta"
 APP_NAME="PiperRead"
 
 # Avant tout le reste : aucun message, aucune dépendance ni dossier touchés.
