@@ -1,9 +1,9 @@
 # PiperRead
 
 <p align="center">
-  <img src="https://img.shields.io/static/v1?label=Version&message=v0.3.3-beta&color=orange" alt="Version">
+  <img src="https://img.shields.io/static/v1?label=Version&message=v0.4.0-beta&color=orange" alt="Version">
   <img src="https://img.shields.io/badge/Lizenz-MIT-green" alt="Lizenz">
-  <img src="https://img.shields.io/badge/Plattform-Linux_(Wayland_|_X11)-black" alt="Unterstütztes OS">
+  <img src="https://img.shields.io/badge/Plattform-Linux_(Wayland_|_X11)_|_Windows_(Oberfläche)-black" alt="Unterstütztes OS">
   <img src="https://img.shields.io/badge/Engine-Piper_Neural_TTS-blueviolet" alt="Audio-Engine">
   <img src="https://img.shields.io/badge/Sprache-Python_|_Bash-blue" alt="Code">
 </p>
@@ -22,10 +22,10 @@ Es ermöglicht das Vorlesen jedes mit der Maus ausgewählten oder in die Zwische
 
 ## Zwei Arten zu lesen
 
-Beide sind unabhängig: keines steuert das andere, und jedes funktioniert auch ohne das andere.
+Beide sind unabhängig: keines steuert das andere, und jedes funktioniert auch ohne das andere. Die [Installation](#installation-aus-einem-paket) beginnt mit der Wahl zwischen ihnen.
 
 *   **Der Launcher** (`piperread`, oder `read.sh` aus einem Klon): eine Schaltfläche oder eine Tastenkombination liest die Auswahl vor. Zwischen zwei Vorlesevorgängen läuft nichts; die Stimme wird bei jedem Klick erneut geladen, sodass der erste Ton etwa 1,3 Sekunden später ertönt.
-*   **Die Oberfläche** (`piperread-gui`, optional): ein residentes Tray-Symbol, das mit Ihrer Sitzung startet und die Stimme geladen hält. Das Vorlesen beginnt innerhalb von 168 Millisekunden nach dem Klick, und es fügt Pause, Fortsetzen und satzweise Navigation hinzu. Sie läuft auch unter Windows.
+*   **Die Oberfläche** (`piperread-gui`, ein separates Paket): ein residentes Tray-Symbol, das mit Ihrer Sitzung startet und die Stimme geladen hält. Das Vorlesen beginnt innerhalb von 168 Millisekunden nach dem Klick, und es fügt Pause, Fortsetzen und satzweise Navigation hinzu. Sie läuft auch unter Windows.
 
 Zusammen gestartet, lesen beide gleichzeitig vor (zwei sich überlappende Stimmen): Wählen Sie eine Geste.
 
@@ -58,54 +58,81 @@ Die Oberfläche ist ein Tray-Symbol im Benachrichtigungsbereich; ein Rechtsklick
 
 ## Installation aus einem Paket
 
-Der einfachste Weg. Laden Sie das Paket für Ihr System von der [Download-Seite](https://piperread.davalan.fr/de/download/) oder aus dem [neuesten Release](https://github.com/RonanDavalan/PiperRead/releases/latest) herunter und installieren Sie es:
+### Möchten Sie die Oberfläche?
 
-```bash
-# Debian 12 und 13, Ubuntu 22.04 und 24.04, Linux Mint
-sudo apt install ./piperread_0.3.3~beta_all.deb
+**Terminal und Schaltfläche.** Eine Tastenkombination, der Befehl `piperread` oder die Schaltfläche Auswahl vorlesen im Anwendungsmenü liest die Auswahl vor. Ein Paket, etwa 195 MB Download und 680 MB nach der Installation unter Debian 13.
 
-# Fedora 42
-sudo dnf install ./piperread-0.3.3~beta-1.fc42.noarch.rpm
+**Mit der Oberfläche.** Dasselbe, dazu ein Tray-Symbol, das mit Ihrer Sitzung startet, die Stimme geladen hält und Pause, Fortsetzen und satzweise Navigation hinzufügt. Zwei Pakete in einem „Alles-in-einem“-Archiv, etwa 460 MB Download und 1,4 GB nach der Installation unter Debian 13, weil die Oberfläche Qt (PySide6) verwendet, das die Distributionen nicht paketieren.
 
-# openSUSE Leap 15.6
-sudo zypper install ./piperread-0.3.3~beta-1.leap156.noarch.rpm
+Die Zahlen wurden in einem Container unter Debian 13 gemessen, Abhängigkeiten eingeschlossen (andere Distributionen: 117 bis 304 MB und 329 bis 792 MB für das Terminal, 421 bis 483 MB und 1,26 bis 1,49 GB mit der Oberfläche). Wenn Sie unsicher sind, nehmen Sie Terminal und Schaltfläche: Die Oberfläche lässt sich später mit einem Befehl hinzufügen. Folgen Sie einer Abfolge vom ersten bis zum letzten Schritt; die [Voraussetzungen](#voraussetzungen) installiert die Paketverwaltung.
 
-# Arch Linux
-sudo pacman -U piperread-0.3.3beta-1-any.pkg.tar.zst
-```
+### Terminal und Schaltfläche
 
-Das Paket installiert die Piper-Engine beim Konfigurieren mit `pip`: etwa 75 MB Download (200 bis 250 MB nach der Installation), Netzzugriff nur in diesem Moment. Es enthält keine Stimme. Laden Sie eine herunter und prüfen Sie dann die Installation:
+1.  Laden Sie das Paket für Ihr System von der [Download-Seite](https://piperread.davalan.fr/de/download/) oder aus dem [neuesten Release](https://github.com/RonanDavalan/PiperRead/releases/latest) herunter.
+2.  Installieren Sie es:
 
-```bash
-piperread --download-voice
-piperread --diagnose
-```
+    ```bash
+    # Debian 12 und 13, Ubuntu 22.04 und 24.04, Linux Mint
+    sudo apt install ./piperread_0.4.0~beta_all.deb
 
-Die Pakete wurden in Containern (Installation, Diagnose und Entfernung) auf jeder oben genannten Distribution und Version validiert. Das Handbuch gibt es als Handbuchseite (`man piperread`) und als PDF in vier Sprachen auf der Download-Seite.
+    # Fedora 42
+    sudo dnf install ./piperread-0.4.0~beta-1.fc42.noarch.rpm
 
-### Die Oberfläche (optional)
+    # openSUSE Leap 15.6
+    sudo zypper install ./piperread-0.4.0~beta-1.leap156.noarch.rpm
 
-`piperread-gui` ist ein separates Paket, das von `piperread` abhängt: Installieren Sie zuerst den Kern (oder beide in einem Befehl, zum Beispiel `sudo apt install ./piperread_0.3.3~beta_all.deb ./piperread-gui_0.3.3~beta_all.deb`).
+    # Arch Linux
+    sudo pacman -U ./piperread-0.4.0beta-1-any.pkg.tar.zst
+    ```
 
-```bash
-# Debian 12 und 13, Ubuntu 22.04 und 24.04, Linux Mint
-sudo apt install ./piperread-gui_0.3.3~beta_all.deb
+    Das Paket installiert die Piper-Engine beim Konfigurieren mit `pip`, Netzzugriff wird nur in diesem Moment gebraucht. Es enthält keine Stimme.
+3.  Fügen Sie eine Stimme hinzu. Die erste Zeile von `piperread --list-voices` ist der genaue Befehl, der die empfohlene Stimme Ihrer Sprache installiert; der zweite Befehl unten schlägt diese Stimme vor und bittet um Bestätigung.
 
-# Fedora 42
-sudo dnf install ./piperread-gui-0.3.3~beta-1.fc42.noarch.rpm
+    ```bash
+    piperread --list-voices
+    piperread --download-voice
+    ```
+4.  Markieren Sie einen Text mit der Maus und führen Sie dann `piperread` aus (oder klicken Sie im Anwendungsmenü auf Auswahl vorlesen). Prüfen Sie die Installation mit `piperread --diagnose`.
 
-# openSUSE Leap 15.6
-sudo zypper install ./piperread-gui-0.3.3~beta-1.leap156.noarch.rpm
+### Mit der Oberfläche
 
-# Arch Linux
-sudo pacman -U piperread-gui-0.3.3beta-1-any.pkg.tar.zst
-```
+1.  Laden Sie das „Alles-in-einem“-Archiv für Ihre Distributionsfamilie (`debian`, `fedora`, `opensuse` oder `arch`) von der [Download-Seite](https://piperread.davalan.fr/de/download/) oder aus dem [neuesten Release](https://github.com/RonanDavalan/PiperRead/releases/latest) herunter. Es enthält `piperread` und `piperread-gui`, sonst nichts.
+2.  Entpacken Sie es und installieren Sie beide Pakete mit einem Befehl:
 
-Die Oberfläche verwendet Qt (PySide6), das von den Distributionen nicht paketiert wird: Die Installation lädt es mit `pip` in eine private virtuelle Umgebung, etwa 245 MB Download (650 bis 700 MB nach der Installation), Netzzugriff nur in diesem Moment. Dieselben Pakete wurden in Containern auf denselben Distributionen validiert.
+    ```bash
+    # Debian 12 und 13, Ubuntu 22.04 und 24.04, Linux Mint
+    tar -xzf piperread-all-in-one-0.4.0-beta-debian.tar.gz
+    sudo apt install ./piperread_0.4.0~beta_all.deb ./piperread-gui_0.4.0~beta_all.deb
 
-### Windows (nur Oberfläche)
+    # Fedora 42
+    tar -xzf piperread-all-in-one-0.4.0-beta-fedora.tar.gz
+    sudo dnf install ./piperread-0.4.0~beta-1.fc42.noarch.rpm ./piperread-gui-0.4.0~beta-1.fc42.noarch.rpm
 
-Der Launcher ist ein Linux-Werkzeug; unter Windows ist nur die Oberfläche verfügbar, als eigenständiger Ordner. Laden Sie `piperread-gui-windows.zip` aus dem [neuesten Release](https://github.com/RonanDavalan/PiperRead/releases/latest) herunter und entpacken Sie es an beliebiger Stelle, wobei der Ordner vollständig bleiben muss. Legen Sie eine Stimme in dessen Ordner `voices` (zwei Dateien mit demselben Namen, `<name>.onnx` und `<name>.onnx.json`, von [rhasspy/piper-voices](https://huggingface.co/rhasspy/piper-voices)), doppelklicken Sie dann auf `piperread-gui.exe`. Der Build ist nicht mit einem Zertifikat signiert, das Windows erkennt: SmartScreen warnt möglicherweise beim ersten Start (wählen Sie „More info“, dann „Run anyway“). Es liest nur die Zwischenablage, nicht die Mausauswahl. Es wurde unter Windows 11 manuell getestet; es gibt keine automatisierte Testmatrix für Windows wie für die Linux-Pakete.
+    # openSUSE Leap 15.6
+    tar -xzf piperread-all-in-one-0.4.0-beta-opensuse.tar.gz
+    sudo zypper install ./piperread-0.4.0~beta-1.leap156.noarch.rpm ./piperread-gui-0.4.0~beta-1.leap156.noarch.rpm
+
+    # Arch Linux
+    tar -xzf piperread-all-in-one-0.4.0-beta-arch.tar.gz
+    sudo pacman -U ./piperread-0.4.0beta-1-any.pkg.tar.zst ./piperread-gui-0.4.0beta-1-any.pkg.tar.zst
+    ```
+
+    Die Installation lädt die Engine, dann Qt (etwa 245 MB) in private virtuelle Umgebungen, Netzzugriff wird nur in diesem Moment gebraucht. Es wird keine Stimme mitgeliefert.
+3.  Starten Sie die Oberfläche: Wählen Sie PiperRead im Anwendungsmenü oder führen Sie `piperread-gui --play` aus (sie startet auch von selbst bei Ihrer nächsten Sitzung). Ohne installierte Stimme öffnet sich ein Fenster namens „Stimme herunterladen“: Wählen Sie eine Stimme und klicken Sie auf Herunterladen. Vor diesem Klick wird nichts heruntergeladen.
+4.  Markieren oder kopieren Sie einen Text und klicken Sie dann auf das Tray-Symbol: Es liest vor, wenn es angehalten ist, pausiert während des Vorlesens und setzt fort, wenn es pausiert ist.
+
+Die Pakete wurden in Containern (Installation, Aktualisierung von der vorherigen Version, Diagnose und Entfernung) auf jeder oben genannten Distribution und Version validiert. Das Handbuch gibt es als Handbuchseite (`man piperread`) und als PDF in vier Sprachen auf der Download-Seite.
+
+### Mit der Oberfläche unter Windows
+
+Unter Windows ist nur die Oberfläche verfügbar, als eigenständiger Ordner.
+
+1.  Laden Sie `piperread-gui-windows.zip` aus dem [neuesten Release](https://github.com/RonanDavalan/PiperRead/releases/latest) herunter.
+2.  Entpacken Sie es an beliebiger Stelle und lassen Sie den Ordner vollständig.
+3.  Doppelklicken Sie auf `piperread-gui.exe`. Ohne installierte Stimme öffnet sich das Fenster „Stimme herunterladen“: Wählen Sie eine Stimme und klicken Sie auf Herunterladen. (Von Hand: Legen Sie zwei Dateien mit demselben Namen, `<name>.onnx` und `<name>.onnx.json`, von [rhasspy/piper-voices](https://huggingface.co/rhasspy/piper-voices) in den Ordner `voices`.)
+4.  Kopieren Sie einen Text mit Strg+C und klicken Sie dann auf das Tray-Symbol.
+
+Der Build ist nicht mit einem Zertifikat signiert, das Windows erkennt: SmartScreen warnt möglicherweise beim ersten Start (wählen Sie „Weitere Informationen“, dann „Trotzdem ausführen“). Er liest nur die Zwischenablage, nicht die Mausauswahl. Er wurde unter Windows 11 von Hand getestet; es gibt keine automatisierte Testmatrix für Windows wie für die Linux-Pakete.
 
 ## Voraussetzungen
 
@@ -174,7 +201,7 @@ sed "s|\$HOME/git/piper/PiperRead|$(pwd)|g" Ressources/PiperRead.desktop > $HOME
 update-desktop-database $HOME/.local/share/applications
 ```
 
-### 5. Die Oberfläche (optional)
+### 5. Die Oberfläche
 
 Die Tray-Oberfläche befindet sich im Ordner `gui/` des Repositorys und läuft auch aus einem Klon heraus, mit eigener Python-Umgebung: siehe [gui/README.md](gui/README.md). Sobald diese Umgebung eingerichtet ist, starten Sie die Oberfläche mit `gui/.venv/bin/python3 -m piperread_gui.app`; bei installiertem Paket `piperread-gui` lautet der Befehl `piperread-gui`.
 
@@ -204,7 +231,7 @@ Das Paket `piperread-gui` startet mit Ihrer Sitzung (ein Linux-Desktop liest sei
 *   **Linksklick** auf das Symbol: vorlesen, wenn angehalten, pausieren während des Lesens, fortsetzen, wenn pausiert.
 *   **Rechtsklick**: das Menü (Wiedergabe, Pause, Stopp, Vorheriger Satz, Nächster Satz, Einstellungen, Neu starten, Beenden), in der Sprache Ihrer Konfiguration.
 *   **Was vorgelesen wird**: die Mausauswahl oder die Zwischenablage, wenn nichts ausgewählt ist (Linux, dieselbe Reihenfolge wie beim Starter); nur die Zwischenablage unter Windows. Markdown-Auszeichnungen werden zuerst entfernt.
-*   **Einstellungen**: der Menüeintrag öffnet einen Dialog für die Stimme, die Geschwindigkeit, die Sprache und „Beim Sitzungsstart öffnen“ (standardmäßig aktiviert; deaktivieren Sie die Option, um den automatischen Start zu beenden). Er schreibt dieselbe `piperread.conf` wie der Starter.
+*   **Einstellungen**: der Menüeintrag öffnet einen Dialog für die Stimme, die Geschwindigkeit, die Sprache und „Beim Sitzungsstart öffnen“ (standardmäßig aktiviert; deaktivieren Sie die Option, um den automatischen Start zu beenden) sowie eine Schaltfläche „Stimme herunterladen …“, die das Stimmenfenster öffnet. Er schreibt dieselbe `piperread.conf` wie der Starter.
 
 Die Oberfläche lässt sich auch über die Befehlszeile steuern, so binden Sie sie an Tastaturkürzel:
 
