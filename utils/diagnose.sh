@@ -10,7 +10,7 @@
 #
 # Usage :
 #     Charger ce fichier après read.sh (msg, alert, runtime_dir, read_voice_rate,
-#     VENV_PATH, MODEL_PATH, SETTING_WARNINGS, CONFIG_UNKNOWN_KEYS),
+#     BASE_DIR, VENV_PATH, MODEL_PATH, SETTING_WARNINGS, CONFIG_UNKNOWN_KEYS),
 #     puis run_diagnose. Chaque check_* affiche ses lignes et laisse son pire
 #     statut (ok, warning ou fail) dans CHECK_STATUS. run_diagnose rend 1 s'il y
 #     a au moins un échec, sinon 0.
@@ -131,6 +131,18 @@ check_config() {
     done
 }
 
+# L'interface est un paquet à part, jamais un prérequis : son absence est une
+# information, pas un avertissement, et ne change pas le décompte des échecs.
+# Un clone porte son propre lanceur, dans gui/.venv.
+check_gui() {
+    CHECK_STATUS="ok"
+    if command -v piperread-gui &> /dev/null || [ -x "$BASE_DIR/gui/.venv/bin/python3" ]; then
+        finding ok diag_title_gui diag_tool_ok "piperread-gui"
+    else
+        finding info diag_title_gui diag_gui_absent "$(msg site_download_url)"
+    fi
+}
+
 # runtime_dir prévient par notification quand il refuse : ici le refus est un
 # résultat du diagnostic, pas une alerte.
 check_runtime() {
@@ -146,7 +158,7 @@ check_runtime() {
 
 run_diagnose() {
     local check
-    for check in check_engine check_voice check_player check_tools check_clipboard check_config check_runtime; do
+    for check in check_engine check_voice check_player check_tools check_clipboard check_config check_runtime check_gui; do
         "$check"
     done
     msg diag_summary "$DIAG_FAILURES" "$DIAG_WARNINGS"

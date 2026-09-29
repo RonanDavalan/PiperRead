@@ -81,6 +81,11 @@ list_voices() {
     local lang wanted entry name entry_lang rate size license speakers rank note remark line
     local -a remarks
 
+    name=$(recommended_voice "$LANG_CODE")
+    line=$(msg voices_start "$name")
+    if voice_installed "$name"; then line+=" ($(msg voices_installed))"; fi
+    echo "$line"
+    echo
     msg voices_intro
     for lang in en fr de es; do
         echo
