@@ -32,6 +32,9 @@ Entrée / sortie :
     fichier, nom conservé par immuabilité des identifiants),
     plus sept options de pilotage d'une instance déjà lancée (`--play`,
     `--pause`, `--resume`, `--stop`, `--next`, `--previous`, `--quit`).
+    Sans voix installée, le démarrage ouvre la fenêtre de voix
+    (`voice_dialog.py`), qui ne télécharge qu'au clic ; refusée, l'interface
+    se ferme en nommant les commandes du noyau (`voice_missing`).
     `--play` sans instance lancée démarre l'interface puis lit, dès que la
     voix est chargée : c'est la commande du lanceur de menu, qui doit lire au
     premier clic, que l'interface tourne ou non. Au démarrage, la voix est
@@ -48,14 +51,17 @@ import sys
 from pathlib import Path
 
 from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import QApplication
+from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QApplication, QDialog
 
 from piperread_gui import autostart, config, frozen, i18n
 from piperread_gui.control_client import ErreurAucuneInstance, envoyer_commande
 from piperread_gui.control_server import ControlServer, ErreurControleIndisponible
 from piperread_gui.controller import PlaybackController
+from piperread_gui.notifier import notifier
 from piperread_gui.relance import relancer_instance
 from piperread_gui.tray import PiperReadTray, avertir_si_tray_absent
+from piperread_gui.voice_dialog import VoiceDialog
 
 _GUI_DIR = Path(__file__).resolve().parent.parent
 _REPO_ROOT = frozen.installation_dir() or _GUI_DIR.parent
@@ -154,6 +160,13 @@ def _emettre_avertissements(
             print(i18n.msg(messages, "setting_invalid", cle, valeur, source), file=sys.stderr)
 
 
+def _proposer_une_voix(messages: dict[str, str], langue: str) -> Path | None:
+    fenetre = VoiceDialog(messages, langue, _VOICES_DIRS[-1])
+    if fenetre.exec() != QDialog.DialogCode.Accepted:
+        return None
+    return fenetre.voix_installee
+
+
 def main(argv: list[str] | None = None) -> int:
     arguments = _analyser_arguments(sys.argv[1:] if argv is None else argv)
 
@@ -180,16 +193,18 @@ def main(argv: list[str] | None = None) -> int:
 
     _emettre_avertissements(messages, resolu.warnings, resolu.model_path)
 
-    model_path = arguments.model if arguments.model is not None else resolu.model_path
-    if model_path is None:
-        print(
-            "Aucun modèle de voix trouvé ; préciser --model <chemin vers un .onnx>.",
-            file=sys.stderr,
-        )
-        return 1
-
     application = QApplication(sys.argv[:1])
     application.setQuitOnLastWindowClosed(False)
+    application.setWindowIcon(QIcon(str(_ICONE)))
+
+    model_path = arguments.model if arguments.model is not None else resolu.model_path
+    if model_path is None:
+        model_path = _proposer_une_voix(messages, resolu.lang)
+    if model_path is None:
+        absence = i18n.msg(messages, "voice_missing").replace("{cmd}", "piperread")
+        print(absence, file=sys.stderr)
+        notifier("PiperRead", absence)
+        return 1
 
     control_server = ControlServer()
     try:

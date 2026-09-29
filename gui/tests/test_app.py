@@ -99,3 +99,59 @@ def test_play_avec_instance_lancee_ne_demarre_rien(monkeypatch, capsys):
     monkeypatch.setattr(app, "envoyer_commande", lambda commande: "ok")
     assert app._piloter_instance_existante("lire") == 0
     assert capsys.readouterr().out.strip() == "ok"
+
+
+# --- première ouverture sans voix ---
+
+
+class _FausseApplication:
+    def __init__(self, *_):
+        pass
+
+    def setQuitOnLastWindowClosed(self, _):
+        pass
+
+    def setWindowIcon(self, _):
+        pass
+
+
+def _sans_voix(monkeypatch, tmp_path):
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    monkeypatch.setattr(app, "_VOICES_DIRS", [tmp_path / "voix"])
+    monkeypatch.setattr(app, "QApplication", _FausseApplication)
+    monkeypatch.setattr(app, "QIcon", lambda *_: None)
+    monkeypatch.setattr(app, "notifier", lambda *_: None)
+    for cle in ("PIPERREAD_SPEED", "PIPERREAD_VOICE", "PIPERREAD_LANG"):
+        monkeypatch.delenv(cle, raising=False)
+
+
+def test_sans_voix_la_fenetre_de_voix_est_proposee_avant_tout_demarrage(monkeypatch, tmp_path, capsys):
+    _sans_voix(monkeypatch, tmp_path)
+    appels = []
+    monkeypatch.setattr(app, "_proposer_une_voix", lambda messages, langue: appels.append(langue))
+    monkeypatch.setattr(app, "ControlServer", lambda: pytest.fail("le serveur de contrôle ne démarre pas sans voix"))
+
+    assert app.main(["--lang", "fr"]) == 1
+
+    assert appels == ["fr"]
+    erreur = capsys.readouterr().err
+    assert "piperread --list-voices" in erreur
+    assert "{cmd}" not in erreur
+
+
+def test_sans_voix_le_choix_de_la_fenetre_devient_la_voix_de_l_interface(monkeypatch, tmp_path):
+    _sans_voix(monkeypatch, tmp_path)
+    posee = tmp_path / "voix" / "fr_FR-siwis-medium.onnx"
+    monkeypatch.setattr(app, "_proposer_une_voix", lambda messages, langue: posee)
+
+    class Arret(Exception):
+        pass
+
+    class ControleArrete:
+        def __init__(self):
+            raise Arret()
+
+    monkeypatch.setattr(app, "ControlServer", ControleArrete)
+
+    with pytest.raises(Arret):
+        app.main(["--lang", "fr"])

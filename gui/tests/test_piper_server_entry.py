@@ -110,3 +110,15 @@ def test_manifeste_du_serveur_gele_en_page_de_code_utf8():
     texte = spec.read_text(encoding="utf-8")
     assert "<activeCodePage" in texte and ">UTF-8</activeCodePage>" in texte
     assert "manifest=MANIFESTE" in texte
+
+
+def test_download_voices_ouvre_le_module_de_telechargement_du_moteur(monkeypatch):
+    recus = []
+    module = types.ModuleType("piper.download_voices")
+    module.main = lambda: recus.append(list(sys.argv[1:]))
+    monkeypatch.setitem(sys.modules, "piper", types.ModuleType("piper"))
+    monkeypatch.setitem(sys.modules, "piper.download_voices", module)
+    monkeypatch.setattr(sys, "argv", ["entree", "download-voices", "--download-dir", "/x", "voix"])
+
+    assert entree.main() == 0
+    assert recus == [["--download-dir", "/x", "voix"]]

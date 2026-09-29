@@ -9,7 +9,10 @@ Pourquoi ce fichier existe :
     délègue l'écriture du fichier à `config.write_config_values` — le même
     fichier, les mêmes clés que `read.sh`. Le lancement à l'ouverture de
     session n'est pas une clé de ce fichier : la case lit et écrit le
-    mécanisme du système (`autostart.py`).
+    mécanisme du système (`autostart.py`). Le bouton « Télécharger une voix »
+    ouvre la fenêtre de voix (`voice_dialog.py`) : la voix posée s'ajoute à la
+    liste et devient la voix choisie, sans être enregistrée avant la
+    validation.
 
 Entrée / sortie :
     Entrée : le `PlaybackController` de la session (voix, vitesse, langue et
@@ -29,10 +32,12 @@ from PySide6.QtWidgets import (
     QDialogButtonBox,
     QDoubleSpinBox,
     QFormLayout,
+    QPushButton,
 )
 
 from piperread_gui import autostart, config
 from piperread_gui.i18n import msg
+from piperread_gui.voice_dialog import VoiceDialog
 
 _NOMS_LANGUES = {"en": "English", "fr": "Français", "de": "Deutsch", "es": "Español"}
 
@@ -45,18 +50,14 @@ class SettingsDialog(QDialog):
         messages = controller.messages
         self.setWindowTitle(msg(messages, "gui_settings_title"))
 
-        self._modeles = config.available_voices(voices_dirs or [controller.model_path.parent])
-        noms_voix = list(self._modeles)
+        self._dossiers_voix = voices_dirs or [controller.model_path.parent]
+        self._modeles = config.available_voices(self._dossiers_voix)
 
         self._voix = QComboBox()
-        if noms_voix:
-            self._voix.addItems(noms_voix)
-            voix_courante = controller.model_path.stem
-            if voix_courante in noms_voix:
-                self._voix.setCurrentText(voix_courante)
-        else:
-            self._voix.addItem(msg(messages, "gui_settings_no_voice"))
-            self._voix.setEnabled(False)
+        self._afficher_voix(controller.model_path.stem)
+
+        self._obtenir_voix = QPushButton(msg(messages, "gui_settings_get_voice"))
+        self._obtenir_voix.clicked.connect(self._telecharger_une_voix)
 
         self._vitesse = QDoubleSpinBox()
         self._vitesse.setRange(0.5, 3.0)
@@ -77,6 +78,7 @@ class SettingsDialog(QDialog):
 
         agencement = QFormLayout(self)
         agencement.addRow(msg(messages, "gui_settings_voice"), self._voix)
+        agencement.addRow(self._obtenir_voix)
         agencement.addRow(msg(messages, "gui_settings_speed"), self._vitesse)
         agencement.addRow(msg(messages, "gui_settings_lang"), self._langue)
         agencement.addRow(self._lancement_auto)
@@ -89,6 +91,34 @@ class SettingsDialog(QDialog):
         boutons.accepted.connect(self._enregistrer)
         boutons.rejected.connect(self.reject)
         agencement.addRow(boutons)
+
+    def _afficher_voix(self, voix_courante: str) -> None:
+        self._voix.clear()
+        noms_voix = list(self._modeles)
+        if noms_voix:
+            self._voix.addItems(noms_voix)
+            self._voix.setEnabled(True)
+            if voix_courante in noms_voix:
+                self._voix.setCurrentText(voix_courante)
+        else:
+            self._voix.addItem(msg(self._controller.messages, "gui_settings_no_voice"))
+            self._voix.setEnabled(False)
+
+    def _creer_fenetre_voix(self) -> VoiceDialog:
+        return VoiceDialog(
+            self._controller.messages,
+            self._controller.lang,
+            self._dossiers_voix[-1],
+            installees=set(self._modeles),
+            parent=self,
+        )
+
+    def _telecharger_une_voix(self) -> None:
+        fenetre = self._creer_fenetre_voix()
+        if fenetre.exec() != QDialog.DialogCode.Accepted or fenetre.voix_installee is None:
+            return
+        self._modeles = config.available_voices(self._dossiers_voix)
+        self._afficher_voix(fenetre.voix_installee.stem)
 
     def _enregistrer(self) -> None:
         nom_voix = self._voix.currentText() if self._voix.isEnabled() else None

@@ -1,5 +1,5 @@
 import pytest
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QDialog
 
 from piperread_gui import config
 from piperread_gui.controller import PlaybackController
@@ -124,3 +124,72 @@ def test_case_de_lancement_automatique_reflete_et_modifie_l_etat(application, tm
     dialogue._lancement_auto.setChecked(True)
     dialogue._enregistrer()
     assert etat["appels"][-1] == ("activer", tmp_path / "icone.svg")
+
+
+def test_bouton_de_telechargement_present_et_libelle_traduit(application, tmp_path):
+    voices_dir = _voix(tmp_path, "alpha")
+    controleur = PlaybackController(voices_dir / "alpha.onnx", "fr")
+
+    dialogue = SettingsDialog(controleur)
+
+    assert dialogue._obtenir_voix.text() == controleur.messages["gui_settings_get_voice"]
+    assert "…" in dialogue._obtenir_voix.text()
+
+
+def test_bouton_ouvre_la_fenetre_de_voix_et_selectionne_la_voix_posee(application, tmp_path, monkeypatch):
+    voices_dir = _voix(tmp_path, "alpha")
+    controleur = PlaybackController(voices_dir / "alpha.onnx", "fr")
+    dialogue = SettingsDialog(controleur, voices_dirs=[voices_dir])
+    ouvertures = []
+
+    class FausseFenetre:
+        voix_installee = voices_dir / "beta.onnx"
+
+        def exec(self):
+            ouvertures.append(True)
+            (voices_dir / "beta.onnx").touch()
+            return QDialog.DialogCode.Accepted
+
+    monkeypatch.setattr(dialogue, "_creer_fenetre_voix", lambda: FausseFenetre())
+
+    dialogue._obtenir_voix.click()
+
+    assert ouvertures == [True]
+    assert [dialogue._voix.itemText(i) for i in range(dialogue._voix.count())] == ["alpha", "beta"]
+    assert dialogue._voix.currentText() == "beta"
+    valeurs, _ = config.load_config_file()
+    assert "voice" not in valeurs
+
+
+def test_fenetre_refusee_ne_change_rien(application, tmp_path, monkeypatch):
+    voices_dir = _voix(tmp_path, "alpha")
+    controleur = PlaybackController(voices_dir / "alpha.onnx", "fr")
+    dialogue = SettingsDialog(controleur, voices_dirs=[voices_dir])
+
+    class FausseFenetre:
+        voix_installee = None
+
+        def exec(self):
+            return QDialog.DialogCode.Rejected
+
+    monkeypatch.setattr(dialogue, "_creer_fenetre_voix", lambda: FausseFenetre())
+
+    dialogue._obtenir_voix.click()
+
+    assert dialogue._voix.currentText() == "alpha"
+
+
+def test_fenetre_de_voix_cible_le_dernier_dossier_et_la_langue(application, tmp_path):
+    clone = tmp_path / "clone"
+    clone.mkdir()
+    utilisateur = tmp_path / "utilisateur"
+    utilisateur.mkdir()
+    (clone / "alpha.onnx").touch()
+    controleur = PlaybackController(clone / "alpha.onnx", "de")
+    dialogue = SettingsDialog(controleur, voices_dirs=[clone, utilisateur])
+
+    fenetre = dialogue._creer_fenetre_voix()
+
+    assert fenetre._dossier_voix == utilisateur
+    assert fenetre._choix.currentData() == "de_DE-thorsten-medium"
+    assert "alpha" in dialogue._modeles

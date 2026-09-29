@@ -20,6 +20,12 @@ Pourquoi ce fichier existe :
     Sous Windows, les chemins accentués sont réglés par le manifeste de
     l'exécutable gelé (page de code UTF-8, `piper-http-server.spec`), pas ici.
 
+    Le premier argument `download-voices` ouvre à la place le module de
+    téléchargement de voix du moteur (`piper.download_voices`), avec les
+    arguments qui suivent : l'exécutable Windows gelé n'a pas d'interpréteur
+    où lancer `-m piper.download_voices`, et la fenêtre de voix
+    (`voice_download.py`) utilise la même entrée sur les deux systèmes.
+
 Dépend de :
     `piper.http_server` (paquet `piper-tts[http]`) et `onnxruntime`.
 """
@@ -83,7 +89,18 @@ def surveiller_parent(environnement=os.environ) -> threading.Thread | None:
     return fil
 
 
+def telecharger_voix(arguments: list[str]) -> int:
+    from piper.download_voices import main as telecharger
+
+    sys.argv = [sys.argv[0], *arguments]
+    telecharger()
+    return 0
+
+
 def main() -> int:
+    if sys.argv[1:2] == ["download-voices"]:
+        return telecharger_voix(sys.argv[2:])
+
     surveiller_parent()
     couper_telemetrie_si_demande()
 
