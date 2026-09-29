@@ -7,6 +7,9 @@ external program, through the HTTP server Piper itself provides
 the engine's own interpreter and bound to `127.0.0.1` only. Keeping the engine
 in a separate process is what keeps its GPL-3.0-or-later code out of this one.
 
+This file is for working on the interface from a clone. To install PiperRead,
+choose a sequence in the [root README](../README.md#installation-from-a-package).
+
 The interface is the comfortable way to use PiperRead; the "Read the selection"
 launcher (`read.sh auto`) stays the minimal way, independent of it. Neither
 drives the other. The interface starts with your session (on by default; the
@@ -47,7 +50,10 @@ gui/
 │   ├── controller.py       — reading state, server kept loaded, next sentence prepared, current settings
 │   ├── notifier.py         — desktop notification through `notify-send`, independent of the tray
 │   ├── tray.py             — tray icon, translated menu, detection of a missing tray host
-│   ├── settings_dialog.py  — settings dialog (voice, speed, language, start with the session)
+│   ├── settings_dialog.py  — settings dialog (voice, speed, language, start with the session, download a voice)
+│   ├── voice_dialog.py     — window that offers a voice download, only on request
+│   ├── voice_download.py   — download into a sibling folder, files moved once complete, cancellable
+│   ├── voice_catalog.py    — the voices on offer (port of the table in `utils/voices.sh`)
 │   ├── autostart.py        — start with the session: XDG autostart (Linux), Run key (Windows)
 │   ├── control_server.py   — local control channel: Unix socket (POSIX), token-protected TCP on loopback (Windows)
 │   ├── control_client.py   — sends a command to the running interface

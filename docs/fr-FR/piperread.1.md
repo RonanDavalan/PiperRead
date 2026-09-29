@@ -1,6 +1,6 @@
 % PIPERREAD(1) piperread | Commandes utilisateur
 % Ronan Davalan
-% 2026-09-21
+% 2026-09-29
 
 # NOM
 
@@ -68,11 +68,16 @@ se télécharge une fois avec **\--download-voice**, puis fonctionne sans résea
 
 **\--diagnose**
 :   Vérifier l'installation (moteur, voix, audio, outils de presse-papiers)
-    sans rien lire ni jouer, puis quitter. Le code de sortie est `1` quand une
+    sans rien lire ni jouer, puis quitter. Une dernière ligne dit si l'interface
+    graphique (**piperread-gui**) est présente et, sinon, quel paquet installer ;
+    elle ne compte jamais comme un échec. Le code de sortie est `1` quand une
     vérification échoue.
 
 **\--list-voices**
-:   Afficher les voix proposées, avec leur licence. Aucun accès au réseau.
+:   Afficher les voix proposées, avec leur taille et leur licence. La première
+    ligne est la commande exacte qui installe la voix recommandée pour la langue
+    courante, suivie de « (installée) » quand elle l'est déjà. Aucun accès au
+    réseau.
 
 **\--download-voice** [*NOM*...]
 :   Télécharger les voix nommées dans le dossier des voix. Sans nom, proposer
@@ -102,7 +107,11 @@ ligne de commande : il est pris dans la variable d'environnement
 
 # INTERFACE GRAPHIQUE
 
-Le paquet optionnel **piperread-gui** fournit une interface de zone de notification, lancée par la commande `piperread-gui`. Depuis un clone du dépôt, une fois l'environnement de `gui/` en place, la commande est `gui/.venv/bin/python3 -m piperread_gui.app`. **piperread** ne la lance jamais lui-même.
+Le paquet **piperread-gui** fournit une interface de zone de notification qui démarre avec la session, garde la voix chargée et ajoute la pause, la reprise et la navigation phrase par phrase. C'est un paquet séparé qui dépend de **piperread** : l'archive « tout en un » de la page de téléchargement contient les deux, et une seule commande les installe ensemble (le guide d'installation la donne pour chaque distribution).
+
+L'interface se lance par la commande `piperread-gui`, ou depuis l'entrée PiperRead du menu des applications. On la pilote avec **piperread-gui** {**\--play** | **\--pause** | **\--resume** | **\--stop** | **\--next** | **\--previous** | **\--quit**} ; sauf **\--play**, ces commandes signalent une erreur quand aucune interface n'est en cours. Sans voix installée, elle ouvre une fenêtre qui propose d'en télécharger une ; rien n'est téléchargé avant le clic sur Télécharger.
+
+Depuis un clone du dépôt, une fois l'environnement de `gui/` en place, la commande est `gui/.venv/bin/python3 -m piperread_gui.app`. **piperread** ne lance jamais l'interface lui-même.
 
 # FICHIERS
 

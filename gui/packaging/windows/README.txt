@@ -15,8 +15,13 @@ Keep the folder whole: each program needs the "_internal" folder next to it.
 Before the first run
 ---------------------
 
-Put a voice model in the "voices" folder: two files with the same name,
-"<name>.onnx" and "<name>.onnx.json". Voices can be downloaded from:
+No voice is shipped. With no voice installed, the first launch opens a
+window called "Download a voice": choose a voice and click Download.
+Nothing is downloaded before that click.
+
+To add a voice by hand instead, put two files with the same name,
+"<name>.onnx" and "<name>.onnx.json", in the "voices" folder. Voices can
+be downloaded from:
 
   https://huggingface.co/rhasspy/piper-voices
 
@@ -35,7 +40,8 @@ untick "Start with the session" in Settings to stop that (the Startup tab
 of the Task Manager shows the same setting). If you move the folder, run
 piperread-gui.exe once from its new place.
 
-Settings (voice, speed, language) are saved in:
+Settings (voice, speed, language) are saved in the file below; the
+Settings dialog also has a "Download a voice..." button:
 
   %USERPROFILE%\.config\piperread\piperread.conf
 
