@@ -306,4 +306,5 @@ El proyecto **PiperRead** es el resultado de una colaboración híbrida **Humano
 *   **Google Gemini**: sintetizador y asesor estratégico. Análisis de arquitectura independiente, resolución de conflictos lógicos, optimización del flujo de trabajo, validación cruzada de decisiones técnicas.
 *   **Muse Spark**: sintetizador y asesor estratégico. Sustituye a Gemini en algunas sesiones, con buenos resultados; algunas de sus respuestas se transmitieron a Claude Code.
 *   **DeepSeek**: limpieza del marco de trabajo del proyecto, al inicio.
+*   **MiMo v2.5 (Xiaomi, vía opencode)**: revisión por un tercero de las traducciones (página de manual y tres guías), 21 de septiembre de 2026; una parte de sus observaciones era acertada y otra no.
 *   **Motor Core**: [Piper TTS](https://github.com/OHF-voice/piper1-gpl), con licencia GPL-3.0-or-later. Se instala en su equipo mediante `pip` y se invoca como programa externo; PiperRead no lo redistribuye.
