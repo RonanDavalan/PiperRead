@@ -129,6 +129,10 @@ The voices come from the Piper catalogue,
 shown by **\--list-voices**. Samples can be heard at
 <https://rhasspy.github.io/piper-samples/>.
 
+# PLATFORMS
+
+On Linux, PiperRead ships as native packages: **Debian** and Ubuntu (`sudo apt install ./piperread_*_all.deb`), **Fedora** (`sudo dnf install ./piperread-*.noarch.rpm`), **openSUSE** Leap (`sudo zypper install ./piperread-*.noarch.rpm`) and **Arch** Linux (`sudo pacman -U ./piperread-*.pkg.tar.zst`), validated in containers (installation, update, diagnosis and removal). On **Windows** only the graphical interface exists, as the self-contained folder `piperread-gui-windows.zip`; it was tried by hand on Windows 11, with no automated test matrix.
+
 # EXIT STATUS
 
 `0` on success, `1` when a dependency, the engine or a voice is missing or a

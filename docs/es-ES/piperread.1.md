@@ -133,6 +133,10 @@ Las voces proceden del catálogo de Piper,
 licencia, que muestra **\--list-voices**. Se pueden escuchar muestras en
 <https://rhasspy.github.io/piper-samples/>.
 
+# PLATAFORMAS
+
+En Linux, PiperRead se entrega en paquetes nativos: **Debian** y Ubuntu (`sudo apt install ./piperread_*_all.deb`), **Fedora** (`sudo dnf install ./piperread-*.noarch.rpm`), **openSUSE** Leap (`sudo zypper install ./piperread-*.noarch.rpm`) y **Arch** Linux (`sudo pacman -U ./piperread-*.pkg.tar.zst`), validados en contenedor (instalación, actualización, diagnóstico y retirada). En **Windows** solo existe la interfaz gráfica, como la carpeta autónoma `piperread-gui-windows.zip`; se probó a mano en Windows 11, sin matriz de pruebas automatizada.
+
 # CÓDIGO DE SALIDA
 
 `0` si todo va bien, `1` cuando falta una dependencia, el motor o una voz, o
