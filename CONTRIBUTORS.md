@@ -11,6 +11,7 @@ the work actually done.
 - **Muse Spark** — synthesizer and strategic advisor, standing in for Gemini in some sessions.
 - **DeepSeek** — cleanup of the project's working framework at the start of the project.
 - **MiMo v2.5 (Xiaomi, via opencode)** — third-party review of the translations, 21 September 2026.
+- **Publication Guarantor (Claude Code, Anthropic)** — examines each version against the project's publication rules before anything is published, and writes its opinion; a separate session with its own framework.
 
 ## Core Engine
 

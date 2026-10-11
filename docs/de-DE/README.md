@@ -307,4 +307,5 @@ Das Projekt **PiperRead** ist das Ergebnis einer hybriden **Mensch-KI**-Zusammen
 *   **Muse Spark**: Synthetisierer und strategischer Berater. Ersetzt Gemini in einigen Sitzungen, mit guten Ergebnissen; einige seiner Antworten wurden an Claude Code weitergegeben.
 *   **DeepSeek**: Bereinigung des Arbeitsrahmens des Projekts zu Beginn.
 *   **MiMo v2.5 (Xiaomi, über opencode)**: Prüfung der Übersetzungen durch einen Dritten (Handbuchseite und drei Anleitungen), 21. September 2026; ein Teil seiner Anmerkungen traf zu, ein Teil nicht.
+*   **Publikationsgarant (Claude Code, Anthropic)**: prüft jede Version vor ihrer Veröffentlichung anhand der Veröffentlichungsregeln des Projekts und schreibt seine Stellungnahme; eigene Sitzung mit eigenem Rahmen.
 *   **Kern-Engine**: [Piper TTS](https://github.com/OHF-voice/piper1-gpl), lizenziert unter GPL-3.0-or-later. Es wird per `pip` auf Ihrem Rechner installiert und als externes Programm aufgerufen; PiperRead verteilt es nicht weiter.
