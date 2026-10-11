@@ -101,7 +101,7 @@ def test_paquet_desactiver_masque_puis_activer_demasque(linux):
     "argument,attendu",
     [
         ("/usr/bin/python3", "/usr/bin/python3"),
-        ("/home/a b/python3", '"/home/a b/python3"'),
+        ("/opt/a b/python3", '"/opt/a b/python3"'),
         ("100%", "100%%"),
         ('/x/"q"', '"/x/\\\\"q\\\\""'),
     ],

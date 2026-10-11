@@ -10,8 +10,7 @@ Pourquoi ce fichier existe :
     sans zone de notification. L'icône provient de `Ressources/piperread.svg`
     du clone en priorité, sinon de l'icône du thème installée par le paquet
     noyau (`/usr/share/icons/hicolor/scalable/apps/piperread.svg`, dont
-    `piperread-gui` dépend) — déjà dessinée pour le paquet
-    (`_CADRE/SPECIFICATIONS/PROCEDURES_LLM/instance/TACHE_dessiner-icone-svg.md`) —
+    `piperread-gui` dépend) — déjà dessinée pour le paquet :
     l'interface n'a pas d'icône propre. Les voix se cherchent dans les mêmes
     dossiers que le noyau (`config.voices_dirs` : `voices/` du clone puis
     `$XDG_DATA_HOME/piperread/voices`, comme `VOICES_DIRS` de `read.sh`), et
