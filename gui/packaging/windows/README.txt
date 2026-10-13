@@ -53,3 +53,46 @@ on, add the line telemetry=on to piperread.conf.
 This is a community build, not signed with a certificate recognized by
 Windows: SmartScreen may warn on first launch ("Windows protected your
 PC"). Choose "More info", then "Run anyway".
+
+
+Licenses
+--------
+
+PiperRead itself is released under the MIT license (licenses\PiperRead-MIT.txt).
+This folder also contains two programs and libraries that are not covered
+by it. Their license texts are in the "licenses" folder next to this file,
+and licenses\COMPONENTS.txt gives the exact version of each component of
+this build.
+
+  Piper speech engine (piper-http-server\piper-http-server.exe)
+      SPDX: GPL-3.0-or-later      text: licenses\GPL-3.0.txt
+      It is a separate program that piperread-gui.exe starts as its own
+      process; the two are only distributed together in this folder.
+      It includes eSpeak NG (data and library), also under the GPL.
+
+  Qt for Python (PySide6, shiboken6) and the Qt 6 libraries in
+  _internal\PySide6
+      SPDX: LGPL-3.0-only         texts: licenses\LGPL-3.0.txt and
+                                         licenses\GPL-3.0.txt
+      piperread-gui.exe uses these libraries, which are covered by the
+      LGPL. They are separate files (the .dll files in _internal\PySide6):
+      you may replace them with a modified, interface-compatible version
+      and run the application with it.
+
+Source code (written offer)
+---------------------------
+
+The complete corresponding source code of the GPL and LGPL components
+above is available at no charge, for as long as this version of PiperRead
+is distributed and for at least three years:
+
+  Piper (piper-tts, the version in licenses\COMPONENTS.txt):
+      https://github.com/OHF-voice/piper1-gpl
+  Qt for Python (PySide6, the version in licenses\COMPONENTS.txt):
+      https://code.qt.io/cgit/pyside/pyside-setup.git/
+      Qt 6 libraries: https://code.qt.io/
+  PiperRead (MIT, with the .spec files that build this folder):
+      https://github.com/RonanDavalan/PiperRead
+
+If one of these addresses no longer serves the source, open an issue at
+https://github.com/RonanDavalan/PiperRead/issues and a copy is sent.

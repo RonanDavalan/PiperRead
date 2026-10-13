@@ -37,6 +37,10 @@ jobs:
           Copy-Item gui\packaging\windows\piperread.ico dist-windows\piperread-gui\
           Copy-Item lang dist-windows\piperread-gui\lang -Recurse
           Copy-Item gui\packaging\windows\README.txt dist-windows\piperread-gui\
+          New-Item -ItemType Directory -Path dist-windows\piperread-gui\licenses | Out-Null
+          Copy-Item gui\packaging\windows\licenses\* dist-windows\piperread-gui\licenses\
+          Copy-Item LICENSE dist-windows\piperread-gui\licenses\PiperRead-MIT.txt
+          pip show piper-tts PySide6 shiboken6 | Out-File -Encoding utf8 dist-windows\piperread-gui\licenses\COMPONENTS.txt
           Set-Content -Path dist-windows\piperread-gui\voices\README.txt -Value "Put a Piper voice here (<name>.onnx and <name>.onnx.json), for example from https://huggingface.co/rhasspy/piper-voices"
 
       - name: Compress to a single archive
