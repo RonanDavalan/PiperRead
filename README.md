@@ -133,7 +133,7 @@ On Windows, only the interface is available, as a self-contained folder.
 3.  Double-click `piperread-gui.exe`. With no voice installed, the "Download a voice" window opens: choose a voice and click Download. (By hand: put two files with the same name, `<name>.onnx` and `<name>.onnx.json`, from [rhasspy/piper-voices](https://huggingface.co/rhasspy/piper-voices), in the `voices` folder.)
 4.  Copy a text with Ctrl+C, then click the tray icon.
 
-The build is not signed with a certificate Windows recognises: SmartScreen may warn on the first launch (choose "More info", then "Run anyway"). It reads the clipboard only, not the mouse selection. It is an executable built on Windows and tried without a screen; there is no automated test matrix for Windows as there is for the Linux packages.
+The build is not signed with a certificate Windows recognises: SmartScreen may warn on the first launch (choose "More info", then "Run anyway"). It reads the clipboard only, not the mouse selection. It is an executable built on Windows and tested by hand on Windows 11; there is no automated test matrix for Windows as there is for the Linux packages.
 
 ## Prerequisites
 

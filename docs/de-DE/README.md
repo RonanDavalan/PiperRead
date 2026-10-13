@@ -132,7 +132,7 @@ Unter Windows ist nur die Oberfläche verfügbar, als eigenständiger Ordner.
 3.  Doppelklicken Sie auf `piperread-gui.exe`. Ohne installierte Stimme öffnet sich das Fenster „Stimme herunterladen“: Wählen Sie eine Stimme und klicken Sie auf Herunterladen. (Von Hand: Legen Sie zwei Dateien mit demselben Namen, `<name>.onnx` und `<name>.onnx.json`, von [rhasspy/piper-voices](https://huggingface.co/rhasspy/piper-voices) in den Ordner `voices`.)
 4.  Kopieren Sie einen Text mit Strg+C und klicken Sie dann auf das Tray-Symbol.
 
-Der Build ist nicht mit einem Zertifikat signiert, das Windows erkennt: SmartScreen warnt möglicherweise beim ersten Start (wählen Sie „Weitere Informationen“, dann „Trotzdem ausführen“). Er liest nur die Zwischenablage, nicht die Mausauswahl. Er ist eine unter Windows gebaute ausführbare Datei, die ohne Bildschirm ausprobiert wurde; es gibt keine automatisierte Testmatrix für Windows wie für die Linux-Pakete.
+Der Build ist nicht mit einem Zertifikat signiert, das Windows erkennt: SmartScreen warnt möglicherweise beim ersten Start (wählen Sie „Weitere Informationen“, dann „Trotzdem ausführen“). Er liest nur die Zwischenablage, nicht die Mausauswahl. Er ist eine unter Windows gebaute ausführbare Datei, die unter Windows 11 von Hand getestet wurde; es gibt keine automatisierte Testmatrix für Windows wie für die Linux-Pakete.
 
 ## Voraussetzungen
 

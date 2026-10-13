@@ -135,7 +135,7 @@ licencia, que muestra **\--list-voices**. Se pueden escuchar muestras en
 
 # PLATAFORMAS
 
-En Linux, PiperRead se entrega en paquetes nativos: **Debian** y Ubuntu (`sudo apt install ./piperread_*_all.deb`), **Fedora** (`sudo dnf install ./piperread-*.noarch.rpm`), **openSUSE** Leap (`sudo zypper install ./piperread-*.noarch.rpm`) y **Arch** Linux (`sudo pacman -U ./piperread-*.pkg.tar.zst`), validados en contenedor: instalación, actualización, diagnóstico y retirada en Debian 12 y 13, Ubuntu 22.04 y 24.04, Fedora 44 y Arch Linux; instalación, diagnóstico y retirada en openSUSE Leap 16.0. Un contenedor no demuestra ni el sonido, ni el portapapeles, ni la entrada de menú, ni la pantalla. En **Windows** solo existe la interfaz gráfica, como la carpeta autónoma `piperread-gui-windows.zip`; es un ejecutable construido en Windows, probado sin pantalla, sin matriz de pruebas automatizada.
+En Linux, PiperRead se entrega en paquetes nativos: **Debian** y Ubuntu (`sudo apt install ./piperread_*_all.deb`), **Fedora** (`sudo dnf install ./piperread-*.noarch.rpm`), **openSUSE** Leap (`sudo zypper install ./piperread-*.noarch.rpm`) y **Arch** Linux (`sudo pacman -U ./piperread-*.pkg.tar.zst`), validados en contenedor: instalación, actualización, diagnóstico y retirada en Debian 12 y 13, Ubuntu 22.04 y 24.04, Fedora 44 y Arch Linux; instalación, diagnóstico y retirada en openSUSE Leap 16.0. Un contenedor no demuestra ni el sonido, ni el portapapeles, ni la entrada de menú, ni la pantalla. En **Windows** solo existe la interfaz gráfica, como la carpeta autónoma `piperread-gui-windows.zip`; es un ejecutable construido en Windows y probado a mano en Windows 11, sin matriz de pruebas automatizada.
 
 # CÓDIGO DE SALIDA
 

@@ -136,7 +136,7 @@ affichée par **\--list-voices**. Des échantillons s'écoutent sur
 
 # PLATEFORMES
 
-Sous Linux, PiperRead est livré en paquets natifs : **Debian** et Ubuntu (`sudo apt install ./piperread_*_all.deb`), **Fedora** (`sudo dnf install ./piperread-*.noarch.rpm`), **openSUSE** Leap (`sudo zypper install ./piperread-*.noarch.rpm`) et **Arch** Linux (`sudo pacman -U ./piperread-*.pkg.tar.zst`), validés en conteneur : installation, mise à jour, diagnostic et retrait sous Debian 12 et 13, Ubuntu 22.04 et 24.04, Fedora 44 et Arch Linux ; installation, diagnostic et retrait sous openSUSE Leap 16.0. Un conteneur ne prouve ni le son, ni le presse-papiers, ni l'entrée de menu, ni l'affichage. Sous **Windows**, seule l'interface graphique existe, sous forme du dossier autonome `piperread-gui-windows.zip` ; c'est un exécutable construit sous Windows, essayé sans écran, sans matrice de tests automatisée.
+Sous Linux, PiperRead est livré en paquets natifs : **Debian** et Ubuntu (`sudo apt install ./piperread_*_all.deb`), **Fedora** (`sudo dnf install ./piperread-*.noarch.rpm`), **openSUSE** Leap (`sudo zypper install ./piperread-*.noarch.rpm`) et **Arch** Linux (`sudo pacman -U ./piperread-*.pkg.tar.zst`), validés en conteneur : installation, mise à jour, diagnostic et retrait sous Debian 12 et 13, Ubuntu 22.04 et 24.04, Fedora 44 et Arch Linux ; installation, diagnostic et retrait sous openSUSE Leap 16.0. Un conteneur ne prouve ni le son, ni le presse-papiers, ni l'entrée de menu, ni l'affichage. Sous **Windows**, seule l'interface graphique existe, sous forme du dossier autonome `piperread-gui-windows.zip` ; c'est un exécutable construit sous Windows et testé à la main sous Windows 11, sans matrice de tests automatisée.
 
 # CODE DE SORTIE
 
