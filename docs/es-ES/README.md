@@ -1,7 +1,7 @@
 # PiperRead
 
 <p align="center">
-  <img src="https://img.shields.io/static/v1?label=Version&message=v0.4.0-beta&color=orange" alt="Version">
+  <img src="https://img.shields.io/static/v1?label=Version&message=v0.4.1-beta&color=orange" alt="Version">
   <img src="https://img.shields.io/badge/Licencia-MIT-green" alt="Licencia">
   <img src="https://img.shields.io/badge/Plataforma-Linux_(Wayland_|_X11)_|_Windows_(interfaz)-black" alt="OS soportado">
   <img src="https://img.shields.io/badge/Motor-Piper_Neural_TTS-blueviolet" alt="Motor de audio">
@@ -73,16 +73,16 @@ Las cifras se midieron en un contenedor con Debian 13, dependencias incluidas (o
 
     ```bash
     # Debian 12 y 13, Ubuntu 22.04 y 24.04, Linux Mint
-    sudo apt install ./piperread_0.4.0~beta_all.deb
+    sudo apt install ./piperread_0.4.1~beta_all.deb
 
     # Fedora 42
-    sudo dnf install ./piperread-0.4.0~beta-1.fc42.noarch.rpm
+    sudo dnf install ./piperread-0.4.1~beta-1.fc42.noarch.rpm
 
     # openSUSE Leap 15.6
-    sudo zypper install ./piperread-0.4.0~beta-1.leap156.noarch.rpm
+    sudo zypper install ./piperread-0.4.1~beta-1.leap156.noarch.rpm
 
     # Arch Linux
-    sudo pacman -U ./piperread-0.4.0beta-1-any.pkg.tar.zst
+    sudo pacman -U ./piperread-0.4.1beta-1-any.pkg.tar.zst
     ```
 
     El paquete instala el motor Piper con `pip` al configurarse, y solo necesita acceso a la red en ese momento. No incluye ninguna voz.
@@ -101,20 +101,20 @@ Las cifras se midieron en un contenedor con Debian 13, dependencias incluidas (o
 
     ```bash
     # Debian 12 y 13, Ubuntu 22.04 y 24.04, Linux Mint
-    tar -xzf piperread-all-in-one-0.4.0-beta-debian.tar.gz
-    sudo apt install ./piperread_0.4.0~beta_all.deb ./piperread-gui_0.4.0~beta_all.deb
+    tar -xzf piperread-all-in-one-0.4.1-beta-debian.tar.gz
+    sudo apt install ./piperread_0.4.1~beta_all.deb ./piperread-gui_0.4.1~beta_all.deb
 
     # Fedora 42
-    tar -xzf piperread-all-in-one-0.4.0-beta-fedora.tar.gz
-    sudo dnf install ./piperread-0.4.0~beta-1.fc42.noarch.rpm ./piperread-gui-0.4.0~beta-1.fc42.noarch.rpm
+    tar -xzf piperread-all-in-one-0.4.1-beta-fedora.tar.gz
+    sudo dnf install ./piperread-0.4.1~beta-1.fc42.noarch.rpm ./piperread-gui-0.4.1~beta-1.fc42.noarch.rpm
 
     # openSUSE Leap 15.6
-    tar -xzf piperread-all-in-one-0.4.0-beta-opensuse.tar.gz
-    sudo zypper install ./piperread-0.4.0~beta-1.leap156.noarch.rpm ./piperread-gui-0.4.0~beta-1.leap156.noarch.rpm
+    tar -xzf piperread-all-in-one-0.4.1-beta-opensuse.tar.gz
+    sudo zypper install ./piperread-0.4.1~beta-1.leap156.noarch.rpm ./piperread-gui-0.4.1~beta-1.leap156.noarch.rpm
 
     # Arch Linux
-    tar -xzf piperread-all-in-one-0.4.0-beta-arch.tar.gz
-    sudo pacman -U ./piperread-0.4.0beta-1-any.pkg.tar.zst ./piperread-gui-0.4.0beta-1-any.pkg.tar.zst
+    tar -xzf piperread-all-in-one-0.4.1-beta-arch.tar.gz
+    sudo pacman -U ./piperread-0.4.1beta-1-any.pkg.tar.zst ./piperread-gui-0.4.1beta-1-any.pkg.tar.zst
     ```
 
     La instalación descarga el motor y después Qt (unos 245 MB) en entornos virtuales privados, y solo necesita acceso a la red en ese momento. No se incluye ninguna voz.
