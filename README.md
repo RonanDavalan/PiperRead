@@ -122,7 +122,7 @@ The figures were measured in a container on Debian 13, dependencies included (ot
 3.  Start the interface: choose PiperRead in your applications menu, or run `piperread-gui --play` (it also starts by itself at your next session). With no voice installed, a window called "Download a voice" opens: choose a voice and click Download. Nothing is downloaded before that click.
 4.  Select or copy a text, then click the tray icon: it reads when stopped, pauses while reading and resumes when paused.
 
-The packages were validated in containers (installation, update from the previous version, diagnostic and removal) on Debian 12 and 13, Ubuntu 22.04 and 24.04, Fedora 44 and Arch Linux. On openSUSE Leap 16.0, installation, diagnostic and removal were validated in a container. Leap 16.0 is supported from this version: no earlier package exists to update from. A container proves the installation, the diagnostic and the removal, not the sound, the clipboard, the menu entry or the display. The manual is available as a page (`man piperread`) and as a PDF in four languages on the download page.
+The packages were validated in containers (installation, update from the previous version, diagnostic and removal) on Debian 12 and 13, Ubuntu 22.04 and 24.04, Fedora 44 and Arch Linux. On openSUSE Leap 16.0, installation, diagnostic and removal were validated in a container. A container proves the installation, the diagnostic and the removal, not the sound, the clipboard, the menu entry or the display. The manual is available as a page (`man piperread`) and as a PDF in four languages on the download page.
 
 ### With the interface, on Windows
 
