@@ -249,7 +249,7 @@ piperread-gui --quit
 
 ### Latence mesurée
 
-« Zero latency » signifie qu'il n'y a aucun aller-retour réseau entre la sélection et le premier son : tout s'exécute sur votre machine. La durée elle-même a été mesurée le 23 septembre 2026, sur la machine du mainteneur (32 cœurs) avec la voix `fr_FR-siwis-medium`. Elle varie selon la machine et la voix ; considérez-la comme un ordre de grandeur, pas comme une garantie.
+« Latence nulle » signifie qu'il n'y a aucun aller-retour réseau entre la sélection et le premier son : tout s'exécute sur votre machine. La durée elle-même a été mesurée le 23 septembre 2026, sur la machine du mainteneur (32 cœurs) avec la voix `fr_FR-siwis-medium`. Elle varie selon la machine et la voix ; considérez-la comme un ordre de grandeur, pas comme une garantie.
 
 | Chemin | Mesure |
 |---|---|
