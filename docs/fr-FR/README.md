@@ -68,7 +68,7 @@ Ces chiffres ont été mesurés en conteneur sous Debian 13, dépendances compri
 
 ### Terminal et bouton
 
-1.  Téléchargez le paquet de votre système depuis la [page de téléchargement](https://piperread.davalan.fr/fr/download/) ou depuis la [dernière Release](https://github.com/RonanDavalan/PiperRead/releases/latest).
+1.  Téléchargez le paquet de votre système depuis la [page de téléchargement](https://piperread.davalan.fr/fr/telechargement/) ou depuis la [dernière Release](https://github.com/RonanDavalan/PiperRead/releases/latest). La Release écrit `.` à la place de `~` dans les noms de fichiers (`piperread_0.4.1.beta_all.deb` pour `piperread_0.4.1~beta_all.deb`) : dans la commande ci-dessous, tapez le nom du fichier que vous avez téléchargé.
 2.  Installez-le :
 
     ```bash
@@ -96,7 +96,7 @@ Ces chiffres ont été mesurés en conteneur sous Debian 13, dépendances compri
 
 ### Avec l'interface
 
-1.  Téléchargez l'archive « tout en un » de votre famille de distributions (`debian`, `fedora`, `opensuse` ou `arch`) depuis la [page de téléchargement](https://piperread.davalan.fr/fr/download/) ou depuis la [dernière Release](https://github.com/RonanDavalan/PiperRead/releases/latest). Elle contient `piperread` et `piperread-gui`, et rien d'autre.
+1.  Téléchargez l'archive « tout en un » de votre famille de distributions (`debian`, `fedora`, `opensuse` ou `arch`) depuis la [page de téléchargement](https://piperread.davalan.fr/fr/telechargement/) ou depuis la [dernière Release](https://github.com/RonanDavalan/PiperRead/releases/latest). Elle contient `piperread` et `piperread-gui`, et rien d'autre.
 2.  Extrayez-la et installez les deux paquets en une commande :
 
     ```bash

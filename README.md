@@ -69,7 +69,7 @@ The figures were measured in a container on Debian 13, dependencies included (ot
 
 ### Terminal and button
 
-1.  Download the package for your system from the [download page](https://piperread.davalan.fr/download/) or from the [latest release](https://github.com/RonanDavalan/PiperRead/releases/latest).
+1.  Download the package for your system from the [download page](https://piperread.davalan.fr/download/) or from the [latest release](https://github.com/RonanDavalan/PiperRead/releases/latest). The Release stores `~` as `.` in file names (`piperread_0.4.1.beta_all.deb` for `piperread_0.4.1~beta_all.deb`): in the command below, type the name of the file you downloaded.
 2.  Install it:
 
     ```bash

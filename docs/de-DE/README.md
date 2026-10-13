@@ -68,7 +68,7 @@ Die Zahlen wurden in einem Container unter Debian 13 gemessen, Abhängigkeiten e
 
 ### Terminal und Schaltfläche
 
-1.  Laden Sie das Paket für Ihr System von der [Download-Seite](https://piperread.davalan.fr/de/download/) oder aus dem [neuesten Release](https://github.com/RonanDavalan/PiperRead/releases/latest) herunter.
+1.  Laden Sie das Paket für Ihr System von der [Download-Seite](https://piperread.davalan.fr/de/download/) oder aus dem [neuesten Release](https://github.com/RonanDavalan/PiperRead/releases/latest) herunter. Das Release schreibt in Dateinamen `.` statt `~` (`piperread_0.4.1.beta_all.deb` statt `piperread_0.4.1~beta_all.deb`): Geben Sie im Befehl unten den Namen der heruntergeladenen Datei ein.
 2.  Installieren Sie es:
 
     ```bash
