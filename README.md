@@ -310,3 +310,7 @@ The **PiperRead** project is the result of a hybrid **Human-AI** collaboration:
 *   **MiMo v2.5 (Xiaomi, via opencode)**: Third-party review of the translations (manual page and three guides), 21 September 2026; part of its remarks held, part did not.
 *   **Publication Guarantor (Claude Code, Anthropic)**: Examines each version against the project's publication rules before anything is published, and writes its opinion; a separate session with its own framework.
 *   **Core Engine**: [Piper TTS](https://github.com/OHF-voice/piper1-gpl), licensed GPL-3.0-or-later. On Linux it is installed on your machine by `pip` and called as an external program; the Windows archive embeds it, with its GPL-3.0-or-later licence text and the location of its sources (folder `licenses\` and section "Licenses" of the archive's `README.txt`).
+
+## Licenses
+
+PiperRead is released under the MIT licence (`LICENSE`). The Windows archive `piperread-gui-windows.zip` also embeds Piper (GPL-3.0-or-later) and Qt for Python (LGPL-3.0-only): their licence texts are in its `licenses\` folder, and the "Licenses" section of its `README.txt` gives the location of their sources and the versions embedded.
