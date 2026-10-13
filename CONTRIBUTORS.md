@@ -15,7 +15,7 @@ the work actually done.
 
 ## Core Engine
 
-- **[Piper TTS](https://github.com/OHF-voice/piper1-gpl)** — speech synthesis engine, GPL-3.0-or-later, installed by `pip` and called as an external program; PiperRead does not redistribute it.
+- **[Piper TTS](https://github.com/OHF-voice/piper1-gpl)** — speech synthesis engine, GPL-3.0-or-later, installed by `pip` on Linux and called as an external program, embedded in the Windows archive with its licence text and the location of its sources.
 
 ## Code and Documentation Contributors
 

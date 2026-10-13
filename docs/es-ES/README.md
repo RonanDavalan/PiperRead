@@ -308,4 +308,4 @@ El proyecto **PiperRead** es el resultado de una colaboración híbrida **Humano
 *   **DeepSeek**: limpieza del marco de trabajo del proyecto, al inicio.
 *   **MiMo v2.5 (Xiaomi, vía opencode)**: revisión por un tercero de las traducciones (página de manual y tres guías), 21 de septiembre de 2026; una parte de sus observaciones era acertada y otra no.
 *   **Garante de publicación (Claude Code, Anthropic)**: examina cada versión según las reglas de publicación del proyecto antes de publicarla y redacta su dictamen; sesión distinta, con su propio marco.
-*   **Motor Core**: [Piper TTS](https://github.com/OHF-voice/piper1-gpl), con licencia GPL-3.0-or-later. Se instala en su equipo mediante `pip` y se invoca como programa externo; PiperRead no lo redistribuye.
+*   **Motor Core**: [Piper TTS](https://github.com/OHF-voice/piper1-gpl), con licencia GPL-3.0-or-later. En Linux se instala en su equipo mediante `pip` y se invoca como programa externo; el archivo de Windows lo incluye, con el texto de su licencia GPL-3.0-or-later y la dirección de sus fuentes (carpeta `licenses\` y sección «Licenses» del `README.txt` del archivo).
