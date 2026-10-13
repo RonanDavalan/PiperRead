@@ -75,11 +75,11 @@ Die Zahlen wurden in einem Container unter Debian 13 gemessen, Abhängigkeiten e
     # Debian 12 und 13, Ubuntu 22.04 und 24.04, Linux Mint
     sudo apt install ./piperread_0.4.1~beta_all.deb
 
-    # Fedora 42
-    sudo dnf install ./piperread-0.4.1~beta-1.fc42.noarch.rpm
+    # Fedora 44
+    sudo dnf install ./piperread-0.4.1~beta-1.fc44.noarch.rpm
 
-    # openSUSE Leap 15.6
-    sudo zypper install ./piperread-0.4.1~beta-1.leap156.noarch.rpm
+    # openSUSE Leap 16.0
+    sudo zypper install ./piperread-0.4.1~beta-1.leap160.noarch.rpm
 
     # Arch Linux
     sudo pacman -U ./piperread-0.4.1beta-1-any.pkg.tar.zst
@@ -104,13 +104,13 @@ Die Zahlen wurden in einem Container unter Debian 13 gemessen, Abhängigkeiten e
     tar -xzf piperread-all-in-one-0.4.1-beta-debian.tar.gz
     sudo apt install ./piperread_0.4.1~beta_all.deb ./piperread-gui_0.4.1~beta_all.deb
 
-    # Fedora 42
+    # Fedora 44
     tar -xzf piperread-all-in-one-0.4.1-beta-fedora.tar.gz
-    sudo dnf install ./piperread-0.4.1~beta-1.fc42.noarch.rpm ./piperread-gui-0.4.1~beta-1.fc42.noarch.rpm
+    sudo dnf install ./piperread-0.4.1~beta-1.fc44.noarch.rpm ./piperread-gui-0.4.1~beta-1.fc44.noarch.rpm
 
-    # openSUSE Leap 15.6
+    # openSUSE Leap 16.0
     tar -xzf piperread-all-in-one-0.4.1-beta-opensuse.tar.gz
-    sudo zypper install ./piperread-0.4.1~beta-1.leap156.noarch.rpm ./piperread-gui-0.4.1~beta-1.leap156.noarch.rpm
+    sudo zypper install ./piperread-0.4.1~beta-1.leap160.noarch.rpm ./piperread-gui-0.4.1~beta-1.leap160.noarch.rpm
 
     # Arch Linux
     tar -xzf piperread-all-in-one-0.4.1-beta-arch.tar.gz
