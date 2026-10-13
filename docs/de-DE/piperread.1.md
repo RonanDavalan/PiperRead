@@ -137,7 +137,7 @@ Lizenz, die **\--list-voices** anzeigt. Hörproben finden sich unter
 
 # PLATTFORMEN
 
-Unter Linux wird PiperRead als native Pakete ausgeliefert: **Debian** und Ubuntu (`sudo apt install ./piperread_*_all.deb`), **Fedora** (`sudo dnf install ./piperread-*.noarch.rpm`), **openSUSE** Leap (`sudo zypper install ./piperread-*.noarch.rpm`) und **Arch** Linux (`sudo pacman -U ./piperread-*.pkg.tar.zst`), im Container validiert (Installation, Aktualisierung, Diagnose und Entfernung). Unter **Windows** gibt es nur die grafische Oberfläche, als eigenständigen Ordner `piperread-gui-windows.zip`; sie ist eine unter Windows gebaute ausführbare Datei, die ohne Bildschirm ausprobiert wurde, ohne automatisierte Testmatrix.
+Unter Linux wird PiperRead als native Pakete ausgeliefert: **Debian** und Ubuntu (`sudo apt install ./piperread_*_all.deb`), **Fedora** (`sudo dnf install ./piperread-*.noarch.rpm`), **openSUSE** Leap (`sudo zypper install ./piperread-*.noarch.rpm`) und **Arch** Linux (`sudo pacman -U ./piperread-*.pkg.tar.zst`), im Container validiert: Installation, Aktualisierung, Diagnose und Entfernung unter Debian 12 und 13, Ubuntu 22.04 und 24.04, Fedora 44 und Arch Linux; Installation, Diagnose und Entfernung unter openSUSE Leap 16.0, wo die Aktualisierung nicht ausprobiert wurde, weil das Paket der vorherigen Version, gebaut für Leap 15.6, `python311` verlangt, das Leap 16.0 nicht bereitstellt. Ein Container belegt weder den Ton noch die Zwischenablage, den Menüeintrag oder die Anzeige. Unter **Windows** gibt es nur die grafische Oberfläche, als eigenständigen Ordner `piperread-gui-windows.zip`; sie ist eine unter Windows gebaute ausführbare Datei, die ohne Bildschirm ausprobiert wurde, ohne automatisierte Testmatrix.
 
 # EXIT-STATUS
 
