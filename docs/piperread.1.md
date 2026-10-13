@@ -131,7 +131,7 @@ shown by **\--list-voices**. Samples can be heard at
 
 # PLATFORMS
 
-On Linux, PiperRead ships as native packages: **Debian** and Ubuntu (`sudo apt install ./piperread_*_all.deb`), **Fedora** (`sudo dnf install ./piperread-*.noarch.rpm`), **openSUSE** Leap (`sudo zypper install ./piperread-*.noarch.rpm`) and **Arch** Linux (`sudo pacman -U ./piperread-*.pkg.tar.zst`), validated in containers (installation, update, diagnosis and removal). On **Windows** only the graphical interface exists, as the self-contained folder `piperread-gui-windows.zip`; it was tried by hand on Windows 11, with no automated test matrix.
+On Linux, PiperRead ships as native packages: **Debian** and Ubuntu (`sudo apt install ./piperread_*_all.deb`), **Fedora** (`sudo dnf install ./piperread-*.noarch.rpm`), **openSUSE** Leap (`sudo zypper install ./piperread-*.noarch.rpm`) and **Arch** Linux (`sudo pacman -U ./piperread-*.pkg.tar.zst`), validated in containers (installation, update, diagnosis and removal). On **Windows** only the graphical interface exists, as the self-contained folder `piperread-gui-windows.zip`; it is an executable built on Windows, tried without a screen, with no automated test matrix.
 
 # EXIT STATUS
 

@@ -137,7 +137,7 @@ Lizenz, die **\--list-voices** anzeigt. Hörproben finden sich unter
 
 # PLATTFORMEN
 
-Unter Linux wird PiperRead als native Pakete ausgeliefert: **Debian** und Ubuntu (`sudo apt install ./piperread_*_all.deb`), **Fedora** (`sudo dnf install ./piperread-*.noarch.rpm`), **openSUSE** Leap (`sudo zypper install ./piperread-*.noarch.rpm`) und **Arch** Linux (`sudo pacman -U ./piperread-*.pkg.tar.zst`), im Container validiert (Installation, Aktualisierung, Diagnose und Entfernung). Unter **Windows** gibt es nur die grafische Oberfläche, als eigenständigen Ordner `piperread-gui-windows.zip`; sie wurde unter Windows 11 von Hand ausprobiert, ohne automatisierte Testmatrix.
+Unter Linux wird PiperRead als native Pakete ausgeliefert: **Debian** und Ubuntu (`sudo apt install ./piperread_*_all.deb`), **Fedora** (`sudo dnf install ./piperread-*.noarch.rpm`), **openSUSE** Leap (`sudo zypper install ./piperread-*.noarch.rpm`) und **Arch** Linux (`sudo pacman -U ./piperread-*.pkg.tar.zst`), im Container validiert (Installation, Aktualisierung, Diagnose und Entfernung). Unter **Windows** gibt es nur die grafische Oberfläche, als eigenständigen Ordner `piperread-gui-windows.zip`; sie ist eine unter Windows gebaute ausführbare Datei, die ohne Bildschirm ausprobiert wurde, ohne automatisierte Testmatrix.
 
 # EXIT-STATUS
 
