@@ -363,6 +363,7 @@ refuse_option() {
     local key="${RESOLVED_INVALID[0]}" value="${RESOLVED_INVALID[1]}" source="${RESOLVED_INVALID[2]}"
     if [ "$key" == "voice" ] && valid_voice_name "$value" > /dev/null; then
         alert voice_not_found "$value"
+        if [ -n "$VOICES_DIR_CHOSEN" ]; then alert voices_dir_flat "$VOICES_DIR_CHOSEN"; fi
     else
         alert option_invalid "$source" "$value"
     fi

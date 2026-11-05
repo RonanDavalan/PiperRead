@@ -12,6 +12,7 @@ resumed=Lecture reprise.
 option_invalid=Valeur invalide « {2} » pour {1}.
 setting_invalid=Valeur invalide de {1} « {2} » dans {3} ; le niveau suivant s’applique.
 voice_not_found=Voix introuvable : {1}
+voices_dir_flat=Le dossier {1} est lu à plat : une voix est faite de deux fichiers, NOM.onnx et NOM.onnx.json, placés directement dedans, pas dans un sous-dossier.
 voice_fallback=La voix « {1} » demandée par {2} n’est pas disponible ; la voix « {3} » est utilisée à la place.
 diag_status_ok=OK
 diag_status_warning=AVERTISSEMENT

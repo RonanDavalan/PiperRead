@@ -12,6 +12,7 @@ resumed=Vorlesen fortgesetzt.
 option_invalid=Ungültiger Wert „{2}“ für {1}.
 setting_invalid=Ungültiger Wert für {1} „{2}“ in {3}; die nächste Ebene gilt.
 voice_not_found=Stimme nicht gefunden: {1}
+voices_dir_flat=Der Ordner {1} wird flach gelesen: Eine Stimme besteht aus zwei Dateien, NAME.onnx und NAME.onnx.json, die direkt darin liegen, nicht in einem Unterordner.
 voice_fallback=Die Stimme „{1}“ aus {2} ist nicht verfügbar; stattdessen wird „{3}“ verwendet.
 diag_status_ok=OK
 diag_status_warning=WARNUNG

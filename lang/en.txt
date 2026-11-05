@@ -12,6 +12,7 @@ resumed=Reading resumed.
 option_invalid=Invalid value "{2}" for {1}.
 setting_invalid=Invalid {1} "{2}" in {3}; the next level applies.
 voice_not_found=Voice not found: {1}
+voices_dir_flat=The folder {1} is read flat: a voice is two files, NAME.onnx and NAME.onnx.json, directly in it, not in a subfolder.
 voice_fallback=Voice "{1}" from {2} is not available; using "{3}" instead.
 diag_status_ok=OK
 diag_status_warning=WARNING
