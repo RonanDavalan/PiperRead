@@ -6,7 +6,7 @@ from piperread_gui import config
 @pytest.fixture(autouse=True)
 def _config_isole(tmp_path, monkeypatch):
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
-    for cle in ("PIPERREAD_SPEED", "PIPERREAD_VOICE", "PIPERREAD_LANG", "LANG"):
+    for cle in ("PIPERREAD_SPEED", "PIPERREAD_VOICE", "PIPERREAD_LANG", "PIPERREAD_VOICES_DIR", "LANG"):
         monkeypatch.delenv(cle, raising=False)
     return tmp_path
 
@@ -338,3 +338,133 @@ def test_resolve_settings_defaut_tous_dossiers_confondus(tmp_path):
     utilisateur = _dossier(tmp_path / "utilisateur", "alpha")
     resultat = config.resolve_settings([clone, utilisateur])
     assert resultat.model_path == utilisateur / "alpha.onnx"
+
+
+# --- voices_dir : dossier des voix choisi par l'utilisateur ---
+
+
+def _dossier_choisi(tmp_path, nom, *voix):
+    dossier = tmp_path / nom
+    dossier.mkdir(exist_ok=True)
+    for une_voix in voix:
+        (dossier / f"{une_voix}.onnx").touch()
+    return dossier
+
+
+def test_valid_voices_dir_accepte_un_chemin_absolu_existant(tmp_path):
+    assert config.valid_voices_dir(str(tmp_path)) == str(tmp_path)
+
+
+def test_valid_voices_dir_developpe_le_tilde_seul(tmp_path, monkeypatch):
+    monkeypatch.setattr(config.Path, "home", lambda: tmp_path)
+    (tmp_path / "voix").mkdir()
+    assert config.valid_voices_dir("~/voix") == str(tmp_path / "voix")
+
+
+@pytest.mark.parametrize("brut", ["", "relatif", "~", "~autre/voix", "$HOME", "../x"])
+def test_valid_voices_dir_refuse_les_formes_non_admises(brut):
+    assert config.valid_voices_dir(brut) is None
+
+
+def test_valid_voices_dir_refuse_un_dossier_inexistant(tmp_path):
+    assert config.valid_voices_dir(str(tmp_path / "absent")) is None
+
+
+def test_valid_voices_dir_refuse_un_fichier(tmp_path):
+    fichier = tmp_path / "fichier"
+    fichier.touch()
+    assert config.valid_voices_dir(str(fichier)) is None
+
+
+def test_voices_dirs_dossier_choisi_en_tete(tmp_path, monkeypatch):
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
+    depot = tmp_path / "depot"
+    (depot / "voices").mkdir(parents=True)
+    choisi = tmp_path / "choisi"
+    assert config.voices_dirs(depot, chosen=choisi) == [
+        choisi,
+        depot / "voices",
+        tmp_path / "data" / "piperread" / "voices",
+    ]
+
+
+def test_voices_dirs_executable_windows_lit_aussi_le_dossier_choisi(tmp_path):
+    installation = tmp_path / "piperread-gui"
+    choisi = tmp_path / "choisi"
+    assert config.voices_dirs(installation, frozen=True, chosen=choisi) == [choisi, installation / "voices"]
+
+
+def test_resolve_settings_dossier_par_l_option(tmp_path):
+    choisi = _dossier_choisi(tmp_path, "choisi", "zeta")
+    base = _voix(tmp_path, "alpha")
+    resultat = config.resolve_settings([base], voices_dir_option=str(choisi))
+    assert resultat.voices_dir == str(choisi)
+    assert resultat.voices_dir_source == "--voices-dir"
+    assert resultat.voices_dirs == [choisi, base]
+    assert config.find_voice("zeta", resultat.voices_dirs) == choisi / "zeta.onnx"
+
+
+def test_resolve_settings_dossier_par_la_variable(tmp_path, monkeypatch):
+    choisi = _dossier_choisi(tmp_path, "choisi", "zeta")
+    monkeypatch.setenv("PIPERREAD_VOICES_DIR", str(choisi))
+    resultat = config.resolve_settings([_voix(tmp_path, "alpha")])
+    assert resultat.voices_dir == str(choisi)
+    assert resultat.voices_dir_source == "PIPERREAD_VOICES_DIR"
+
+
+def test_resolve_settings_dossier_par_le_fichier(tmp_path):
+    choisi = _dossier_choisi(tmp_path, "choisi", "zeta")
+    _ecrire_conf(tmp_path, f"voices_dir={choisi}\n")
+    resultat = config.resolve_settings([_voix(tmp_path, "alpha")])
+    assert resultat.voices_dir == str(choisi)
+    assert resultat.voices_dir_source == "piperread.conf"
+    assert resultat.unknown_keys == []
+
+
+def test_resolve_settings_dossier_option_avant_variable_avant_fichier(tmp_path, monkeypatch):
+    par_option = _dossier_choisi(tmp_path, "option")
+    par_variable = _dossier_choisi(tmp_path, "variable")
+    par_fichier = _dossier_choisi(tmp_path, "fichier")
+    monkeypatch.setenv("PIPERREAD_VOICES_DIR", str(par_variable))
+    _ecrire_conf(tmp_path, f"voices_dir={par_fichier}\n")
+    base = [_voix(tmp_path, "alpha")]
+    assert config.resolve_settings(base, voices_dir_option=str(par_option)).voices_dir == str(par_option)
+    assert config.resolve_settings(base).voices_dir == str(par_variable)
+    monkeypatch.delenv("PIPERREAD_VOICES_DIR")
+    assert config.resolve_settings(base).voices_dir == str(par_fichier)
+
+
+def test_resolve_settings_sans_dossier_choisi_le_defaut_ne_change_pas(tmp_path):
+    base = _voix(tmp_path, "alpha")
+    resultat = config.resolve_settings([base])
+    assert resultat.voices_dir is None
+    assert resultat.voices_dir_source == "default"
+    assert resultat.voices_dirs == [base]
+
+
+def test_resolve_settings_dossier_option_invalide_est_signale(tmp_path):
+    resultat = config.resolve_settings([_voix(tmp_path, "alpha")], voices_dir_option=str(tmp_path / "absent"))
+    assert resultat.invalid == ("voices_dir", str(tmp_path / "absent"), "--voices-dir")
+    assert resultat.voices_dir is None
+
+
+def test_resolve_settings_dossier_variable_invalide_avertit_et_continue(tmp_path, monkeypatch):
+    monkeypatch.setenv("PIPERREAD_VOICES_DIR", "relatif")
+    resultat = config.resolve_settings([_voix(tmp_path, "alpha")])
+    assert resultat.invalid is None
+    assert resultat.voices_dir is None
+    assert ("voices_dir", "relatif", "PIPERREAD_VOICES_DIR") in resultat.warnings
+
+
+def test_resolve_settings_dossier_fichier_invalide_avertit_en_nommant_la_cle(tmp_path):
+    _ecrire_conf(tmp_path, f"voices_dir={tmp_path / 'absent'}\n")
+    resultat = config.resolve_settings([_voix(tmp_path, "alpha")])
+    assert resultat.voices_dir is None
+    assert resultat.warnings == [("voices_dir", str(tmp_path / "absent"), "piperread.conf")]
+
+
+def test_resolve_settings_voix_du_dossier_choisi_masque_le_clone_a_nom_egal(tmp_path):
+    choisi = _dossier_choisi(tmp_path, "choisi", "commune")
+    base = _voix(tmp_path, "commune")
+    resultat = config.resolve_settings([base], voices_dir_option=str(choisi), voice_option="commune")
+    assert resultat.model_path == choisi / "commune.onnx"

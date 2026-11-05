@@ -14,7 +14,7 @@ def application():
 @pytest.fixture(autouse=True)
 def _config_isole(tmp_path, monkeypatch):
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
-    for cle in ("PIPERREAD_SPEED", "PIPERREAD_VOICE", "PIPERREAD_LANG"):
+    for cle in ("PIPERREAD_SPEED", "PIPERREAD_VOICE", "PIPERREAD_LANG", "PIPERREAD_VOICES_DIR"):
         monkeypatch.delenv(cle, raising=False)
 
 
@@ -193,3 +193,121 @@ def test_fenetre_de_voix_cible_le_dernier_dossier_et_la_langue(application, tmp_
     assert fenetre._dossier_voix == utilisateur
     assert fenetre._choix.currentData() == "de_DE-thorsten-medium"
     assert "alpha" in dialogue._modeles
+
+
+# --- dossier des voix choisi par l'utilisateur ---
+
+
+def _dossier_choisi(tmp_path, *noms):
+    dossier = tmp_path / "choisi"
+    dossier.mkdir(exist_ok=True)
+    for nom in noms:
+        (dossier / f"{nom}.onnx").touch()
+    return dossier
+
+
+def test_dialogue_liste_les_voix_des_trois_dossiers(application, tmp_path):
+    clone = tmp_path / "clone"
+    clone.mkdir()
+    (clone / "du-clone.onnx").touch()
+    donnees = _voix(tmp_path, "des-donnees")
+    choisi = _dossier_choisi(tmp_path, "du-dossier-choisi")
+    controleur = PlaybackController(donnees / "des-donnees.onnx", "fr")
+
+    dialogue = SettingsDialog(controleur, voices_dirs=[choisi, clone, donnees], voices_dir=str(choisi))
+
+    noms = [dialogue._voix.itemText(i) for i in range(dialogue._voix.count())]
+    assert noms == ["des-donnees", "du-clone", "du-dossier-choisi"]
+    assert dialogue._champ_dossier.text() == str(choisi)
+
+
+def test_saisir_un_dossier_relance_la_liste_des_voix(application, tmp_path):
+    donnees = _voix(tmp_path, "alpha")
+    choisi = _dossier_choisi(tmp_path, "zeta")
+    controleur = PlaybackController(donnees / "alpha.onnx", "fr")
+    dialogue = SettingsDialog(controleur, voices_dirs=[donnees])
+
+    dialogue._champ_dossier.setText(str(choisi))
+    dialogue._dossier_modifie()
+
+    noms = [dialogue._voix.itemText(i) for i in range(dialogue._voix.count())]
+    assert noms == ["alpha", "zeta"]
+
+
+def test_enregistrer_ecrit_voices_dir_dans_le_fichier(application, tmp_path):
+    donnees = _voix(tmp_path, "alpha")
+    choisi = _dossier_choisi(tmp_path, "zeta")
+    controleur = PlaybackController(donnees / "alpha.onnx", "fr")
+    dialogue = SettingsDialog(controleur, voices_dirs=[donnees])
+
+    dialogue._champ_dossier.setText(str(choisi))
+    dialogue._dossier_modifie()
+    dialogue._voix.setCurrentText("zeta")
+    dialogue._enregistrer()
+
+    assert dialogue.result() == QDialog.DialogCode.Accepted
+    valeurs, _ = config.load_config_file()
+    assert valeurs["voices_dir"] == str(choisi)
+    assert valeurs["voice"] == "zeta"
+    assert controleur.model_path == choisi / "zeta.onnx"
+
+
+def test_dossier_inexistant_n_est_pas_enregistre_et_garde_le_dialogue_ouvert(application, tmp_path):
+    donnees = _voix(tmp_path, "alpha")
+    controleur = PlaybackController(donnees / "alpha.onnx", "fr")
+    dialogue = SettingsDialog(controleur, voices_dirs=[donnees])
+
+    dialogue._champ_dossier.setText(str(tmp_path / "absent"))
+    dialogue._enregistrer()
+
+    assert dialogue.result() != QDialog.DialogCode.Accepted
+    assert not config.config_file_path().exists()
+    assert dialogue.voices_dir is None
+
+
+def test_dossier_relatif_est_refuse(application, tmp_path):
+    donnees = _voix(tmp_path, "alpha")
+    dialogue = SettingsDialog(PlaybackController(donnees / "alpha.onnx", "fr"), voices_dirs=[donnees])
+
+    dialogue._champ_dossier.setText("voix")
+    dialogue._enregistrer()
+
+    assert dialogue.result() != QDialog.DialogCode.Accepted
+    assert dialogue._champ_dossier.toolTip() != ""
+
+
+def test_dossier_inchange_n_ajoute_pas_la_cle(application, tmp_path):
+    donnees = _voix(tmp_path, "alpha")
+    controleur = PlaybackController(donnees / "alpha.onnx", "fr")
+    dialogue = SettingsDialog(controleur, voices_dirs=[donnees])
+
+    dialogue._enregistrer()
+
+    valeurs, _ = config.load_config_file()
+    assert "voices_dir" not in valeurs
+
+
+def test_vider_le_champ_ecrit_une_valeur_vide(application, tmp_path):
+    donnees = _voix(tmp_path, "alpha")
+    choisi = _dossier_choisi(tmp_path, "zeta")
+    controleur = PlaybackController(donnees / "alpha.onnx", "fr")
+    dialogue = SettingsDialog(controleur, voices_dirs=[choisi, donnees], voices_dir=str(choisi))
+
+    dialogue._champ_dossier.setText("")
+    dialogue._dossier_modifie()
+    dialogue._enregistrer()
+
+    valeurs, _ = config.load_config_file()
+    assert valeurs["voices_dir"] == ""
+    assert dialogue.voices_dirs == [donnees]
+
+
+def test_telechargement_va_dans_le_dossier_choisi(application, tmp_path):
+    donnees = _voix(tmp_path, "alpha")
+    choisi = _dossier_choisi(tmp_path)
+    controleur = PlaybackController(donnees / "alpha.onnx", "fr")
+    dialogue = SettingsDialog(controleur, voices_dirs=[choisi, donnees], voices_dir=str(choisi))
+
+    assert dialogue._dossier_de_telechargement() == choisi
+    dialogue._champ_dossier.setText("")
+    assert dialogue._dossier_de_telechargement() == donnees
