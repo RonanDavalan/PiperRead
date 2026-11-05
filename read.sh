@@ -29,7 +29,7 @@
 #     lang/ (messages), piper-env/ (moteur), voices/ (voix .onnx), wl-paste ou xsel, aplay, setsid, flock,
 #     notify-send.
 
-VERSION="0.4.1-beta"
+VERSION="0.5.0-beta"
 APP_NAME="PiperRead"
 MIXER_STREAM_PROPS="{ application.name = $APP_NAME media.name = $APP_NAME }"
 

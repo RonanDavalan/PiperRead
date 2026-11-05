@@ -1,7 +1,7 @@
 # PiperRead
 
 <p align="center">
-  <img src="https://img.shields.io/static/v1?label=Version&message=v0.4.1-beta&color=orange" alt="Version">
+  <img src="https://img.shields.io/static/v1?label=Version&message=v0.5.0-beta&color=orange" alt="Version">
   <img src="https://img.shields.io/badge/Lizenz-MIT-green" alt="Lizenz">
   <img src="https://img.shields.io/badge/Plattform-Linux_(Wayland_|_X11)_|_Windows_(Oberfläche)-black" alt="Unterstütztes OS">
   <img src="https://img.shields.io/badge/Engine-Piper_Neural_TTS-blueviolet" alt="Audio-Engine">
@@ -68,21 +68,21 @@ Die Zahlen wurden in einem Container unter Debian 13 gemessen, Abhängigkeiten e
 
 ### Terminal und Schaltfläche
 
-1.  Laden Sie das Paket für Ihr System von der [Download-Seite](https://piperread.davalan.fr/de/download/) oder aus dem [neuesten Release](https://github.com/RonanDavalan/PiperRead/releases/latest) herunter. Das Release schreibt in Dateinamen `.` statt `~` (`piperread_0.4.1.beta_all.deb` statt `piperread_0.4.1~beta_all.deb`): Geben Sie im Befehl unten den Namen der heruntergeladenen Datei ein.
+1.  Laden Sie das Paket für Ihr System von der [Download-Seite](https://piperread.davalan.fr/de/download/) oder aus dem [neuesten Release](https://github.com/RonanDavalan/PiperRead/releases/latest) herunter. Das Release schreibt in Dateinamen `.` statt `~` (`piperread_0.5.0.beta_all.deb` statt `piperread_0.5.0~beta_all.deb`): Geben Sie im Befehl unten den Namen der heruntergeladenen Datei ein.
 2.  Installieren Sie es:
 
     ```bash
     # Debian 12 und 13, Ubuntu 22.04 und 24.04, Linux Mint
-    sudo apt install ./piperread_0.4.1~beta_all.deb
+    sudo apt install ./piperread_0.5.0~beta_all.deb
 
     # Fedora 44
-    sudo dnf install ./piperread-0.4.1~beta-1.fc44.noarch.rpm
+    sudo dnf install ./piperread-0.5.0~beta-1.fc44.noarch.rpm
 
     # openSUSE Leap 16.0
-    sudo zypper install ./piperread-0.4.1~beta-1.leap160.noarch.rpm
+    sudo zypper install ./piperread-0.5.0~beta-1.leap160.noarch.rpm
 
     # Arch Linux
-    sudo pacman -U ./piperread-0.4.1beta-1-any.pkg.tar.zst
+    sudo pacman -U ./piperread-0.5.0beta-1-any.pkg.tar.zst
     ```
 
     Das Paket installiert die Piper-Engine beim Konfigurieren mit `pip`, Netzzugriff wird nur in diesem Moment gebraucht. Es enthält keine Stimme.
@@ -101,20 +101,20 @@ Die Zahlen wurden in einem Container unter Debian 13 gemessen, Abhängigkeiten e
 
     ```bash
     # Debian 12 und 13, Ubuntu 22.04 und 24.04, Linux Mint
-    tar -xzf piperread-all-in-one-0.4.1-beta-debian.tar.gz
-    sudo apt install ./piperread_0.4.1~beta_all.deb ./piperread-gui_0.4.1~beta_all.deb
+    tar -xzf piperread-all-in-one-0.5.0-beta-debian.tar.gz
+    sudo apt install ./piperread_0.5.0~beta_all.deb ./piperread-gui_0.5.0~beta_all.deb
 
     # Fedora 44
-    tar -xzf piperread-all-in-one-0.4.1-beta-fedora.tar.gz
-    sudo dnf install ./piperread-0.4.1~beta-1.fc44.noarch.rpm ./piperread-gui-0.4.1~beta-1.fc44.noarch.rpm
+    tar -xzf piperread-all-in-one-0.5.0-beta-fedora.tar.gz
+    sudo dnf install ./piperread-0.5.0~beta-1.fc44.noarch.rpm ./piperread-gui-0.5.0~beta-1.fc44.noarch.rpm
 
     # openSUSE Leap 16.0
-    tar -xzf piperread-all-in-one-0.4.1-beta-opensuse.tar.gz
-    sudo zypper install ./piperread-0.4.1~beta-1.leap160.noarch.rpm ./piperread-gui-0.4.1~beta-1.leap160.noarch.rpm
+    tar -xzf piperread-all-in-one-0.5.0-beta-opensuse.tar.gz
+    sudo zypper install ./piperread-0.5.0~beta-1.leap160.noarch.rpm ./piperread-gui-0.5.0~beta-1.leap160.noarch.rpm
 
     # Arch Linux
-    tar -xzf piperread-all-in-one-0.4.1-beta-arch.tar.gz
-    sudo pacman -U ./piperread-0.4.1beta-1-any.pkg.tar.zst ./piperread-gui-0.4.1beta-1-any.pkg.tar.zst
+    tar -xzf piperread-all-in-one-0.5.0-beta-arch.tar.gz
+    sudo pacman -U ./piperread-0.5.0beta-1-any.pkg.tar.zst ./piperread-gui-0.5.0beta-1-any.pkg.tar.zst
     ```
 
     Die Installation lädt die Engine, dann Qt (etwa 245 MB) in private virtuelle Umgebungen, Netzzugriff wird nur in diesem Moment gebraucht. Es wird keine Stimme mitgeliefert.
