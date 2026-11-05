@@ -8,7 +8,7 @@ piperread - lire à voix haute le texte sélectionné ou copié, hors ligne, ave
 
 # SYNOPSIS
 
-**piperread** [*auto* | *selection* | *clipboard*] [**\--speed** *X*] [**\--voice** *NOM*] [**\--lang** *CODE*]
+**piperread** [*auto* | *selection* | *clipboard*] [**\--speed** *X*] [**\--voice** *NOM*] [**\--lang** *CODE*] [**\--voices-dir** *CHEMIN*] [**\--normalize** *on*|*off*]
 
 **piperread** {**\--stop** | **\--pause** | **\--resume**}
 
@@ -60,6 +60,16 @@ se télécharge une fois avec **\--download-voice**, puis fonctionne sans résea
 **\--lang** *CODE*
 :   Langue des messages et de la voix par défaut (`en`, `fr`, `de` ou `es`).
 
+**\--voices-dir** *CHEMIN*
+:   Dossier de voix à vous, lu avant les dossiers de PiperRead. Un chemin
+    absolu ou commençant par `~/` ; le dossier doit exister, sinon la commande
+    s'arrête avec le code `2`. Il est lu à plat : une voix est faite de deux
+    fichiers, `NOM.onnx` et `NOM.onnx.json`, placés directement dedans.
+
+**\--normalize** *on*|*off*
+:   `on` amène les voix au même niveau par un gain mesuré une fois par voix
+    (`off` par défaut).
+
 **\--stop**
 :   Arrêter la lecture en cours.
 
@@ -77,11 +87,11 @@ se télécharge une fois avec **\--download-voice**, puis fonctionne sans résea
 :   Afficher les voix proposées, avec leur taille et leur licence. La première
     ligne est la commande exacte qui installe la voix recommandée pour la langue
     courante, suivie de « (installée) » quand elle l'est déjà. Aucun accès au
-    réseau.
+    réseau. Les voix installées suivent, chacune avec son dossier.
 
 **\--download-voice** [*NOM*...]
 :   Télécharger les voix nommées dans le dossier des voix. Sans nom, proposer
-    la voix de la langue courante.
+    la voix de la langue courante. Avec un dossier de voix choisi, les voix y sont enregistrées ; la commande s'arrête avec le code `1` quand ce dossier n'est pas accessible en écriture.
 
 **\--version**
 :   Afficher la version et quitter.
@@ -92,11 +102,11 @@ se télécharge une fois avec **\--download-voice**, puis fonctionne sans résea
 
 # CONFIGURATION
 
-Chaque réglage (`speed`, `voice`, `lang`) est pris dans la première de ces
+Chaque réglage (`speed`, `voice`, `lang`, `voices_dir`, `normalize`) est pris dans la première de ces
 sources qui le définit :
 
 1. l'option de la ligne de commande ;
-2. la variable d'environnement `PIPERREAD_SPEED`, `PIPERREAD_VOICE` ou `PIPERREAD_LANG` ;
+2. la variable d'environnement `PIPERREAD_SPEED`, `PIPERREAD_VOICE`, `PIPERREAD_LANG`, `PIPERREAD_VOICES_DIR` ou `PIPERREAD_NORMALIZE` ;
 3. le fichier de configuration.
 
 Le réglage `telemetry` (`on` ou `off`, `off` par défaut) n'a pas d'option de
@@ -104,6 +114,17 @@ ligne de commande : il est pris dans la variable d'environnement
 `PIPERREAD_TELEMETRY`, puis dans le fichier de configuration. Il commande les
 événements d'utilisation de la bibliothèque d'inférence que tire le moteur
 (onnxruntime), désactivés par défaut afin que la lecture reste hors ligne.
+
+Le réglage `voices_dir` désigne un dossier de voix à vous, lu avant les
+dossiers de PiperRead : une voix présente dans les deux vient du vôtre.
+**\--download-voice** y enregistre et **\--diagnose** le nomme. Il a l'option
+**\--voices-dir**.
+
+Le réglage `normalize` (`on` ou `off`, `off` par défaut) amène les voix au même
+niveau : chaque voix est mesurée une fois, à sa première lecture, et la mesure
+est gardée dans `$XDG_STATE_HOME/piperread/voice-levels`. Il a l'option
+**\--normalize**. Ce n'est pas un réglage de volume. Il n'a été mesuré que sous
+Linux.
 
 # INTERFACE GRAPHIQUE
 
@@ -123,6 +144,10 @@ Depuis un clone du dépôt, une fois l'environnement de `gui/` en place, la comm
 :   Voix téléchargées, `~/.local/share/piperread/voices/` quand `XDG_DATA_HOME`
     n'est pas définie.
 
+`$XDG_STATE_HOME/piperread/voice-levels`
+:   Niveau mesuré de chaque voix, `~/.local/state/piperread/voice-levels` quand
+    `XDG_STATE_HOME` n'est pas définie. Écrit quand `normalize` vaut `on`.
+
 `/usr/lib/piperread/venv`
 :   Environnement Python qui contient le moteur Piper, pour une installation
     par paquet.
@@ -134,9 +159,17 @@ Les voix viennent du catalogue Piper,
 affichée par **\--list-voices**. Des échantillons s'écoutent sur
 <https://rhasspy.github.io/piper-samples/>.
 
+Dans le mixeur du son, la lecture apparaît sous le nom « PiperRead », avec le
+lanceur comme avec l'interface ; **\--diagnose** dit le nom. PiperRead pose
+`PIPEWIRE_PROPS` avant d'ouvrir le flux et garde votre valeur si vous en avez
+posé une. Le mixeur retient un volume par nom d'application : le volume de ce
+flux repart donc du volume par défaut la première fois. Vérifié avec PipeWire et
+sa couche PulseAudio ; PulseAudio seul, ALSA seul, macOS et Windows n'ont pas
+été vérifiés.
+
 # PLATEFORMES
 
-Sous Linux, PiperRead est livré en paquets natifs : **Debian** et Ubuntu (`sudo apt install ./piperread_*_all.deb`), **Fedora** (`sudo dnf install ./piperread-*.noarch.rpm`), **openSUSE** Leap (`sudo zypper install ./piperread-*.noarch.rpm`) et **Arch** Linux (`sudo pacman -U ./piperread-*.pkg.tar.zst`), validés en conteneur : installation, mise à jour, diagnostic et retrait sous Debian 12 et 13, Ubuntu 22.04 et 24.04, Fedora 44 et Arch Linux ; installation, diagnostic et retrait sous openSUSE Leap 16.0. Un conteneur ne prouve ni le son, ni le presse-papiers, ni l'entrée de menu, ni l'affichage. Sous **Windows**, seule l'interface graphique existe, sous forme du dossier autonome `piperread-gui-windows.zip` ; c'est un exécutable construit sous Windows et testé à la main sous Windows 11, sans matrice de tests automatisée.
+Sous Linux, PiperRead est livré en paquets natifs : **Debian** et Ubuntu (`sudo apt install ./piperread_*_all.deb`), **Fedora** (`sudo dnf install ./piperread-*.noarch.rpm`), **openSUSE** Leap (`sudo zypper install ./piperread-*.noarch.rpm`) et **Arch** Linux (`sudo pacman -U ./piperread-*.pkg.tar.zst`), validés en conteneur : installation, mise à jour, diagnostic et retrait sous Debian 12 et 13, Ubuntu 22.04 et 24.04, Fedora 44 et Arch Linux ; installation, diagnostic et retrait sous openSUSE Leap 16.0. Un conteneur ne prouve ni le son, ni le presse-papiers, ni l'entrée de menu, ni l'affichage. Sous **Windows**, seule l'interface graphique existe, sous forme du dossier autonome `piperread-gui-windows.zip` ; c'est un exécutable construit sous Windows et essayé sans écran, sans matrice de tests automatisée.
 
 # CODE DE SORTIE
 

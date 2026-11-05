@@ -8,7 +8,7 @@ piperread - markierten oder kopierten Text offline mit der Piper-Engine vorlesen
 
 # ÜBERSICHT
 
-**piperread** [*auto* | *selection* | *clipboard*] [**\--speed** *X*] [**\--voice** *NAME*] [**\--lang** *CODE*]
+**piperread** [*auto* | *selection* | *clipboard*] [**\--speed** *X*] [**\--voice** *NAME*] [**\--lang** *CODE*] [**\--voices-dir** *PFAD*] [**\--normalize** *on*|*off*]
 
 **piperread** {**\--stop** | **\--pause** | **\--resume**}
 
@@ -61,6 +61,17 @@ heruntergeladen und funktioniert danach ohne Netzwerk.
 **\--lang** *CODE*
 :   Sprache der Meldungen und der Standardstimme (`en`, `fr`, `de` oder `es`).
 
+**\--voices-dir** *PFAD*
+:   Ordner mit eigenen Stimmen, der vor den Ordnern von PiperRead gelesen wird.
+    Ein absoluter Pfad oder einer, der mit `~/` beginnt; der Ordner muss
+    existieren, sonst bricht der Befehl mit Exitcode `2` ab. Er wird flach
+    gelesen: Eine Stimme besteht aus zwei Dateien, `NAME.onnx` und
+    `NAME.onnx.json`, die direkt darin liegen.
+
+**\--normalize** *on*|*off*
+:   `on` bringt die Stimmen mit einer einmal pro Stimme gemessenen Verstärkung
+    auf denselben Pegel (standardmäßig `off`).
+
 **\--stop**
 :   Das laufende Vorlesen beenden.
 
@@ -79,11 +90,11 @@ heruntergeladen und funktioniert danach ohne Netzwerk.
 :   Die angebotenen Stimmen mit ihrer Größe und Lizenz ausgeben. Die erste Zeile
     ist der genaue Befehl, der die empfohlene Stimme der aktuellen Sprache
     installiert, gefolgt von „(installiert)“, wenn sie schon vorhanden ist. Kein
-    Netzwerkzugriff.
+    Netzwerkzugriff. Danach folgen die installierten Stimmen, jede mit ihrem Ordner.
 
 **\--download-voice** [*NAME*...]
 :   Die genannten Stimmen in das Stimmenverzeichnis herunterladen. Ohne Namen
-    wird die Stimme der aktuellen Sprache angeboten.
+    wird die Stimme der aktuellen Sprache angeboten. Ist ein Stimmenordner gewählt, landen die Stimmen darin; der Befehl bricht mit Exitcode `1` ab, wenn dieser Ordner nicht beschreibbar ist.
 
 **\--version**
 :   Die Version ausgeben und beenden.
@@ -94,11 +105,11 @@ heruntergeladen und funktioniert danach ohne Netzwerk.
 
 # KONFIGURATION
 
-Jede Einstellung (`speed`, `voice`, `lang`) stammt aus der ersten der folgenden
+Jede Einstellung (`speed`, `voice`, `lang`, `voices_dir`, `normalize`) stammt aus der ersten der folgenden
 Quellen, die sie definiert:
 
 1. die Kommandozeilenoption;
-2. die Umgebungsvariable `PIPERREAD_SPEED`, `PIPERREAD_VOICE` oder `PIPERREAD_LANG`;
+2. die Umgebungsvariable `PIPERREAD_SPEED`, `PIPERREAD_VOICE`, `PIPERREAD_LANG`, `PIPERREAD_VOICES_DIR` oder `PIPERREAD_NORMALIZE`;
 3. die Konfigurationsdatei.
 
 Die Einstellung `telemetry` (`on` oder `off`, standardmäßig `off`) hat keine
@@ -106,6 +117,17 @@ Befehlszeilenoption: Sie wird der Umgebungsvariable `PIPERREAD_TELEMETRY`
 entnommen, danach der Konfigurationsdatei. Sie steuert die Nutzungsereignisse
 der Inferenzbibliothek, die die Engine mitbringt (onnxruntime); standardmäßig
 sind sie ausgeschaltet, damit das Vorlesen offline bleibt.
+
+Die Einstellung `voices_dir` benennt einen Ordner mit eigenen Stimmen, der
+vor den Ordnern von PiperRead gelesen wird: Eine Stimme, die in beiden vorkommt,
+stammt aus Ihrem. **\--download-voice** speichert darin, und **\--diagnose**
+nennt ihn. Sie hat die Option **\--voices-dir**.
+
+Die Einstellung `normalize` (`on` oder `off`, standardmäßig `off`) bringt die
+Stimmen auf denselben Pegel: Jede Stimme wird beim ersten Vorlesen einmal
+gemessen, und die Messung wird in `$XDG_STATE_HOME/piperread/voice-levels`
+gespeichert. Sie hat die Option **\--normalize**. Es ist keine
+Lautstärkeregelung. Gemessen wurde nur unter Linux.
 
 # GRAFISCHE OBERFLÄCHE
 
@@ -125,6 +147,11 @@ Aus einem Klon des Repositorys lautet der Befehl, sobald die Umgebung in `gui/` 
 :   Heruntergeladene Stimmen, `~/.local/share/piperread/voices/`, wenn
     `XDG_DATA_HOME` nicht gesetzt ist.
 
+`$XDG_STATE_HOME/piperread/voice-levels`
+:   Gemessener Pegel jeder Stimme, `~/.local/state/piperread/voice-levels`,
+    wenn `XDG_STATE_HOME` nicht gesetzt ist. Wird geschrieben, wenn `normalize`
+    `on` ist.
+
 `/usr/lib/piperread/venv`
 :   Python-Umgebung mit der Piper-Engine, bei einer Installation per Paket.
 
@@ -135,9 +162,17 @@ Die Stimmen stammen aus dem Piper-Katalog,
 Lizenz, die **\--list-voices** anzeigt. Hörproben finden sich unter
 <https://rhasspy.github.io/piper-samples/>.
 
+Im Klang-Mixer erscheint die Wiedergabe unter dem Namen « PiperRead », mit
+dem Starter wie mit der Oberfläche; **\--diagnose** nennt den Namen. PiperRead
+setzt `PIPEWIRE_PROPS`, bevor es den Stream öffnet, und behält Ihren Wert, falls
+Sie einen gesetzt haben. Der Mixer merkt sich die Lautstärke pro
+Anwendungsname, daher beginnt die Lautstärke dieses Streams beim ersten Mal
+wieder beim Standardwert. Geprüft mit PipeWire und seiner PulseAudio-Schicht;
+PulseAudio allein, ALSA allein, macOS und Windows wurden nicht geprüft.
+
 # PLATTFORMEN
 
-Unter Linux wird PiperRead als native Pakete ausgeliefert: **Debian** und Ubuntu (`sudo apt install ./piperread_*_all.deb`), **Fedora** (`sudo dnf install ./piperread-*.noarch.rpm`), **openSUSE** Leap (`sudo zypper install ./piperread-*.noarch.rpm`) und **Arch** Linux (`sudo pacman -U ./piperread-*.pkg.tar.zst`), im Container validiert: Installation, Aktualisierung, Diagnose und Entfernung unter Debian 12 und 13, Ubuntu 22.04 und 24.04, Fedora 44 und Arch Linux; Installation, Diagnose und Entfernung unter openSUSE Leap 16.0. Ein Container belegt weder den Ton noch die Zwischenablage, den Menüeintrag oder die Anzeige. Unter **Windows** gibt es nur die grafische Oberfläche, als eigenständigen Ordner `piperread-gui-windows.zip`; sie ist eine unter Windows gebaute ausführbare Datei, die unter Windows 11 von Hand getestet wurde, ohne automatisierte Testmatrix.
+Unter Linux wird PiperRead als native Pakete ausgeliefert: **Debian** und Ubuntu (`sudo apt install ./piperread_*_all.deb`), **Fedora** (`sudo dnf install ./piperread-*.noarch.rpm`), **openSUSE** Leap (`sudo zypper install ./piperread-*.noarch.rpm`) und **Arch** Linux (`sudo pacman -U ./piperread-*.pkg.tar.zst`), im Container validiert: Installation, Aktualisierung, Diagnose und Entfernung unter Debian 12 und 13, Ubuntu 22.04 und 24.04, Fedora 44 und Arch Linux; Installation, Diagnose und Entfernung unter openSUSE Leap 16.0. Ein Container belegt weder den Ton noch die Zwischenablage, den Menüeintrag oder die Anzeige. Unter **Windows** gibt es nur die grafische Oberfläche, als eigenständigen Ordner `piperread-gui-windows.zip`; sie ist eine unter Windows gebaute ausführbare Datei, die ohne Bildschirm ausprobiert wurde, ohne automatisierte Testmatrix.
 
 # EXIT-STATUS
 
