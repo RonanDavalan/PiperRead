@@ -19,6 +19,7 @@ Dépend de :
 """
 
 import io
+import os
 import threading
 import wave
 
@@ -28,6 +29,7 @@ from piperread_gui.loudness import scale_pcm16
 
 _LARGEUR_ECHANTILLON_GEREE = 2  # 16 bits — seul format produit par le serveur Piper
 _TAILLE_BLOC_TRAMES = 4096
+NOM_DANS_LE_MIXEUR = "PiperRead"
 
 
 class ErreurLecture(RuntimeError):
@@ -40,6 +42,13 @@ def play_wav_bytes(
     pause_event: threading.Event | None = None,
     gain: float = 1.0,
 ) -> None:
+    # Le mixeur nomme le flux d'après le processus (« PipeWire ALSA [python3.13] ») : PipeWire lit
+    # le nom voulu dans cette variable, à l'ouverture du flux ; celle de l'utilisateur est gardée.
+    os.environ.setdefault(
+        "PIPEWIRE_PROPS",
+        f"{{ application.name = {NOM_DANS_LE_MIXEUR} media.name = {NOM_DANS_LE_MIXEUR} }}",
+    )
+
     with wave.open(io.BytesIO(wav_bytes), "rb") as fichier_wav:
         canaux = fichier_wav.getnchannels()
         largeur = fichier_wav.getsampwidth()

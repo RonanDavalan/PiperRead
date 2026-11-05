@@ -10,7 +10,7 @@
 #
 # Usage :
 #     Charger ce fichier après read.sh (msg, alert, runtime_dir, read_voice_rate,
-#     BASE_DIR, VENV_PATH, MODEL_PATH, VOICES_DIR_CHOSEN, SETTING_WARNINGS, CONFIG_UNKNOWN_KEYS),
+#     BASE_DIR, VENV_PATH, MODEL_PATH, APP_NAME, MIXER_STREAM_PROPS, VOICES_DIR_CHOSEN, SETTING_WARNINGS, CONFIG_UNKNOWN_KEYS),
 #     puis run_diagnose. Chaque check_* affiche ses lignes et laisse son pire
 #     statut (ok, warning ou fail) dans CHECK_STATUS. run_diagnose rend 1 s'il y
 #     a au moins un échec, sinon 0.
@@ -82,6 +82,16 @@ check_player() {
         finding ok diag_title_player diag_player_ok "$cards"
     else
         finding warning diag_title_player diag_player_no_card
+    fi
+}
+
+# Le nom du flux dans le mixeur : celui de PiperRead, ou la variable PIPEWIRE_PROPS que l'utilisateur a posée.
+check_mixer() {
+    CHECK_STATUS="ok"
+    if [ -n "$PIPEWIRE_PROPS" ] && [ "$PIPEWIRE_PROPS" != "$MIXER_STREAM_PROPS" ]; then
+        finding ok diag_title_mixer diag_mixer_user "$PIPEWIRE_PROPS"
+    else
+        finding ok diag_title_mixer diag_mixer_name "$APP_NAME"
     fi
 }
 
@@ -166,7 +176,7 @@ check_runtime() {
 
 run_diagnose() {
     local check
-    for check in check_engine check_voice check_voices_dir check_player check_tools check_clipboard check_config check_runtime check_gui; do
+    for check in check_engine check_voice check_voices_dir check_player check_mixer check_tools check_clipboard check_config check_runtime check_gui; do
         "$check"
     done
     msg diag_summary "$DIAG_FAILURES" "$DIAG_WARNINGS"

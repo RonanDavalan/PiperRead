@@ -31,6 +31,7 @@
 
 VERSION="0.4.1-beta"
 APP_NAME="PiperRead"
+MIXER_STREAM_PROPS="{ application.name = $APP_NAME media.name = $APP_NAME }"
 
 # Avant tout le reste : aucun message, aucune dépendance ni dossier touchés.
 for arg in "$@"; do
@@ -277,6 +278,10 @@ play_text() {
     if [ "$NORMALIZE" == "on" ]; then
         gain=$(voice_gain "$MODEL_PATH") || alert normalize_failed
     fi
+
+    # Le mixeur nomme le flux d'après le processus (« PipeWire ALSA [aplay] ») : PipeWire lit le nom
+    # voulu dans cette variable, que l'utilisateur garde s'il l'a déjà posée.
+    export PIPEWIRE_PROPS="${PIPEWIRE_PROPS:-$MIXER_STREAM_PROPS}"
 
     # Synthèse vocale dans son propre groupe : un signal au groupe n'atteint ni
     # le terminal lanceur ni un autre lecteur audio. Le verrou est fermé pour le

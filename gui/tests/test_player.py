@@ -1,4 +1,5 @@
 import io
+import os
 import threading
 import wave
 
@@ -130,3 +131,18 @@ def test_gain_applique_aux_echantillons(monkeypatch):
     joue = array.array("h")
     joue.frombytes(flux_captures[0].ecrit)
     assert list(joue) == [5000, -5000, 16384]
+
+
+def test_nom_du_flux_dans_le_mixeur(monkeypatch):
+    monkeypatch.setattr(player.sd, "RawOutputStream", _FluxFactice)
+    monkeypatch.delenv("PIPEWIRE_PROPS", raising=False)
+    player.play_wav_bytes(_wav_de_test())
+    assert "application.name = PiperRead" in os.environ["PIPEWIRE_PROPS"]
+    assert "media.name = PiperRead" in os.environ["PIPEWIRE_PROPS"]
+
+
+def test_variable_pipewire_de_l_utilisateur_gardee(monkeypatch):
+    monkeypatch.setattr(player.sd, "RawOutputStream", _FluxFactice)
+    monkeypatch.setenv("PIPEWIRE_PROPS", "{ application.name = Autre }")
+    player.play_wav_bytes(_wav_de_test())
+    assert os.environ["PIPEWIRE_PROPS"] == "{ application.name = Autre }"
