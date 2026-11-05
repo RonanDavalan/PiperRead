@@ -128,7 +128,7 @@ def _sans_voix(monkeypatch, tmp_path):
 def test_sans_voix_la_fenetre_de_voix_est_proposee_avant_tout_demarrage(monkeypatch, tmp_path, capsys):
     _sans_voix(monkeypatch, tmp_path)
     appels = []
-    monkeypatch.setattr(app, "_proposer_une_voix", lambda messages, langue: appels.append(langue))
+    monkeypatch.setattr(app, "_proposer_une_voix", lambda messages, langue, dossier=None: appels.append(langue))
     monkeypatch.setattr(app, "ControlServer", lambda: pytest.fail("le serveur de contrôle ne démarre pas sans voix"))
 
     assert app.main(["--lang", "fr"]) == 1
@@ -142,7 +142,7 @@ def test_sans_voix_la_fenetre_de_voix_est_proposee_avant_tout_demarrage(monkeypa
 def test_sans_voix_le_choix_de_la_fenetre_devient_la_voix_de_l_interface(monkeypatch, tmp_path):
     _sans_voix(monkeypatch, tmp_path)
     posee = tmp_path / "voix" / "fr_FR-siwis-medium.onnx"
-    monkeypatch.setattr(app, "_proposer_une_voix", lambda messages, langue: posee)
+    monkeypatch.setattr(app, "_proposer_une_voix", lambda messages, langue, dossier=None: posee)
 
     class Arret(Exception):
         pass

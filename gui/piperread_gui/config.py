@@ -3,7 +3,7 @@ config.py — résout et écrit les réglages de `piperread.conf`, à l'identiqu
 
 Pourquoi ce fichier existe :
     Le noyau et l'interface lisent le même fichier de configuration, les mêmes
-    clés (`speed`, `voice`, `lang`) et le même ordre de priorité (option de
+    clés (`speed`, `voice`, `lang`, `voices_dir`) et le même ordre de priorité (option de
     ligne de commande > variable d'environnement > fichier > défaut) — décision
     arbitrée dans `CONCEPTION_PIPERREAD.md`, fiche « interface graphique ».
     Port Python fidèle de `utils/config.sh`, jamais un import du script Bash :
@@ -31,7 +31,7 @@ from typing import Callable
 
 from piperread_gui.flatfile import read_flat_file
 
-KNOWN_KEYS = ("speed", "voice", "lang", "telemetry")
+KNOWN_KEYS = ("speed", "voice", "lang", "telemetry", "voices_dir")
 LANGS = ("en", "fr", "de", "es")
 
 _CLE_VALIDE = re.compile(r"[a-z][a-z_]*")
@@ -43,18 +43,22 @@ def config_file_path() -> Path:
     return Path(base) / "piperread" / "piperread.conf"
 
 
-def voices_dirs(repo_root: Path, frozen: bool = False) -> list[Path]:
+def voices_dirs(repo_root: Path, frozen: bool = False, chosen: Path | str | None = None) -> list[Path]:
     """Dossiers de voix dans l'ordre de recherche, comme `VOICES_DIRS` de `read.sh`.
 
-    Le `voices/` d'un clone passe avant le dossier de l'utilisateur sans le
-    masquer. L'exécutable Windows ne lit que le dossier voisin de son `.exe`.
+    Le dossier choisi par l'utilisateur (`voices_dir`) passe en tête ; le
+    `voices/` d'un clone vient avant le dossier de l'utilisateur sans le
+    masquer. L'exécutable Windows lit le dossier voisin de son `.exe`, et le
+    dossier choisi s'il y en a un.
     """
     clone = repo_root / "voices"
     if frozen:
-        return [clone]
-    base = os.environ.get("XDG_DATA_HOME") or str(Path.home() / ".local" / "share")
-    utilisateur = Path(base) / "piperread" / "voices"
-    return [clone, utilisateur] if clone.is_dir() else [utilisateur]
+        dossiers = [clone]
+    else:
+        base = os.environ.get("XDG_DATA_HOME") or str(Path.home() / ".local" / "share")
+        utilisateur = Path(base) / "piperread" / "voices"
+        dossiers = [clone, utilisateur] if clone.is_dir() else [utilisateur]
+    return [Path(chosen), *dossiers] if chosen else dossiers
 
 
 def find_voice(name: str, dirs: list[Path]) -> Path | None:
@@ -109,6 +113,17 @@ def valid_telemetry(value: str) -> str | None:
     return value if value in ("on", "off") else None
 
 
+def valid_voices_dir(value: str) -> str | None:
+    """Chemin absolu, ou commençant par `~/` (seul développement fait), d'un dossier existant."""
+    if value.startswith("~/"):
+        chemin = str(Path.home() / value[2:])
+    elif value.startswith("/") or re.match(r"[A-Za-z]:[\\/]", value):
+        chemin = value
+    else:
+        return None
+    return chemin if Path(chemin).is_dir() else None
+
+
 def valid_voice_name(value: str) -> bool:
     return bool(_NOM_VOIX_VALIDE.fullmatch(value))
 
@@ -141,7 +156,7 @@ def resolve_setting(
 ) -> Resolved:
     warnings: list[tuple[str, str, str]] = []
     niveaux = (
-        ("option", option_value, f"--{key}"),
+        ("option", option_value, f"--{key.replace('_', '-')}"),
         ("environment", os.environ.get(f"PIPERREAD_{key.upper()}"), f"PIPERREAD_{key.upper()}"),
         ("file", config_values.get(key), "piperread.conf"),
     )
@@ -159,6 +174,9 @@ def resolve_setting(
 
 @dataclass
 class ResolvedSettings:
+    voices_dir: str | None
+    voices_dir_source: str
+    voices_dirs: list[Path]
     speed: float
     speed_source: str
     voice: str | None
@@ -178,10 +196,18 @@ def resolve_settings(
     speed_option: str | None = None,
     voice_option: str | None = None,
     lang_option: str | None = None,
+    voices_dir_option: str | None = None,
 ) -> ResolvedSettings:
+    """`voices_dirs` est la liste de base, sans le dossier choisi : il est résolu ici et passe en tête."""
     config_values, unknown_keys = load_config_file()
     invalid: tuple[str, str, str] | None = None
     warnings: list[tuple[str, str, str]] = []
+
+    dir_resolved = resolve_setting("voices_dir", valid_voices_dir, voices_dir_option, config_values)
+    warnings += dir_resolved.warnings
+    if dir_resolved.invalid is not None:
+        invalid = dir_resolved.invalid
+    voices_dirs = [Path(dir_resolved.value), *voices_dirs] if dir_resolved.value else list(voices_dirs)
 
     lang_resolved = resolve_setting("lang", valid_lang, lang_option, config_values)
     warnings += lang_resolved.warnings
@@ -216,6 +242,9 @@ def resolve_settings(
     telemetry = telemetry_resolved.value or "off"
 
     return ResolvedSettings(
+        voices_dir=dir_resolved.value,
+        voices_dir_source=dir_resolved.source,
+        voices_dirs=voices_dirs,
         speed=speed,
         speed_source=speed_resolved.source,
         voice=voice_name,

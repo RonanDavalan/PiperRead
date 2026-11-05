@@ -43,12 +43,17 @@ class PiperReadTray(QSystemTrayIcon):
     relance_demandee = Signal()
 
     def __init__(
-        self, controller: PlaybackController, icon_path: Path, voices_dirs: list[Path] | None = None
+        self,
+        controller: PlaybackController,
+        icon_path: Path,
+        voices_dirs: list[Path] | None = None,
+        voices_dir: str | None = None,
     ):
         super().__init__(QIcon(str(icon_path)))
         self._controller = controller
         self._icon_path = icon_path
         self._voices_dirs = voices_dirs
+        self._voices_dir = voices_dir
 
         self._menu = QMenu()
         self._action_lire = self._menu.addAction("", self._controller.lire)
@@ -105,8 +110,12 @@ class PiperReadTray(QSystemTrayIcon):
             notifier("PiperRead", message)
 
     def _ouvrir_reglages(self) -> None:
-        dialogue = SettingsDialog(self._controller, self._icon_path, voices_dirs=self._voices_dirs)
+        dialogue = SettingsDialog(
+            self._controller, self._icon_path, voices_dirs=self._voices_dirs, voices_dir=self._voices_dir
+        )
         if dialogue.exec() == QDialog.DialogCode.Accepted:
+            self._voices_dirs = dialogue.voices_dirs
+            self._voices_dir = dialogue.voices_dir
             self._actualiser_textes()
 
     def _quitter(self) -> None:

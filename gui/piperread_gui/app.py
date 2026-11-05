@@ -12,9 +12,10 @@ Pourquoi ce fichier existe :
     noyau (`/usr/share/icons/hicolor/scalable/apps/piperread.svg`, dont
     `piperread-gui` dépend) — déjà dessinée pour le paquet :
     l'interface n'a pas d'icône propre. Les voix se cherchent dans les mêmes
-    dossiers que le noyau (`config.voices_dirs` : `voices/` du clone puis
-    `$XDG_DATA_HOME/piperread/voices`, comme `VOICES_DIRS` de `read.sh`), et
-    dans le seul dossier `voices` de l'exécutable Windows. Sur l'exécutable Windows gelé, la racine de résolution est
+    dossiers que le noyau (`config.voices_dirs` : le dossier choisi `voices_dir`,
+    `voices/` du clone puis `$XDG_DATA_HOME/piperread/voices`, comme `VOICES_DIRS`
+    de `read.sh`), et dans le dossier `voices` de l'exécutable Windows plus le
+    dossier choisi. Sur l'exécutable Windows gelé, la racine de résolution est
     le dossier réel de `piperread-gui.exe` (`frozen.installation_dir`), pas
     le dossier d'extraction temporaire que donnerait `Path(__file__)` — même
     principe que `server._trouver_executable_windows`. La résolution de la
@@ -26,7 +27,7 @@ Pourquoi ce fichier existe :
 
 Entrée / sortie :
     Entrée : options de ligne de commande, mêmes que `cli.py` (`--model`,
-    `--lang`), plus `--speed` (vitesse de 0.5 à 3.0 — pas de `--voice`
+    `--lang`, `--voices-dir`), plus `--speed` (vitesse de 0.5 à 3.0 — pas de `--voice`
     distinct : `--model` sert déjà ce rôle en désignant directement le
     fichier, nom conservé par immuabilité des identifiants),
     plus sept options de pilotage d'une instance déjà lancée (`--play`,
@@ -97,6 +98,11 @@ def _analyser_arguments(argv: list[str]) -> argparse.Namespace:
         help="Langue des messages et du découpage en phrases (défaut : résolue depuis piperread.conf).",
     )
     analyseur.add_argument(
+        "--voices-dir",
+        default=None,
+        help="Dossier de voix lu en plus de ceux de PiperRead, chemin absolu ou ~/… (défaut : résolu depuis piperread.conf).",
+    )
+    analyseur.add_argument(
         "--speed",
         default=None,
         help="Vitesse de 0.5 à 3.0, point ou virgule (défaut : résolue depuis piperread.conf, sinon 1.0).",
@@ -159,8 +165,8 @@ def _emettre_avertissements(
             print(i18n.msg(messages, "setting_invalid", cle, valeur, source), file=sys.stderr)
 
 
-def _proposer_une_voix(messages: dict[str, str], langue: str) -> Path | None:
-    fenetre = VoiceDialog(messages, langue, _VOICES_DIRS[-1])
+def _proposer_une_voix(messages: dict[str, str], langue: str, dossier_choisi: str | None = None) -> Path | None:
+    fenetre = VoiceDialog(messages, langue, Path(dossier_choisi) if dossier_choisi else _VOICES_DIRS[-1])
     if fenetre.exec() != QDialog.DialogCode.Accepted:
         return None
     return fenetre.voix_installee
@@ -179,6 +185,7 @@ def main(argv: list[str] | None = None) -> int:
         speed_option=arguments.speed,
         voice_option=None,
         lang_option=arguments.lang,
+        voices_dir_option=arguments.voices_dir,
     )
     messages = i18n.load_messages(resolu.lang)
 
@@ -198,7 +205,7 @@ def main(argv: list[str] | None = None) -> int:
 
     model_path = arguments.model if arguments.model is not None else resolu.model_path
     if model_path is None:
-        model_path = _proposer_une_voix(messages, resolu.lang)
+        model_path = _proposer_une_voix(messages, resolu.lang, resolu.voices_dir)
     if model_path is None:
         absence = i18n.msg(messages, "voice_missing").replace("{cmd}", "piperread")
         print(absence, file=sys.stderr)
@@ -217,7 +224,7 @@ def main(argv: list[str] | None = None) -> int:
     controller = PlaybackController(model_path, resolu.lang, resolu.speed, resolu.telemetry)
     controller.demarrer_moteur()
     avertir_si_tray_absent(controller.messages)
-    tray = PiperReadTray(controller, _ICONE, _VOICES_DIRS)
+    tray = PiperReadTray(controller, _ICONE, resolu.voices_dirs, resolu.voices_dir)
     tray.show()
 
     repartiteur = {

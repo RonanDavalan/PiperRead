@@ -28,7 +28,8 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
 def _modele_par_defaut() -> Path | None:
-    dossiers = config.voices_dirs(_REPO_ROOT)
+    resolu = config.resolve_settings(config.voices_dirs(_REPO_ROOT))
+    dossiers = resolu.voices_dirs
     nom = config.default_voice_name(dossiers)
     return config.find_voice(nom, dossiers) if nom else None
 
@@ -53,13 +54,26 @@ def _analyser_arguments(argv: list[str]) -> argparse.Namespace:
         choices=("en", "fr", "de", "es"),
         help="Langue du découpage en phrases (défaut : fr).",
     )
+    analyseur.add_argument(
+        "--voices-dir",
+        default=None,
+        help="Dossier de voix lu en plus de ceux de PiperRead, chemin absolu ou ~/… (défaut : piperread.conf).",
+    )
     return analyseur.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> int:
     arguments = _analyser_arguments(sys.argv[1:] if argv is None else argv)
 
-    if arguments.model is None:
+    modele = arguments.model
+    if modele is None and arguments.voices_dir:
+        resolu = config.resolve_settings(config.voices_dirs(_REPO_ROOT), voices_dir_option=arguments.voices_dir)
+        if resolu.invalid is not None:
+            print(f"Valeur invalide « {resolu.invalid[1]} » pour {resolu.invalid[2]}.", file=sys.stderr)
+            return 2
+        nom = config.default_voice_name(resolu.voices_dirs)
+        modele = config.find_voice(nom, resolu.voices_dirs) if nom else None
+    if modele is None:
         print(
             "Aucun modèle de voix trouvé ; préciser --model <chemin vers un .onnx>.",
             file=sys.stderr,
@@ -77,7 +91,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     try:
-        with PiperHttpServer(arguments.model) as serveur:
+        with PiperHttpServer(modele) as serveur:
             print(f"Serveur prêt sur {serveur.base_url} ({len(phrases)} phrase(s)).")
             for numero, phrase in enumerate(phrases, start=1):
                 print(f"[{numero}/{len(phrases)}] {phrase}")
