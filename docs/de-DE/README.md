@@ -132,7 +132,7 @@ Unter Windows ist nur die Oberfläche verfügbar, als eigenständiger Ordner.
 3.  Doppelklicken Sie auf `piperread-gui.exe`. Ohne installierte Stimme öffnet sich das Fenster „Stimme herunterladen“: Wählen Sie eine Stimme und klicken Sie auf Herunterladen. (Von Hand: Legen Sie zwei Dateien mit demselben Namen, `<name>.onnx` und `<name>.onnx.json`, von [rhasspy/piper-voices](https://huggingface.co/rhasspy/piper-voices) in den Ordner `voices`.)
 4.  Kopieren Sie einen Text mit Strg+C und klicken Sie dann auf das Tray-Symbol.
 
-Der Build ist nicht mit einem Zertifikat signiert, das Windows erkennt: SmartScreen warnt möglicherweise beim ersten Start (wählen Sie „Weitere Informationen“, dann „Trotzdem ausführen“). Er liest nur die Zwischenablage, nicht die Mausauswahl. Er ist eine unter Windows gebaute ausführbare Datei, die unter Windows 11 von Hand getestet wurde; es gibt keine automatisierte Testmatrix für Windows wie für die Linux-Pakete.
+Der Build ist nicht mit einem Zertifikat signiert, das Windows erkennt: SmartScreen warnt möglicherweise beim ersten Start (wählen Sie „Weitere Informationen“, dann „Trotzdem ausführen“). Er liest nur die Zwischenablage, nicht die Mausauswahl. Er ist eine unter Windows gebaute ausführbare Datei, die ohne Bildschirm ausprobiert wurde; es gibt keine automatisierte Testmatrix für Windows wie für die Linux-Pakete.
 
 ## Voraussetzungen
 
@@ -231,7 +231,7 @@ Das Paket `piperread-gui` startet mit Ihrer Sitzung (ein Linux-Desktop liest sei
 *   **Linksklick** auf das Symbol: vorlesen, wenn angehalten, pausieren während des Lesens, fortsetzen, wenn pausiert.
 *   **Rechtsklick**: das Menü (Wiedergabe, Pause, Stopp, Vorheriger Satz, Nächster Satz, Einstellungen, Neu starten, Beenden), in der Sprache Ihrer Konfiguration.
 *   **Was vorgelesen wird**: die Mausauswahl oder die Zwischenablage, wenn nichts ausgewählt ist (Linux, dieselbe Reihenfolge wie beim Starter); nur die Zwischenablage unter Windows. Markdown-Auszeichnungen werden zuerst entfernt.
-*   **Einstellungen**: der Menüeintrag öffnet einen Dialog für die Stimme, die Geschwindigkeit, die Sprache und „Beim Sitzungsstart öffnen“ (standardmäßig aktiviert; deaktivieren Sie die Option, um den automatischen Start zu beenden) sowie eine Schaltfläche „Stimme herunterladen …“, die das Stimmenfenster öffnet. Er schreibt dieselbe `piperread.conf` wie der Starter.
+*   **Einstellungen**: der Menüeintrag öffnet einen Dialog für die Stimme, die Geschwindigkeit, die Sprache und „Beim Sitzungsstart öffnen“ (standardmäßig aktiviert; deaktivieren Sie die Option, um den automatischen Start zu beenden) sowie eine Schaltfläche „Stimme herunterladen …“, die das Stimmenfenster öffnet. Derselbe Dialog hat ein Feld „Stimmenordner“ mit einer Schaltfläche „Durchsuchen …“; für `normalize` und `telemetry` gibt es dort kein Feld. Er schreibt dieselbe `piperread.conf` wie der Starter.
 
 Die Oberfläche lässt sich auch über die Befehlszeile steuern, so binden Sie sie an Tastaturkürzel:
 
@@ -260,20 +260,36 @@ Im Ruhezustand verbraucht die Oberfläche keine CPU; ihr Speicher beträgt etwa 
 
 ### Konfiguration
 
-Vier Einstellungen lassen sich anpassen: die Lesegeschwindigkeit `speed` (ein Multiplikator von 0,5 bis 3,0, 1 ist die natürliche Stimme), die Stimme `voice` (der Modellname, wie von `--list-voices` aufgelistet), die Sprache `lang` der Meldungen (`en`, `fr`, `de` oder `es`) und `telemetry` (`on` oder `off`, siehe unten). Jede wird in dieser Reihenfolge aufgelöst — die erste Ebene mit einem gültigen Wert gewinnt:
+Sechs Einstellungen lassen sich anpassen: die Lesegeschwindigkeit `speed` (ein Multiplikator von 0,5 bis 3,0, 1 ist die natürliche Stimme), die Stimme `voice` (der Modellname, wie von `--list-voices` aufgelistet), die Sprache `lang` der Meldungen (`en`, `fr`, `de` oder `es`), `voices_dir` (ein eigener Ordner mit Stimmen, siehe unten), `normalize` (`on` oder `off`, siehe unten) und `telemetry` (`on` oder `off`, siehe unten). Jede wird in dieser Reihenfolge aufgelöst — die erste Ebene mit einem gültigen Wert gewinnt:
 
-1.  **Befehlszeilenoption** — `--speed 1.25`, `--voice en_US-ljspeech-medium`, `--lang en` (`telemetry` hat keine Option).
-2.  **Umgebungsvariable** — `PIPERREAD_SPEED`, `PIPERREAD_VOICE`, `PIPERREAD_LANG`, `PIPERREAD_TELEMETRY`.
+1.  **Befehlszeilenoption** — `--speed 1.25`, `--voice en_US-ljspeech-medium`, `--lang en`, `--voices-dir ~/Stimmen`, `--normalize on` (`telemetry` hat keine Option).
+2.  **Umgebungsvariable** — `PIPERREAD_SPEED`, `PIPERREAD_VOICE`, `PIPERREAD_LANG`, `PIPERREAD_VOICES_DIR`, `PIPERREAD_NORMALIZE`, `PIPERREAD_TELEMETRY`.
 3.  **Konfigurationsdatei** — `~/.config/piperread/piperread.conf` (unter Windows, `%USERPROFILE%\.config\piperread\piperread.conf`), eine Zeile `key=value` pro Einstellung:
     ```
     speed=1.25
     voice=en_US-ljspeech-medium
     lang=en
+    voices_dir=~/Stimmen
+    normalize=off
     telemetry=off
     ```
-4.  **Standard** — natürliche Geschwindigkeit, erste installierte Stimme in alphabetischer Reihenfolge, englische Meldungen, Telemetrie aus.
+4.  **Standard** — natürliche Geschwindigkeit, erste installierte Stimme in alphabetischer Reihenfolge, englische Meldungen, kein eigener Ordner, `normalize` aus, Telemetrie aus.
 
 Ein ungültiger Wert auf einer anderen Ebene als der Option wird ignoriert, und die nächste Ebene wird versucht; eine ungültige Befehlszeilenoption bricht das Vorlesen ab.
+
+### Stimmenordner
+
+`voices_dir` benennt einen Ordner, in dem Sie eigene Stimmen aufbewahren, zum Beispiel auf einer anderen Festplatte. PiperRead liest ihn zuerst, danach seine eigenen Ordner; eine Stimme, die in beiden vorkommt, stammt aus Ihrem. Der Ordner wird flach gelesen: Eine Stimme besteht aus zwei Dateien, `NAME.onnx` und `NAME.onnx.json`, die direkt darin liegen, nicht in einem Unterordner. Der Wert ist ein absoluter Pfad oder beginnt mit `~/`, und der Ordner muss existieren: Ein ungültiges `--voices-dir` bricht mit Exitcode 2 ab.
+
+`--list-voices` zeigt den Ordner jeder installierten Stimme, `--download-voice` speichert die Stimmen im gewählten Ordner (und bricht mit Exitcode 1 ab, wenn er nicht beschreibbar ist), und `--diagnose` nennt ihn.
+
+### Pegel der Stimmen
+
+Die Stimmen sprechen nicht alle gleich laut: Bei den sechzehn ausprobierten Stimmen lagen die lauteste und die leiseste etwa 9 dB auseinander. Mit `normalize=on` misst PiperRead jede Stimme einmal und bringt dann alle Stimmen auf denselben Pegel; damit lagen dieselben sechzehn Stimmen weniger als 1 dB auseinander. Die Messung dauert beim ersten Vorlesen einer Stimme einige Sekunden und wird in `~/.local/state/piperread/voice-levels` gespeichert (unter `$XDG_STATE_HOME`, wenn Sie die Variable gesetzt haben). Standardmäßig ist sie aus. Es ist keine Lautstärkeregelung: Stellen Sie die Lautstärke im Mixer Ihres Systems ein. Gemessen wurde nur unter Linux.
+
+### Name im Klang-Mixer
+
+Im Klang-Mixer Ihres Desktops erscheint die Wiedergabe unter dem Namen « PiperRead », mit dem Starter wie mit der Oberfläche (zuvor erschien sie als « PipeWire ALSA [aplay] »). PiperRead setzt die Variable `PIPEWIRE_PROPS`, bevor es den Stream öffnet, und behält Ihre, falls Sie eine gesetzt haben. Da der Mixer die Lautstärke pro Anwendungsname merkt, beginnt die Lautstärke dieses Streams beim ersten Mal wieder beim Standardwert. Geprüft wurde dies mit PipeWire und seiner PulseAudio-Schicht; PulseAudio allein, ALSA allein, macOS und Windows wurden nicht geprüft. `--diagnose` nennt den Namen.
 
 ### Engine-Telemetrie
 

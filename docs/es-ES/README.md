@@ -132,7 +132,7 @@ En Windows solo está disponible la interfaz, como una carpeta autónoma.
 3.  Haga doble clic en `piperread-gui.exe`. Sin ninguna voz instalada, se abre la ventana «Descargar una voz»: elija una voz y pulse Descargar. (A mano: coloque dos archivos con el mismo nombre, `<nombre>.onnx` y `<nombre>.onnx.json`, procedentes de [rhasspy/piper-voices](https://huggingface.co/rhasspy/piper-voices), en la carpeta `voices`.)
 4.  Copie un texto con Ctrl+C y pulse después el icono de la bandeja.
 
-La compilación no está firmada con un certificado que Windows reconozca: SmartScreen puede avisar en el primer inicio (elija «Más información» y después «Ejecutar de todas formas»). Lee solo el portapapeles, no la selección del ratón. Es un ejecutable construido en Windows y probado a mano en Windows 11; no hay ninguna matriz de pruebas automatizada para Windows como la hay para los paquetes de Linux.
+La compilación no está firmada con un certificado que Windows reconozca: SmartScreen puede avisar en el primer inicio (elija «Más información» y después «Ejecutar de todas formas»). Lee solo el portapapeles, no la selección del ratón. Es un ejecutable construido en Windows y ensayado sin pantalla; no hay ninguna matriz de pruebas automatizada para Windows como la hay para los paquetes de Linux.
 
 ## Requisitos previos
 
@@ -231,7 +231,7 @@ El paquete `piperread-gui` se inicia con su sesión (un escritorio Linux lee su 
 *   **Clic izquierdo** en el icono: leer cuando está detenido, pausar durante la lectura, reanudar cuando está en pausa.
 *   **Clic derecho**: el menú (Reproducir, Pausa, Detener, Frase anterior, Frase siguiente, Ajustes, Reiniciar, Salir), en el idioma de su configuración.
 *   **Lo que se lee**: la selección del ratón, o el portapapeles cuando no hay nada seleccionado (Linux, el mismo orden que el lanzador); solo el portapapeles en Windows. El marcado Markdown se elimina primero.
-*   **Ajustes**: la entrada del menú abre un diálogo para la voz, la velocidad, el idioma y "Iniciar con la sesión" (activado por defecto; desmárquelo para detener el inicio automático), y un botón «Descargar una voz…» que abre la ventana de voces. Escribe el mismo `piperread.conf` que el lanzador.
+*   **Ajustes**: la entrada del menú abre un diálogo para la voz, la velocidad, el idioma y "Iniciar con la sesión" (activado por defecto; desmárquelo para detener el inicio automático), y un botón «Descargar una voz…» que abre la ventana de voces. El mismo diálogo tiene un campo «Carpeta de voces» con un botón «Examinar…»; `normalize` y `telemetry` no tienen campo ahí. Escribe el mismo `piperread.conf` que el lanzador.
 
 La interfaz también se controla desde la línea de comandos, que es como se asigna a los atajos de teclado:
 
@@ -260,20 +260,36 @@ En reposo la interfaz no usa CPU; su memoria es de unos 100 MB, más 150 MB (voz
 
 ### Configuración
 
-Se pueden ajustar cuatro parámetros: la velocidad de lectura `speed` (un multiplicador de 0,5 a 3,0; 1 es la voz natural), la voz `voice` (el nombre del modelo, tal como aparece con `--list-voices`), el idioma `lang` de los mensajes (`en`, `fr`, `de` o `es`) y `telemetry` (`on` o `off`, véase más abajo). Cada uno se resuelve en este orden — el primer nivel que aporte un valor válido prevalece:
+Se pueden ajustar seis parámetros: la velocidad de lectura `speed` (un multiplicador de 0,5 a 3,0; 1 es la voz natural), la voz `voice` (el nombre del modelo, tal como aparece con `--list-voices`), el idioma `lang` de los mensajes (`en`, `fr`, `de` o `es`), `voices_dir` (una carpeta de voces propia, véase más abajo), `normalize` (`on` o `off`, véase más abajo) y `telemetry` (`on` o `off`, véase más abajo). Cada uno se resuelve en este orden — el primer nivel que aporte un valor válido prevalece:
 
-1.  **Opción en la línea de comandos** — `--speed 1.25`, `--voice en_US-ljspeech-medium`, `--lang en` (`telemetry` no tiene opción).
-2.  **Variable de entorno** — `PIPERREAD_SPEED`, `PIPERREAD_VOICE`, `PIPERREAD_LANG`, `PIPERREAD_TELEMETRY`.
+1.  **Opción en la línea de comandos** — `--speed 1.25`, `--voice en_US-ljspeech-medium`, `--lang en`, `--voices-dir ~/Voces`, `--normalize on` (`telemetry` no tiene opción).
+2.  **Variable de entorno** — `PIPERREAD_SPEED`, `PIPERREAD_VOICE`, `PIPERREAD_LANG`, `PIPERREAD_VOICES_DIR`, `PIPERREAD_NORMALIZE`, `PIPERREAD_TELEMETRY`.
 3.  **Archivo de configuración** — `~/.config/piperread/piperread.conf` (en Windows, `%USERPROFILE%\.config\piperread\piperread.conf`), una línea `key=value` por parámetro:
     ```
     speed=1.25
     voice=en_US-ljspeech-medium
     lang=en
+    voices_dir=~/Voces
+    normalize=off
     telemetry=off
     ```
-4.  **Predeterminado** — velocidad natural, primera voz instalada por orden alfabético, mensajes en inglés, telemetría desactivada.
+4.  **Predeterminado** — velocidad natural, primera voz instalada por orden alfabético, mensajes en inglés, ninguna carpeta propia, `normalize` desactivado, telemetría desactivada.
 
 Un valor inválido en cualquier nivel distinto de la opción se ignora y se intenta el siguiente nivel; una opción de línea de comandos inválida detiene la lectura.
+
+### Carpeta de voces
+
+`voices_dir` indica una carpeta donde guarda voces propias, por ejemplo en otro disco. PiperRead la lee primero y después sus propias carpetas, así que una voz presente en ambas procede de la suya. La carpeta se lee en plano: una voz son dos archivos, `NOMBRE.onnx` y `NOMBRE.onnx.json`, colocados directamente en ella, no en una subcarpeta. El valor es una ruta absoluta o que empieza por `~/`, y la carpeta debe existir: un `--voices-dir` no válido se detiene con el código 2.
+
+`--list-voices` indica la carpeta de cada voz instalada, `--download-voice` guarda las voces en la carpeta elegida (y se detiene con el código 1 si no se puede escribir en ella), y `--diagnose` la nombra.
+
+### Nivel de las voces
+
+Las voces no hablan todas al mismo nivel: en las dieciséis voces probadas, la más fuerte y la más baja estaban separadas por unos 9 dB. Con `normalize=on`, PiperRead mide cada voz una vez y después lleva todas las voces al mismo nivel; con este ajuste, las mismas dieciséis voces quedaron separadas por menos de 1 dB. La medición tarda unos segundos la primera vez que se lee una voz y se guarda en `~/.local/state/piperread/voice-levels` (bajo `$XDG_STATE_HOME` si la ha definido). Está desactivado por defecto. No es un control de volumen: ajuste el volumen en el mezclador de su sistema. Solo se midió en Linux.
+
+### Nombre en el mezclador de sonido
+
+En el mezclador de sonido de su escritorio, la reproducción aparece con el nombre « PiperRead », tanto con el lanzador como con la interfaz (antes aparecía como « PipeWire ALSA [aplay] »). PiperRead define la variable `PIPEWIRE_PROPS` antes de abrir el flujo y conserva la suya si ha definido una. Como el mezclador recuerda un volumen por nombre de aplicación, el volumen de ese flujo vuelve al valor por defecto la primera vez. Se comprobó con PipeWire y su capa PulseAudio; PulseAudio solo, ALSA solo, macOS y Windows no se comprobaron. `--diagnose` dice el nombre.
 
 ### Telemetría del motor
 

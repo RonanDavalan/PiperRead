@@ -133,7 +133,7 @@ On Windows, only the interface is available, as a self-contained folder.
 3.  Double-click `piperread-gui.exe`. With no voice installed, the "Download a voice" window opens: choose a voice and click Download. (By hand: put two files with the same name, `<name>.onnx` and `<name>.onnx.json`, from [rhasspy/piper-voices](https://huggingface.co/rhasspy/piper-voices), in the `voices` folder.)
 4.  Copy a text with Ctrl+C, then click the tray icon.
 
-The build is not signed with a certificate Windows recognises: SmartScreen may warn on the first launch (choose "More info", then "Run anyway"). It reads the clipboard only, not the mouse selection. It is an executable built on Windows and tested by hand on Windows 11; there is no automated test matrix for Windows as there is for the Linux packages.
+The build is not signed with a certificate Windows recognises: SmartScreen may warn on the first launch (choose "More info", then "Run anyway"). It reads the clipboard only, not the mouse selection. It is an executable built on Windows and tried without a screen; there is no automated test matrix for Windows as there is for the Linux packages.
 
 ## Prerequisites
 
@@ -232,7 +232,7 @@ The `piperread-gui` package starts with your session (a Linux desktop reads its 
 *   **Left click** on the icon: read when stopped, pause while reading, resume when paused.
 *   **Right click**: the menu (Play, Pause, Stop, Previous sentence, Next sentence, Settings, Restart, Quit), in the language of your configuration.
 *   **What is read**: the mouse selection, or the clipboard when nothing is selected (Linux, the same order as the launcher); the clipboard only on Windows. Markdown markup is removed first.
-*   **Settings**: the menu entry opens a dialog for the voice, the speed, the language and "Start with the session" (on by default; untick it to stop the automatic start), with a "Download a voice..." button. It writes the same `piperread.conf` as the launcher.
+*   **Settings**: the menu entry opens a dialog for the voice, the speed, the language and "Start with the session" (on by default; untick it to stop the automatic start), with a "Download a voice..." button. The same dialog has a "Voices folder" field with a "Browse…" button; `normalize` and `telemetry` have no field there. It writes the same `piperread.conf` as the launcher.
 
 The interface is also driven from the command line, which is how you bind it to keyboard shortcuts:
 
@@ -261,20 +261,36 @@ At rest the interface uses no CPU; its memory is about 100 MB, plus 150 MB (voic
 
 ### Configuration
 
-Four settings can be adjusted: reading `speed` (a multiplier from 0.5 to 3.0, 1 is the natural voice), `voice` (the model name, as listed by `--list-voices`), `lang` (the message language: `en`, `fr`, `de` or `es`) and `telemetry` (`on` or `off`, see below). Each one is resolved in this order — the first level that provides a valid value wins:
+Six settings can be adjusted: reading `speed` (a multiplier from 0.5 to 3.0, 1 is the natural voice), `voice` (the model name, as listed by `--list-voices`), `lang` (the message language: `en`, `fr`, `de` or `es`), `voices_dir` (a folder of voices of your own, see below), `normalize` (`on` or `off`, see below) and `telemetry` (`on` or `off`, see below). Each one is resolved in this order — the first level that provides a valid value wins:
 
-1.  **Command-line option** — `--speed 1.25`, `--voice en_US-ljspeech-medium`, `--lang en` (`telemetry` has no option).
-2.  **Environment variable** — `PIPERREAD_SPEED`, `PIPERREAD_VOICE`, `PIPERREAD_LANG`, `PIPERREAD_TELEMETRY`.
+1.  **Command-line option** — `--speed 1.25`, `--voice en_US-ljspeech-medium`, `--lang en`, `--voices-dir ~/Voices`, `--normalize on` (`telemetry` has no option).
+2.  **Environment variable** — `PIPERREAD_SPEED`, `PIPERREAD_VOICE`, `PIPERREAD_LANG`, `PIPERREAD_VOICES_DIR`, `PIPERREAD_NORMALIZE`, `PIPERREAD_TELEMETRY`.
 3.  **Configuration file** — `~/.config/piperread/piperread.conf` (on Windows, `%USERPROFILE%\.config\piperread\piperread.conf`), one `key=value` line per setting:
     ```
     speed=1.25
     voice=en_US-ljspeech-medium
     lang=en
+    voices_dir=~/Voices
+    normalize=off
     telemetry=off
     ```
-4.  **Default** — natural speed, the first installed voice in alphabetical order, English messages, telemetry off.
+4.  **Default** — natural speed, the first installed voice in alphabetical order, English messages, no folder of your own, `normalize` off, telemetry off.
 
 An invalid value at any level below the option is ignored and the next level is tried instead; an invalid command-line option stops the reading.
+
+### Voices folder
+
+`voices_dir` names a folder where you keep voices of your own, for example on another disk. PiperRead reads it first, then its own folders, so a voice present in both comes from yours. The folder is read flat: a voice is two files, `NAME.onnx` and `NAME.onnx.json`, directly in it, not in a subfolder. The value is an absolute path or starts with `~/`, and the folder must exist: an invalid `--voices-dir` stops with exit code 2.
+
+`--list-voices` shows the folder of every installed voice, `--download-voice` saves the voices into the folder you chose (and stops with exit code 1 when it is not writable), and `--diagnose` names it.
+
+### Level of the voices
+
+Voices do not speak at the same level: on the sixteen voices tried, the loudest and the quietest were about 9 dB apart. With `normalize=on`, PiperRead measures each voice once, then brings every voice to the same level; with it, the same sixteen voices were less than 1 dB apart. The measurement takes a few seconds the first time a voice is read and is kept in `~/.local/state/piperread/voice-levels` (under `$XDG_STATE_HOME` when you set it). It is off by default. It is not a volume control: set the volume in your system mixer. It was measured on Linux only.
+
+### Name in the sound mixer
+
+In the sound mixer of your desktop, the playback appears as « PiperRead », with the launcher and with the interface (it appeared as « PipeWire ALSA [aplay] » before). PiperRead sets the `PIPEWIRE_PROPS` variable before it opens the stream, and keeps yours when you have set one. Because the mixer remembers a volume by application name, the volume of that stream restarts from the default one the first time. This was checked with PipeWire and its PulseAudio layer; PulseAudio alone, ALSA alone, macOS and Windows were not checked. `--diagnose` tells the name.
 
 ### Engine telemetry
 
