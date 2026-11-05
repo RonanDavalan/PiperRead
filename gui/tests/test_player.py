@@ -111,3 +111,22 @@ def test_pause_bloque_l_ecriture_jusqu_a_liberation(monkeypatch):
 
     (flux,) = flux_captures
     assert flux.ecrit == b"\x00\x01" * 3
+
+
+def test_gain_applique_aux_echantillons(monkeypatch):
+    import array
+
+    flux_captures = []
+
+    def faux_flux(samplerate, channels, dtype):
+        flux_captures.append(_FluxFactice(samplerate, channels, dtype))
+        return flux_captures[-1]
+
+    monkeypatch.setattr(player.sd, "RawOutputStream", faux_flux)
+    trames = array.array("h", [10000, -10000, 32767]).tobytes()
+
+    player.play_wav_bytes(_wav_de_test(trames=trames), gain=0.5)
+
+    joue = array.array("h")
+    joue.frombytes(flux_captures[0].ecrit)
+    assert list(joue) == [5000, -5000, 16384]

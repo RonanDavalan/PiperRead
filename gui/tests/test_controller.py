@@ -125,7 +125,7 @@ def test_arreter_quand_rien_ne_tourne_ne_fait_rien():
 
 
 def test_phrase_suivante_interrompt_et_avance(monkeypatch):
-    def jeu_bloquant(audio, stop_event=None, pause_event=None):
+    def jeu_bloquant(audio, stop_event=None, pause_event=None, gain=1.0):
         while not stop_event.is_set():
             time.sleep(0.01)
 
@@ -320,7 +320,7 @@ def test_phrase_preparee_non_jouee_apres_un_retour_en_arriere(monkeypatch):
     jouees = []
     retour_fait = []
 
-    def jeu(audio, stop_event=None, pause_event=None):
+    def jeu(audio, stop_event=None, pause_event=None, gain=1.0):
         jouees.append(audio)
         if audio == b"audio:b." and not retour_fait:
             retour_fait.append(True)
@@ -386,3 +386,27 @@ def test_filet_et_ponctuation_seule_ne_coupent_pas_la_lecture(monkeypatch):
 
     assert jouees == [b"audio:Premier paragraphe.", b"audio:Titre", "audio:Dernière phrase.".encode()]
     assert erreurs == []
+
+
+def test_normalize_on_passe_le_gain_mesure_au_lecteur(monkeypatch):
+    gains = []
+    monkeypatch.setattr(controller_module, "play_wav_bytes", lambda audio, **kw: gains.append(kw.get("gain")))
+    monkeypatch.setattr(controller_module, "voice_gain", lambda modele, synthese: 0.5)
+    controleur = controller_module.PlaybackController(Path("voix.onnx"), "fr", normalize="on")
+    serveur = type("S", (), {"base_url": "http://127.0.0.1:1"})()
+    assert controleur._mesurer_gain(serveur, Path("voix.onnx")) == 0.5
+
+
+def test_normalize_off_ne_mesure_rien(monkeypatch):
+    monkeypatch.setattr(controller_module, "voice_gain", lambda *_a: pytest.fail("aucune mesure attendue"))
+    controleur = controller_module.PlaybackController(Path("voix.onnx"), "fr", normalize="off")
+    assert controleur._mesurer_gain(object(), Path("voix.onnx")) == 1.0
+
+
+def test_normalize_mesure_impossible_joue_a_son_niveau(monkeypatch):
+    def echec(modele, synthese):
+        raise ValueError("flux vide")
+
+    monkeypatch.setattr(controller_module, "voice_gain", echec)
+    controleur = controller_module.PlaybackController(Path("voix.onnx"), "fr", normalize="on")
+    assert controleur._mesurer_gain(object(), Path("voix.onnx")) == 1.0

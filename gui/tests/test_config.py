@@ -6,7 +6,7 @@ from piperread_gui import config
 @pytest.fixture(autouse=True)
 def _config_isole(tmp_path, monkeypatch):
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
-    for cle in ("PIPERREAD_SPEED", "PIPERREAD_VOICE", "PIPERREAD_LANG", "PIPERREAD_VOICES_DIR", "LANG"):
+    for cle in ("PIPERREAD_SPEED", "PIPERREAD_VOICE", "PIPERREAD_LANG", "PIPERREAD_VOICES_DIR", "PIPERREAD_NORMALIZE", "LANG"):
         monkeypatch.delenv(cle, raising=False)
     return tmp_path
 
@@ -468,3 +468,35 @@ def test_resolve_settings_voix_du_dossier_choisi_masque_le_clone_a_nom_egal(tmp_
     base = _voix(tmp_path, "commune")
     resultat = config.resolve_settings([base], voices_dir_option=str(choisi), voice_option="commune")
     assert resultat.model_path == choisi / "commune.onnx"
+
+
+# --- normalize : option, variable, fichier, défaut ---
+
+
+def test_normalize_defaut_off():
+    resolu = config.resolve_settings([])
+    assert (resolu.normalize, resolu.normalize_source, resolu.invalid) == ("off", "default", None)
+
+
+def test_normalize_fichier_variable_option_dans_l_ordre(monkeypatch, tmp_path):
+    _ecrire_conf(tmp_path, "normalize=on\n")
+    assert config.resolve_settings([]).normalize_source == "piperread.conf"
+    monkeypatch.setenv("PIPERREAD_NORMALIZE", "off")
+    resolu = config.resolve_settings([])
+    assert (resolu.normalize, resolu.normalize_source) == ("off", "PIPERREAD_NORMALIZE")
+    resolu = config.resolve_settings([], normalize_option="on")
+    assert (resolu.normalize, resolu.normalize_source) == ("on", "--normalize")
+
+
+def test_normalize_option_invalide_refusee():
+    resolu = config.resolve_settings([], normalize_option="peut-etre")
+    assert resolu.invalid == ("normalize", "peut-etre", "--normalize")
+
+
+def test_normalize_variable_invalide_avertit_et_le_fichier_s_applique(monkeypatch, tmp_path):
+    _ecrire_conf(tmp_path, "normalize=on\n")
+    monkeypatch.setenv("PIPERREAD_NORMALIZE", "oui")
+    resolu = config.resolve_settings([])
+    assert resolu.normalize == "on"
+    assert ("normalize", "oui", "PIPERREAD_NORMALIZE") in resolu.warnings
+    assert resolu.unknown_keys == []
