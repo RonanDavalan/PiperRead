@@ -8,7 +8,7 @@
 #
 # Usage :
 #     Charger ce fichier, puis load_config_file, puis resolve_setting <clé>
-#     <validateur> pour speed, voice, lang, telemetry et voices_dir. Le résultat est dans
+#     <validateur> pour speed, voice, lang, telemetry, voices_dir et normalize. Le résultat est dans
 #     RESOLVED_VALUE et RESOLVED_SOURCE. Les valeurs de l'utilisateur ne sont
 #     jamais évaluées : elles sont comparées à des motifs, puis recopiées.
 #
@@ -113,7 +113,7 @@ load_config_file() {
         value="${value#"${value%%[![:space:]]*}"}"
         value="${value%"${value##*[![:space:]]}"}"
         case "$key" in
-            speed|voice|lang|telemetry|voices_dir) CONFIG_FILE_VALUES["$key"]="$value" ;;
+            speed|voice|lang|telemetry|voices_dir|normalize) CONFIG_FILE_VALUES["$key"]="$value" ;;
             *) CONFIG_UNKNOWN_KEYS+=("$key") ;;
         esac
     done

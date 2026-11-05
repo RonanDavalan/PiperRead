@@ -9,7 +9,8 @@ Pourquoi ce fichier existe :
 Entrée / sortie :
     Entrée : les octets d'un fichier WAV mono ou stéréo, 16 bits, et deux
     événements optionnels (`stop_event`, `pause_event`) pour interrompre ou
-    suspendre la lecture en cours depuis un autre fil. Sortie : aucune
+    suspendre la lecture en cours depuis un autre fil, et un `gain` (au plus 1) appliqué
+    aux échantillons avant lecture. Sortie : aucune
     (lecture bloquante jusqu'à la fin du son, jusqu'à l'arrêt demandé, ou
     tant que la pause n'est pas levée).
 
@@ -23,6 +24,8 @@ import wave
 
 import sounddevice as sd
 
+from piperread_gui.loudness import scale_pcm16
+
 _LARGEUR_ECHANTILLON_GEREE = 2  # 16 bits — seul format produit par le serveur Piper
 _TAILLE_BLOC_TRAMES = 4096
 
@@ -35,6 +38,7 @@ def play_wav_bytes(
     wav_bytes: bytes,
     stop_event: threading.Event | None = None,
     pause_event: threading.Event | None = None,
+    gain: float = 1.0,
 ) -> None:
     with wave.open(io.BytesIO(wav_bytes), "rb") as fichier_wav:
         canaux = fichier_wav.getnchannels()
@@ -47,6 +51,8 @@ def play_wav_bytes(
             f"Largeur d'échantillon non gérée : {largeur * 8} bits "
             f"(16 bits attendus)."
         )
+
+    trames = scale_pcm16(trames, gain)
 
     if stop_event is None and pause_event is None:
         with sd.RawOutputStream(

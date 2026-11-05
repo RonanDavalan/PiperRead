@@ -8,13 +8,14 @@
 #     ou le presse-papiers, sous Wayland comme sous X11.
 #
 # Usage :
-#     read.sh [auto|selection|clipboard] [--speed X] [--voice NOM] [--lang CODE] [--voices-dir CHEMIN]
+#     read.sh [auto|selection|clipboard] [--speed X] [--voice NOM] [--lang CODE] [--voices-dir CHEMIN] [--normalize on|off]
 #     read.sh --stop | --pause | --resume
 #     read.sh --version | --diagnose | --help
 #     read.sh --list-voices | --download-voice [NOM...]
 #     auto (défaut) lit la sélection à la souris, à défaut le presse-papiers.
 #     --speed : multiplicateur de vitesse de 0,5 à 3,0 (1 = voix naturelle).
 #     --voices-dir : dossier de voix lu en plus des dossiers de PiperRead (chemin absolu ou ~/…).
+#     --normalize : on égalise le niveau des voix par un gain mesuré une fois par voix (off par défaut).
 #     --stop arrête la lecture en cours ; relancer read.sh coupe la précédente.
 #     --pause la suspend, --resume la reprend là où elle s'était arrêtée.
 #     --diagnose contrôle l'installation (code 1 s'il y a un échec), sans rien lire ni jouer.
@@ -22,9 +23,9 @@
 #     --list-voices affiche les voix proposées, avec leur licence, sans réseau.
 #     --download-voice télécharge les voix nommées ; sans nom, propose celle de la langue.
 #     Chaque réglage vient de l'option, sinon de PIPERREAD_SPEED, PIPERREAD_VOICE,
-#     PIPERREAD_LANG ou PIPERREAD_VOICES_DIR, sinon de ~/.config/piperread/piperread.conf.
+#     PIPERREAD_LANG, PIPERREAD_VOICES_DIR ou PIPERREAD_NORMALIZE, sinon de ~/.config/piperread/piperread.conf.
 #
-# Dépend de : utils/cleaner.sh, utils/flatfile.sh, utils/config.sh, utils/diagnose.sh, utils/voices.sh,
+# Dépend de : utils/cleaner.sh, utils/flatfile.sh, utils/config.sh, utils/diagnose.sh, utils/voices.sh, utils/normalize.sh,
 #     lang/ (messages), piper-env/ (moteur), voices/ (voix .onnx), wl-paste ou xsel, aplay, setsid, flock,
 #     notify-send.
 
@@ -88,6 +89,7 @@ source "$BASE_DIR/utils/flatfile.sh"
 source "$BASE_DIR/utils/config.sh"
 source "$BASE_DIR/utils/diagnose.sh"
 source "$BASE_DIR/utils/voices.sh"
+source "$BASE_DIR/utils/normalize.sh"
 declare -A MSG
 
 # L'anglais est chargé d'abord : il comble toute clé absente d'une autre langue.
@@ -240,7 +242,7 @@ resume_reading() {
 play_text() {
     local raw_text="$1"
     local text=$(clean_markdown "$raw_text")
-    local rate pid
+    local rate pid gain=1
 
     RUN=$(runtime_dir) || exit 1
     exec 9>"$RUN/lock"
@@ -271,11 +273,16 @@ play_text() {
         exit 1
     fi
 
+    # La mesure d'une voix inconnue prend quelques secondes, une fois ; sans mesure la voix joue à son niveau.
+    if [ "$NORMALIZE" == "on" ]; then
+        gain=$(voice_gain "$MODEL_PATH") || alert normalize_failed
+    fi
+
     # Synthèse vocale dans son propre groupe : un signal au groupe n'atteint ni
     # le terminal lanceur ni un autre lecteur audio. Le verrou est fermé pour le
     # pipeline, sinon il le tiendrait jusqu'à la fin de la lecture.
-    setsid bash -c 'piper --model "$1" --length-scale "$3" --output_raw | aplay -r "$2" -f S16_LE -t raw - 2>/dev/null' \
-        piperread-pipeline "$MODEL_PATH" "$rate" "$LENGTH_SCALE" 9>&- <<< "$text" &
+    setsid bash -c 'piper --model "$1" --length-scale "$3" --volume "$4" --output_raw | aplay -r "$2" -f S16_LE -t raw - 2>/dev/null' \
+        piperread-pipeline "$MODEL_PATH" "$rate" "$LENGTH_SCALE" "$gain" 9>&- <<< "$text" &
     pid=$!
     PIPELINE_PID="$pid"
     echo "$pid" > "$RUN/group.$pid" && mv -f "$RUN/group.$pid" "$RUN/group"
@@ -310,7 +317,7 @@ print_help() {
     done
     echo
     msg help_options_title
-    for name in speed voice lang voices-dir stop pause resume list-voices download-voice diagnose version help; do
+    for name in speed voice lang voices-dir normalize stop pause resume list-voices download-voice diagnose version help; do
         printf '  %-18s %s\n' "--$name" "$(msg "help_opt_${name//-/_}")"
     done
     echo
@@ -339,13 +346,13 @@ parse_arguments() {
                 while [ $# -gt 1 ] && [[ "$2" != -* ]]; do DOWNLOAD_NAMES+=("$2"); shift; done
                 ;;
             --download-voice=*) MODE="--download-voice"; DOWNLOAD_NAMES+=("${1#*=}") ;;
-            --speed|--voice|--lang|--voices-dir)
+            --speed|--voice|--lang|--voices-dir|--normalize)
                 if [ $# -lt 2 ]; then PARSE_ERROR="missing:$1"; return 1; fi
                 name="${1#--}"
                 OPT_VALUES["${name//-/_}"]="$2"
                 shift
                 ;;
-            --speed=*|--voice=*|--lang=*|--voices-dir=*)
+            --speed=*|--voice=*|--lang=*|--voices-dir=*|--normalize=*)
                 name="${1%%=*}"
                 name="${name#--}"
                 OPT_VALUES["${name//-/_}"]="${1#*=}"
@@ -422,6 +429,9 @@ fi
 
 resolve_setting telemetry valid_telemetry || refuse_option
 TELEMETRY="${RESOLVED_VALUE:-off}"
+
+resolve_setting normalize valid_normalize || refuse_option
+NORMALIZE="${RESOLVED_VALUE:-off}"
 
 case "$MODE" in
     --diagnose|--list-voices|--download-voice) ;;

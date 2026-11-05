@@ -51,6 +51,7 @@ from piperread_gui.cleaner import clean_markdown
 from piperread_gui.clipboard import read_clipboard
 from piperread_gui.config import speed_to_length_scale
 from piperread_gui.i18n import load_messages, msg
+from piperread_gui.loudness import voice_gain
 from piperread_gui.player import play_wav_bytes
 from piperread_gui.sentences import split_sentences
 from piperread_gui.server import ErreurServeurPiper, PiperHttpServer
@@ -71,12 +72,14 @@ class PlaybackController(QObject):
     phrase_courante = Signal(int, int)
     erreur = Signal(str)
 
-    def __init__(self, model_path: Path, lang: str, speed: float = 1.0, telemetry: str = "off"):
+    def __init__(self, model_path: Path, lang: str, speed: float = 1.0, telemetry: str = "off", normalize: str = "off"):
         super().__init__()
         self._model_path = Path(model_path)
         self._lang = lang
         self._speed = speed
         self._telemetry = telemetry
+        self._normalize = normalize
+        self._gain = 1.0
         self._length_scale = speed_to_length_scale(speed)
         self._messages = load_messages(lang)
         self._etat = Etat.ARRET
@@ -147,7 +150,16 @@ class PlaybackController(QObject):
         serveur.start()
         self._serveur = serveur
         self._modele_du_serveur = modele
+        self._gain = self._mesurer_gain(serveur, modele)
         return serveur
+
+    def _mesurer_gain(self, serveur: PiperHttpServer, modele: Path) -> float:
+        if self._normalize != "on":
+            return 1.0
+        try:
+            return voice_gain(modele, lambda texte: synthesize(serveur.base_url, texte))
+        except (OSError, ValueError, ErreurSynthese):
+            return 1.0
 
     def _fermer_serveur(self) -> None:
         if self._serveur is None:
@@ -264,6 +276,7 @@ class PlaybackController(QObject):
                     audio,
                     stop_event=self._evenement_arret,
                     pause_event=self._evenement_pause,
+                    gain=self._gain,
                 )
 
                 if self._index_demande is not None:

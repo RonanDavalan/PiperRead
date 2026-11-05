@@ -31,7 +31,7 @@ from typing import Callable
 
 from piperread_gui.flatfile import read_flat_file
 
-KNOWN_KEYS = ("speed", "voice", "lang", "telemetry", "voices_dir")
+KNOWN_KEYS = ("speed", "voice", "lang", "telemetry", "voices_dir", "normalize")
 LANGS = ("en", "fr", "de", "es")
 
 _CLE_VALIDE = re.compile(r"[a-z][a-z_]*")
@@ -113,6 +113,10 @@ def valid_telemetry(value: str) -> str | None:
     return value if value in ("on", "off") else None
 
 
+def valid_normalize(value: str) -> str | None:
+    return value if value in ("on", "off") else None
+
+
 def valid_voices_dir(value: str) -> str | None:
     """Chemin absolu, ou commençant par `~/` (seul développement fait), d'un dossier existant."""
     if value.startswith("~/"):
@@ -186,6 +190,8 @@ class ResolvedSettings:
     lang_source: str
     telemetry: str
     telemetry_source: str
+    normalize: str
+    normalize_source: str
     warnings: list[tuple[str, str, str]]
     unknown_keys: list[str]
     invalid: tuple[str, str, str] | None
@@ -197,6 +203,7 @@ def resolve_settings(
     voice_option: str | None = None,
     lang_option: str | None = None,
     voices_dir_option: str | None = None,
+    normalize_option: str | None = None,
 ) -> ResolvedSettings:
     """`voices_dirs` est la liste de base, sans le dossier choisi : il est résolu ici et passe en tête."""
     config_values, unknown_keys = load_config_file()
@@ -241,6 +248,12 @@ def resolve_settings(
         invalid = telemetry_resolved.invalid
     telemetry = telemetry_resolved.value or "off"
 
+    normalize_resolved = resolve_setting("normalize", valid_normalize, normalize_option, config_values)
+    warnings += normalize_resolved.warnings
+    if invalid is None and normalize_resolved.invalid is not None:
+        invalid = normalize_resolved.invalid
+    normalize = normalize_resolved.value or "off"
+
     return ResolvedSettings(
         voices_dir=dir_resolved.value,
         voices_dir_source=dir_resolved.source,
@@ -254,6 +267,8 @@ def resolve_settings(
         lang_source=lang_source,
         telemetry=telemetry,
         telemetry_source=telemetry_resolved.source,
+        normalize=normalize,
+        normalize_source=normalize_resolved.source,
         warnings=warnings,
         unknown_keys=unknown_keys,
         invalid=invalid,

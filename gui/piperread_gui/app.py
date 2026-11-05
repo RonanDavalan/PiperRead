@@ -27,7 +27,7 @@ Pourquoi ce fichier existe :
 
 Entrée / sortie :
     Entrée : options de ligne de commande, mêmes que `cli.py` (`--model`,
-    `--lang`, `--voices-dir`), plus `--speed` (vitesse de 0.5 à 3.0 — pas de `--voice`
+    `--lang`, `--voices-dir`), plus `--normalize` (on, off) et `--speed` (vitesse de 0.5 à 3.0 — pas de `--voice`
     distinct : `--model` sert déjà ce rôle en désignant directement le
     fichier, nom conservé par immuabilité des identifiants),
     plus sept options de pilotage d'une instance déjà lancée (`--play`,
@@ -108,6 +108,12 @@ def _analyser_arguments(argv: list[str]) -> argparse.Namespace:
         help="Vitesse de 0.5 à 3.0, point ou virgule (défaut : résolue depuis piperread.conf, sinon 1.0).",
     )
 
+    analyseur.add_argument(
+        "--normalize",
+        default=None,
+        help="on égalise le niveau des voix par un gain mesuré une fois par voix, off le laisse tel quel (défaut : résolu depuis piperread.conf, sinon off).",
+    )
+
     groupe_pilotage = analyseur.add_mutually_exclusive_group()
     groupe_pilotage.add_argument(
         "--play", dest="commande", action="store_const", const="lire",
@@ -186,6 +192,7 @@ def main(argv: list[str] | None = None) -> int:
         voice_option=None,
         lang_option=arguments.lang,
         voices_dir_option=arguments.voices_dir,
+        normalize_option=arguments.normalize,
     )
     messages = i18n.load_messages(resolu.lang)
 
@@ -221,7 +228,7 @@ def main(argv: list[str] | None = None) -> int:
 
     autostart.appliquer_defaut_premier_lancement(_ICONE)
 
-    controller = PlaybackController(model_path, resolu.lang, resolu.speed, resolu.telemetry)
+    controller = PlaybackController(model_path, resolu.lang, resolu.speed, resolu.telemetry, resolu.normalize)
     controller.demarrer_moteur()
     avertir_si_tray_absent(controller.messages)
     tray = PiperReadTray(controller, _ICONE, resolu.voices_dirs, resolu.voices_dir)
