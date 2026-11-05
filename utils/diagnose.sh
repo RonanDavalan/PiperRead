@@ -10,7 +10,7 @@
 #
 # Usage :
 #     Charger ce fichier après read.sh (msg, alert, runtime_dir, read_voice_rate,
-#     BASE_DIR, VENV_PATH, MODEL_PATH, SETTING_WARNINGS, CONFIG_UNKNOWN_KEYS),
+#     BASE_DIR, VENV_PATH, MODEL_PATH, VOICES_DIR_CHOSEN, SETTING_WARNINGS, CONFIG_UNKNOWN_KEYS),
 #     puis run_diagnose. Chaque check_* affiche ses lignes et laisse son pire
 #     statut (ok, warning ou fail) dans CHECK_STATUS. run_diagnose rend 1 s'il y
 #     a au moins un échec, sinon 0.
@@ -58,6 +58,14 @@ check_voice() {
         finding ok diag_title_voice diag_voice_ok "$(basename "$MODEL_PATH" .onnx)" "$rate" "${folder/#$HOME/\~}"
     else
         finding warning diag_title_voice rate_unreadable
+    fi
+}
+
+# Le dossier choisi par l'utilisateur ne s'affiche que s'il y en a un.
+check_voices_dir() {
+    CHECK_STATUS="ok"
+    if [ -n "$VOICES_DIR_CHOSEN" ]; then
+        finding ok diag_title_voices_dir diag_voices_dir_ok "${VOICES_DIR_CHOSEN/#$HOME/\~}"
     fi
 }
 
@@ -158,7 +166,7 @@ check_runtime() {
 
 run_diagnose() {
     local check
-    for check in check_engine check_voice check_player check_tools check_clipboard check_config check_runtime check_gui; do
+    for check in check_engine check_voice check_voices_dir check_player check_tools check_clipboard check_config check_runtime check_gui; do
         "$check"
     done
     msg diag_summary "$DIAG_FAILURES" "$DIAG_WARNINGS"

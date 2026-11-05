@@ -8,7 +8,7 @@
 #     l'utilisateur la connaisse avant de télécharger.
 #
 # Usage :
-#     Charger ce fichier après read.sh (msg, alert, VOICES_DIRS, VOICES_DIR, VENV_PATH,
+#     Charger ce fichier après read.sh (msg, alert, VOICES_DIRS, VOICES_DIR, VOICES_DIR_CHOSEN, VENV_PATH,
 #     LANG_CODE), puis list_voices ou download_voices_command. Les noms à
 #     télécharger sont dans DOWNLOAD_NAMES ; vide, la voix recommandée de la
 #     langue est proposée.
@@ -107,9 +107,27 @@ list_voices() {
         done
     done
     echo
+    list_installed_voices
+    echo
     msg voices_listen "$VOICE_LISTEN_URL"
     msg voices_catalog "$VOICE_CATALOG_URL"
     msg voices_howto
+}
+
+# Toutes les voix présentes dans les dossiers lus, avec le dossier qui sert chacune :
+# à nom égal, le premier dossier de VOICES_DIRS l'emporte.
+list_installed_voices() {
+    local dir model name header=0
+    local -A seen=()
+    for dir in "${VOICES_DIRS[@]}"; do
+        for model in "$dir"/*.onnx; do
+            name=$(basename "$model" .onnx)
+            if [ -n "${seen[$name]}" ] || [ ! -s "$model" ] || [ ! -s "$model.json" ]; then continue; fi
+            seen["$name"]=1
+            if [ "$header" -eq 0 ]; then echo; msg voices_installed_title; header=1; fi
+            printf '  %-32s %s\n' "$name" "${dir/#$HOME/\~}"
+        done
+    done
 }
 
 # Le module du moteur écrit dans le dossier final et ne rejette qu'un fichier vide :
@@ -181,6 +199,10 @@ download_voices_command() {
     local name status=0
     local -a names=("${DOWNLOAD_NAMES[@]}")
 
+    if [ -n "$VOICES_DIR_CHOSEN" ] && [ ! -w "$VOICES_DIR_CHOSEN" ]; then
+        alert download_dir_unwritable "$VOICES_DIR_CHOSEN"
+        return 1
+    fi
     if [ ${#names[@]} -eq 0 ]; then
         name=$(recommended_voice "$LANG_CODE")
         if voice_installed "$name"; then msg download_already "$name"; return 0; fi

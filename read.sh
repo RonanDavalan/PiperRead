@@ -8,20 +8,21 @@
 #     ou le presse-papiers, sous Wayland comme sous X11.
 #
 # Usage :
-#     read.sh [auto|selection|clipboard] [--speed X] [--voice NOM] [--lang CODE]
+#     read.sh [auto|selection|clipboard] [--speed X] [--voice NOM] [--lang CODE] [--voices-dir CHEMIN]
 #     read.sh --stop | --pause | --resume
 #     read.sh --version | --diagnose | --help
 #     read.sh --list-voices | --download-voice [NOM...]
 #     auto (défaut) lit la sélection à la souris, à défaut le presse-papiers.
 #     --speed : multiplicateur de vitesse de 0,5 à 3,0 (1 = voix naturelle).
+#     --voices-dir : dossier de voix lu en plus des dossiers de PiperRead (chemin absolu ou ~/…).
 #     --stop arrête la lecture en cours ; relancer read.sh coupe la précédente.
 #     --pause la suspend, --resume la reprend là où elle s'était arrêtée.
 #     --diagnose contrôle l'installation (code 1 s'il y a un échec), sans rien lire ni jouer.
 #     --help affiche l'aide dans la langue des messages, sur la sortie standard.
 #     --list-voices affiche les voix proposées, avec leur licence, sans réseau.
 #     --download-voice télécharge les voix nommées ; sans nom, propose celle de la langue.
-#     Chaque réglage vient de l'option, sinon de PIPERREAD_SPEED, PIPERREAD_VOICE
-#     ou PIPERREAD_LANG, sinon de ~/.config/piperread/piperread.conf.
+#     Chaque réglage vient de l'option, sinon de PIPERREAD_SPEED, PIPERREAD_VOICE,
+#     PIPERREAD_LANG ou PIPERREAD_VOICES_DIR, sinon de ~/.config/piperread/piperread.conf.
 #
 # Dépend de : utils/cleaner.sh, utils/flatfile.sh, utils/config.sh, utils/diagnose.sh, utils/voices.sh,
 #     lang/ (messages), piper-env/ (moteur), voices/ (voix .onnx), wl-paste ou xsel, aplay, setsid, flock,
@@ -43,10 +44,17 @@ DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/piperread"
 # Un clone fonctionne sans installation : ses dossiers, s'ils existent, passent
 # avant ceux d'un paquet, dont le moteur est système et les voix personnelles.
 # Les voix du clone ne masquent pas celles de l'utilisateur : les deux dossiers
-# sont lus ; les téléchargements vont dans le premier.
+# sont lus ; les téléchargements vont dans le premier. Le dossier choisi par
+# l'utilisateur (add_chosen_voices_dir) s'ajoute en tête sans rien remplacer.
 VOICES_DIRS=("$DATA_DIR/voices")
 if [ -d "$BASE_DIR/voices" ]; then VOICES_DIRS=("$BASE_DIR/voices" "$DATA_DIR/voices"); fi
 VOICES_DIR="${VOICES_DIRS[0]}"
+VOICES_DIR_CHOSEN=""
+add_chosen_voices_dir() {
+    VOICES_DIR_CHOSEN="$1"
+    VOICES_DIRS=("$1" "${VOICES_DIRS[@]}")
+    VOICES_DIR="$1"
+}
 if [ -d "$BASE_DIR/piper-env" ]; then VENV_PATH="$BASE_DIR/piper-env"; else VENV_PATH="/usr/lib/piperread/venv"; fi
 
 # Les messages citent la commande que l'utilisateur tape : celle du paquet n'est pas read.sh.
@@ -302,7 +310,7 @@ print_help() {
     done
     echo
     msg help_options_title
-    for name in speed voice lang stop pause resume list-voices download-voice diagnose version help; do
+    for name in speed voice lang voices-dir stop pause resume list-voices download-voice diagnose version help; do
         printf '  %-18s %s\n' "--$name" "$(msg "help_opt_${name//-/_}")"
     done
     echo
@@ -331,14 +339,16 @@ parse_arguments() {
                 while [ $# -gt 1 ] && [[ "$2" != -* ]]; do DOWNLOAD_NAMES+=("$2"); shift; done
                 ;;
             --download-voice=*) MODE="--download-voice"; DOWNLOAD_NAMES+=("${1#*=}") ;;
-            --speed|--voice|--lang)
+            --speed|--voice|--lang|--voices-dir)
                 if [ $# -lt 2 ]; then PARSE_ERROR="missing:$1"; return 1; fi
-                OPT_VALUES["${1#--}"]="$2"
+                name="${1#--}"
+                OPT_VALUES["${name//-/_}"]="$2"
                 shift
                 ;;
-            --speed=*|--voice=*|--lang=*)
+            --speed=*|--voice=*|--lang=*|--voices-dir=*)
                 name="${1%%=*}"
-                OPT_VALUES["${name#--}"]="${1#*=}"
+                name="${name#--}"
+                OPT_VALUES["${name//-/_}"]="${1#*=}"
                 ;;
             *) PARSE_ERROR="$1"; return 1 ;;
         esac
@@ -398,6 +408,9 @@ if [ "$LANG_STATUS" -eq 2 ]; then refuse_option; fi
 
 resolve_setting speed normalize_speed || refuse_option
 LENGTH_SCALE=$(speed_to_length_scale "${RESOLVED_VALUE:-1}")
+
+resolve_setting voices_dir valid_voices_dir || refuse_option
+if [ -n "$RESOLVED_VALUE" ]; then add_chosen_voices_dir "$RESOLVED_VALUE"; fi
 
 resolve_setting voice validate_voice || refuse_option
 if [ -n "$RESOLVED_VALUE" ]; then

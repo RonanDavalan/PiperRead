@@ -2,13 +2,13 @@
 # config.sh — résout les réglages : option, variable d'environnement, fichier, défaut.
 #
 # Pourquoi ce fichier existe :
-#     La vitesse, la voix et la langue se règlent de quatre façons ; une valeur
+#     La vitesse, la voix, la langue et le dossier des voix se règlent de quatre façons ; une valeur
 #     invalide ne doit ni exécuter quoi que ce soit ni bloquer une lecture lancée
 #     par un raccourci clavier, qui n'a pas de terminal pour en rendre compte.
 #
 # Usage :
 #     Charger ce fichier, puis load_config_file, puis resolve_setting <clé>
-#     <validateur> pour speed, voice et lang. Le résultat est dans
+#     <validateur> pour speed, voice, lang, telemetry et voices_dir. Le résultat est dans
 #     RESOLVED_VALUE et RESOLVED_SOURCE. Les valeurs de l'utilisateur ne sont
 #     jamais évaluées : elles sont comparées à des motifs, puis recopiées.
 #
@@ -40,6 +40,18 @@ valid_voice_name() {
     [[ "$1" =~ ^[A-Za-z0-9_.-]+$ ]] && echo "$1"
 }
 
+# Chemin absolu, ou commençant par ~/ (seul développement fait, sans évaluer le
+# texte), d'un dossier qui existe : affiche le chemin développé.
+valid_voices_dir() {
+    local path="$1"
+    case "$path" in
+        "~/"*) path="$HOME/${path#"~/"}" ;;
+        /*) ;;
+        *) return 1 ;;
+    esac
+    [ -d "$path" ] && echo "$path"
+}
+
 valid_lang() {
     case "$1" in
         en|fr|de|es) echo "$1" ;;
@@ -55,7 +67,7 @@ valid_telemetry() {
 }
 
 # Chemin du modèle d'un nom déjà validé, dans l'ordre de VOICES_DIRS : à nom
-# égal, la voix du clone l'emporte.
+# égal, le premier dossier l'emporte.
 find_voice() {
     local dir
     for dir in "${VOICES_DIRS[@]}"; do
@@ -101,7 +113,7 @@ load_config_file() {
         value="${value#"${value%%[![:space:]]*}"}"
         value="${value%"${value##*[![:space:]]}"}"
         case "$key" in
-            speed|voice|lang|telemetry) CONFIG_FILE_VALUES["$key"]="$value" ;;
+            speed|voice|lang|telemetry|voices_dir) CONFIG_FILE_VALUES["$key"]="$value" ;;
             *) CONFIG_UNKNOWN_KEYS+=("$key") ;;
         esac
     done
@@ -123,7 +135,7 @@ resolve_setting() {
             option)
                 [[ -v OPT_VALUES[$key] ]] || continue
                 value="${OPT_VALUES[$key]}"
-                source="--$key"
+                source="--${key//_/-}"
                 ;;
             environment)
                 variable="PIPERREAD_${key^^}"
